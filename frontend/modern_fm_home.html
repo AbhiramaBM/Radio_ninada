@@ -13,9 +13,170 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
     <!-- Tailwind Configuration -->
-    <script src="js/tailwind-config.js"></script>
-    <!-- Custom Stylesheet -->
-    <link rel="stylesheet" href="css/style.css" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#251819",
+                        "on-secondary-container": "#616363",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#ffdadb",
+                        "on-secondary-fixed-variant": "#454747",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#ffedec",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#fff0f0",
+                        "outline-variant": "#e0bfbf",
+                        "on-surface-variant": "#594141",
+                        "on-tertiary-container": "#fffbff",
+                        "on-tertiary-fixed-variant": "#7f2734",
+                        "surface-container-high": "#fce2e2",
+                        "tertiary-container": "#ba545f",
+                        "surface-tint": "#b1293e",
+                        "on-tertiary-fixed": "#40000e",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#fff8f7",
+                        "on-surface": "#251819",
+                        "tertiary-fixed-dim": "#ffb2b7",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "on-primary-container": "#fffbff",
+                        "tertiary": "#9b3c48",
+                        "surface-variant": "#f6dddd",
+                        "on-primary-fixed": "#40000c",
+                        "primary": "#ae263c",
+                        "on-primary-fixed-variant": "#8f0a29",
+                        "secondary": "#5d5f5f",
+                        "surface-bright": "#fff8f7",
+                        "secondary-fixed": "#e2e2e2",
+                        "surface-container-highest": "#f6dddd",
+                        "inverse-primary": "#ffb3b6",
+                        "primary-fixed": "#ffdada",
+                        "surface-dim": "#edd4d4",
+                        "surface-container": "#ffe9e9",
+                        "primary-fixed-dim": "#ffb3b6",
+                        "inverse-surface": "#3c2d2d",
+                        "background": "#fff8f7",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#d04053",
+                        "outline": "#8c7071",
+                        "secondary-container": "#dfe0e0",
+                        "on-tertiary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "12px",
+                        "2xl": "24px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "container-max": "1440px",
+                        "xl": "80px",
+                        "xs": "4px",
+                        "lg": "48px",
+                        "gutter": "24px",
+                        "md": "24px",
+                        "sm": "12px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg-mobile": ["Poppins"],
+                        "headline-lg": ["Poppins"],
+                        "headline-md": ["Poppins"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Poppins"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["13px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.3", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .glass-nav {
+            background: rgba(255, 248, 247, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-16px) rotate(4deg);
+            }
+
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .vinyl-spin {
+            animation: spin 20s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .active-glow {
+            box-shadow: 0 0 24px rgba(243, 90, 107, 0.35);
+            border: 2px solid #ae263c;
+        }
+
+        .tab-btn.active {
+            background-color: #ae263c;
+            color: #ffffff;
+            border-color: #ae263c;
+        }
+
+        /* Custom scrollbars for RJ linear rows */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
     <link rel="stylesheet" href="css/auth-modal.css" />
 </head>
 
@@ -27,9 +188,10 @@
         <nav class="flex justify-between items-center px-md lg:px-xl py-base max-w-container-max mx-auto">
             <!-- Brand Logo -->
             <a href="#home"
-                class="flex items-center gap-xs font-headline-md text-headline-md font-bold tracking-tighter text-primary group">
-                <span class="material-symbols-outlined text-3xl group-hover:rotate-12 transition-transform">radio</span>
-                <span>Radio Ninada</span>
+                class="inline-flex items-center transition-transform duration-200 ease-in-out hover:scale-[1.03] cursor-pointer"
+                aria-label="Radio Ninada 90.4 FM - Home">
+                <img src="images/radio_ninada_logo.png" alt="Radio Ninada 90.4 FM Logo"
+                    class="h-[44px] sm:h-[48px] md:h-[56px] w-auto object-contain transition-transform duration-200 ease-in-out" />
             </a>
             <!-- Navigation Links -->
             <div class="hidden xl:flex items-center gap-md">
@@ -53,7 +215,7 @@
                 <button
                     class="material-symbols-outlined p-base text-on-surface-variant hover:bg-primary/10 rounded-full transition-all">search</button>
                 <button onclick="RadioAuth.openModal('signin')"
-                    class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-sm text-label-sm hover:scale-105 active:scale-95 transition-transform shadow-md shadow-primary/20 cursor-pointer">
+                    class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-sm text-label-sm hover:scale-105 active:scale-95 transition-transform shadow-md shadow-primary/20">
                     Login
                 </button>
             </div>
@@ -180,14 +342,15 @@
                     Broadcasted in high fidelity.
                 </p>
                 <div class="flex items-center gap-md mt-md">
-                    <button onclick="RadioPlayer.togglePlay()" id="hero-play-btn"
+                    <button onclick="https://radio.garden/visit/ujire/1VelQ804#google_vignette" id="hero-play-btn"
                         class="group relative flex items-center justify-center h-20 w-20 rounded-full bg-primary text-on-primary shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all duration-300">
                         <span id="hero-play-icon" class="material-symbols-outlined text-[40px]"
                             style="font-variation-settings: 'FILL' 1;">play_arrow</span>
                         <div class="absolute -inset-2 border-2 border-primary/20 rounded-full animate-pulse"></div>
                     </button>
-                    <div class="flex flex-col">
-                        <span class="font-headline-md text-headline-md text-on-background leading-none">Play Live</span>
+                    <div class="flex flex-col cursor-pointer" onclick="toggleAudioPlay()">
+                        <span id="hero-play-text"
+                            class="font-headline-md text-headline-md text-on-background leading-none">▶ Play Live</span>
                         <span class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Modern FM HD Stream •
                             98.4 FM</span>
                     </div>
@@ -416,7 +579,8 @@
                         <span
                             class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">Recently
                             Added</span>
-                        <button onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'Campus Unfiltered: Ep 42', 'RJ Sarah Jenkins', 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80')"
+                        <button
+                            onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'Campus Unfiltered: Ep 42', 'RJ Sarah Jenkins', 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80')"
                             class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-2xl"
                                 style="font-variation-settings: 'FILL' 1;">play_arrow</span>
@@ -432,7 +596,7 @@
                 <div
                     class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
                     <span>12.4k Plays</span>
-                    <span onclick="RadioAuth.requireAuth(() => showToast('❤️ Saved episode to your Favorites!'))" class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
+                    <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
                 </div>
             </div>
 
@@ -446,7 +610,8 @@
                             alt="Tech & Beats" />
                         <span
                             class="absolute top-2 left-2 bg-tertiary text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">Popular</span>
-                        <button onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', 'Tech & Beats: AI in Music', 'RJ David Vibe', 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=600&q=80')"
+                        <button
+                            onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', 'Tech & Beats: AI in Music', 'RJ David Vibe', 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=600&q=80')"
                             class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-2xl"
                                 style="font-variation-settings: 'FILL' 1;">play_arrow</span>
@@ -462,7 +627,7 @@
                 <div
                     class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
                     <span>28.9k Plays</span>
-                    <span onclick="RadioAuth.requireAuth(() => showToast('❤️ Saved episode to your Favorites!'))" class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
+                    <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
                 </div>
             </div>
 
@@ -477,7 +642,8 @@
                         <span
                             class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">Recently
                             Added</span>
-                        <button onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', 'Indie Spotlight: Coastal Sound', 'RJ Clara Skye', 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80')"
+                        <button
+                            onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', 'Indie Spotlight: Coastal Sound', 'RJ Clara Skye', 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80')"
                             class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-2xl"
                                 style="font-variation-settings: 'FILL' 1;">play_arrow</span>
@@ -493,7 +659,7 @@
                 <div
                     class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
                     <span>9.1k Plays</span>
-                    <span onclick="RadioAuth.requireAuth(() => showToast('❤️ Saved episode to your Favorites!'))" class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
+                    <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
                 </div>
             </div>
 
@@ -507,7 +673,8 @@
                             alt="Night Vibes Stories" />
                         <span
                             class="absolute top-2 left-2 bg-tertiary text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">Popular</span>
-                        <button onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', 'Night Owl Stories: Ep 18', 'RJ Felix Blaze', 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80')"
+                        <button
+                            onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', 'Night Owl Stories: Ep 18', 'RJ Felix Blaze', 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80')"
                             class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-2xl"
                                 style="font-variation-settings: 'FILL' 1;">play_arrow</span>
@@ -523,7 +690,7 @@
                 <div
                     class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
                     <span>35.2k Plays</span>
-                    <span onclick="RadioAuth.requireAuth(() => showToast('❤️ Saved episode to your Favorites!'))" class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
+                    <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
                 </div>
             </div>
         </div>
@@ -568,7 +735,7 @@
                         Annual Campus Radio Fest 2026</h3>
                     <p class="text-on-surface-variant text-sm mb-md">Live DJ sets, RJ battle grounds, band performances,
                         and celebrity guest appearances.</p>
-                    <button onclick="RadioAuth.requireAuth(() => rsvpToast('Annual Campus Radio Fest'))"
+                    <button onclick="rsvpToast('Annual Campus Radio Fest')"
                         class="w-full bg-surface-container-low text-primary font-bold py-sm rounded-xl hover:bg-primary hover:text-white transition-all text-sm">
                         RSVP / Get Free Pass
                     </button>
@@ -693,8 +860,10 @@
         <div class="space-y-lg">
             <!-- Linear Row 1 -->
             <div>
-                <span class="text-xs font-bold text-on-surface-variant/70 uppercase tracking-widest block mb-md">On-Air RJ Hosts & Presenters</span>
-                <div id="rj-list-container" class="flex items-center gap-md lg:gap-lg overflow-x-auto pb-sm no-scrollbar">
+                <span class="text-xs font-bold text-on-surface-variant/70 uppercase tracking-widest block mb-md">On-Air
+                    RJ Hosts & Presenters</span>
+                <div id="rj-list-container"
+                    class="flex items-center gap-md lg:gap-lg overflow-x-auto pb-sm no-scrollbar">
                     <!-- RJ 1 -->
                     <div onclick="openRjModal('rj1')"
                         class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
@@ -954,34 +1123,42 @@
     </section>
 
     <!-- Bottom Persistent Player Bar -->
-    <nav
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 flex justify-between items-center px-md py-sm z-40 w-full max-w-4xl bg-surface/90 backdrop-blur-2xl border border-white/40 shadow-2xl shadow-primary/10 rounded-full">
+    <nav id="persistent-player"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 flex justify-between items-center px-md py-sm z-40 w-[calc(100%-1.5rem)] max-w-4xl bg-surface/90 backdrop-blur-2xl border border-white/40 shadow-2xl shadow-primary/10 rounded-full opacity-0 translate-y-10 pointer-events-none invisible transition-all duration-350 ease-in-out">
         <div class="flex justify-between items-center w-full">
-            <button onclick="toggleAudioPlay()" class="flex items-center gap-sm text-left px-2">
-                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-md">
+            <button onclick="toggleAudioPlay()" aria-label="Toggle Audio Playback"
+                class="flex items-center gap-sm text-left px-2 focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-full">
+                <div
+                    class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-md shrink-0">
                     <span id="nav-play-icon" class="material-symbols-outlined text-xl"
                         style="font-variation-settings: 'FILL' 1;">play_arrow</span>
                 </div>
-                <div class="hidden sm:block">
+                <div>
                     <p class="font-bold text-xs leading-none text-on-background">Modern FM Live</p>
                     <p class="text-[10px] text-on-surface-variant mt-0.5">Echoes of the City</p>
                 </div>
             </button>
-            <div class="flex items-center gap-md">
+            <div class="flex items-center gap-xs sm:gap-md">
                 <button
-                    class="flex flex-col items-center gap-xs text-on-surface-variant hover:text-primary transition-colors text-xs font-semibold">
+                    class="flex flex-col items-center gap-xs text-on-surface-variant hover:text-primary transition-colors text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg p-1">
                     <span class="material-symbols-outlined text-xl">equalizer</span>
                     <span class="hidden sm:inline">Equalizer</span>
                 </button>
                 <button
-                    class="flex flex-col items-center gap-xs text-on-surface-variant hover:text-primary transition-colors text-xs font-semibold">
+                    class="flex flex-col items-center gap-xs text-on-surface-variant hover:text-primary transition-colors text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg p-1">
                     <span class="material-symbols-outlined text-xl">volume_up</span>
                     <span class="hidden sm:inline">Volume</span>
                 </button>
-                <a href="#home" class="flex flex-col items-center gap-xs text-primary text-xs font-semibold">
+                <a href="#home"
+                    class="flex flex-col items-center gap-xs text-primary text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg p-1">
                     <span class="material-symbols-outlined text-xl">vertical_align_top</span>
                     <span class="hidden sm:inline">Top</span>
                 </a>
+                <div class="w-[1px] h-6 bg-outline-variant/40 mx-xs"></div>
+                <button onclick="closePlayer()" aria-label="Close Player"
+                    class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-high/80 text-on-surface hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer shadow-sm shrink-0 focus:outline-none focus:ring-2 focus:ring-primary">
+                    <span class="material-symbols-outlined text-base">close</span>
+                </button>
             </div>
         </div>
     </nav>
@@ -1092,7 +1269,6 @@
     </div>
 
     <!-- JavaScript Logic -->
-    <script src="js/api-client.js"></script>
     <script src="js/app.js"></script>
     <script src="js/auth-modal.js"></script>
 </body>
