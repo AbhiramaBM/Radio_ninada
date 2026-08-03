@@ -1,0 +1,524 @@
+/* ==========================================================================
+   Radio Ninada - Premium Glassmorphism Authentication Modal & User System
+   Inspired by Spotify, Apple Music & YouTube Music
+   ========================================================================== */
+
+/* Dark Backdrop Overlay */
+#auth-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#auth-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Glass Card Modal Window */
+.auth-glass-card {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 24px;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 30px rgba(239, 68, 68, 0.08);
+    overflow: hidden;
+    transform: scale(0.92) translateY(16px);
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .auth-glass-card {
+    background: rgba(20, 20, 24, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 30px rgba(239, 68, 68, 0.12);
+    color: #f3f4f6;
+}
+
+#auth-modal-overlay.active .auth-glass-card {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+@media (max-width: 480px) {
+    .auth-glass-card {
+        max-width: 380px;
+        width: 92%;
+        border-radius: 24px;
+    }
+}
+
+/* Close Button */
+.auth-close-btn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.05);
+    color: #4b5563;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.dark .auth-close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+}
+
+.auth-close-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    transform: rotate(90deg) scale(1.05);
+}
+
+/* Tab Underline Indicator */
+.auth-tabs-container {
+    position: relative;
+    display: flex;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 16px;
+    padding: 4px;
+    margin-top: 20px;
+}
+
+.dark .auth-tabs-container {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.auth-tab-btn {
+    flex: 1;
+    position: relative;
+    z-index: 2;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    color: #6b7280;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.25s ease;
+}
+
+.dark .auth-tab-btn {
+    color: #9ca3af;
+}
+
+.auth-tab-btn.active {
+    color: #ef4444;
+}
+
+.dark .auth-tab-btn.active {
+    color: #ffffff;
+}
+
+.auth-tab-indicator {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    height: calc(100% - 8px);
+    width: calc(50% - 4px);
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+.dark .auth-tab-indicator {
+    background: #ef4444;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+/* Segmented Toggle (Email | Phone) */
+.auth-segmented-toggle {
+    position: relative;
+    display: flex;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 14px;
+    padding: 3px;
+    margin-bottom: 16px;
+}
+
+.dark .auth-segmented-toggle {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.auth-toggle-btn {
+    flex: 1;
+    position: relative;
+    z-index: 2;
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.25s ease;
+}
+
+.dark .auth-toggle-btn {
+    color: #9ca3af;
+}
+
+.auth-toggle-btn.active {
+    color: #111827;
+}
+
+.dark .auth-toggle-btn.active {
+    color: #ffffff;
+}
+
+.auth-toggle-pill {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    height: calc(100% - 6px);
+    width: calc(50% - 3px);
+    background: #ffffff;
+    border-radius: 11px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+.dark .auth-toggle-pill {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Rounded Inputs (18px) */
+.auth-input-group {
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.auth-input-group input[type='email'],
+.auth-input-group input[type='password'],
+.auth-input-group input[type='text'],
+.auth-input-group input[type='tel'],
+.auth-input-group .auth-input,
+.auth-input {
+    width: 100%;
+    padding-left: 52px !important;
+    padding-right: 44px !important;
+    padding-top: 13px !important;
+    padding-bottom: 13px !important;
+    border-radius: 18px;
+    border: 1.5px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.7);
+    color: #111827;
+    font-size: 14.5px;
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.dark .auth-input {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+}
+
+.auth-input:focus {
+    border-color: #ef4444;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15), 0 4px 12px rgba(239, 68, 68, 0.1);
+}
+
+.dark .auth-input:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+}
+
+.auth-input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 20px;
+    pointer-events: none;
+    transition: color 0.2s ease;
+}
+
+.auth-input:focus ~ .auth-input-icon {
+    color: #ef4444;
+}
+
+.auth-password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    transition: color 0.2s ease;
+}
+
+.auth-password-toggle:hover {
+    color: #ef4444;
+}
+
+/* Primary Red Button (Full Pill) */
+.auth-btn-primary {
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 8px 20px -4px rgba(239, 68, 68, 0.4);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.auth-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px -4px rgba(239, 68, 68, 0.55);
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+}
+
+.auth-btn-primary:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Social Buttons */
+.auth-social-btn {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 9999px;
+    border: 1.5px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.8);
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .auth-social-btn {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+    color: #e5e7eb;
+}
+
+.auth-social-btn:hover {
+    transform: translateY(-1.5px);
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.auth-social-btn.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    filter: grayscale(40%);
+}
+
+.auth-social-btn.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* OTP 6-Digit Inputs */
+.otp-input-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.otp-box {
+    width: 48px;
+    height: 54px;
+    border-radius: 18px;
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.8);
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    color: #111827;
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .otp-box {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+}
+
+.otp-box:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+    transform: scale(1.05);
+}
+
+.otp-box.filled {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.dark .otp-box.filled {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+/* Success Checkmark Pop Animation */
+.success-checkmark-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.checkmark-circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: checkmarkPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.checkmark-icon {
+    font-size: 40px;
+    color: #ffffff;
+}
+
+@keyframes checkmarkPop {
+    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    70% { transform: scale(1.15) rotate(5deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* View Fade & Slide Keyframes */
+.auth-view {
+    display: none;
+    animation: authSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-view.active {
+    display: block;
+}
+
+@keyframes authSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Profile Dropdown Styling */
+#user-profile-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 12px);
+    width: 260px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.96);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 60;
+}
+
+.dark #user-profile-menu {
+    background: rgba(23, 23, 27, 0.95);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
+}
+
+#user-profile-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    border-radius: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dark .profile-menu-item {
+    color: #d1d5db;
+}
+
+.profile-menu-item:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    transform: translateX(4px);
+}
+
+.dark .profile-menu-item:hover {
+    background: rgba(239, 68, 68, 0.18);
+    color: #f87171;
+}
+
+.profile-menu-item.logout {
+    color: #ef4444;
+}
+
+.profile-menu-item.logout:hover {
+    background: rgba(239, 68, 68, 0.12);
+}

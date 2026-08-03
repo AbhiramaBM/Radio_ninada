@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  password     String
+  name         String
+  role         String         @default("EDITOR") // SUPER_ADMIN, ADMIN, EDITOR, RJ, MODERATOR
+  avatar       String?
+  bio          String?
+  status       String         @default("ACTIVE") // ACTIVE, SUSPENDED, BANNED
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+  refreshTokens RefreshToken[]
+  auditLogs    AuditLog[]
+  bookmarks    UserBookmark[]
+  histories    UserHistory[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model LiveRadioState {
+  id             String   @id @default("live-config")
+  isLive         Boolean  @default(false)
+  streamUrl      String   @default("https://stream.radioninada.com/live")
+  title          String   @default("Radio Ninada Live Stream")
+  currentProgram String   @default("Morning Beats")
+  currentRJ      String   @default("RJ Ananya")
+  currentSong    String   @default("Community Melodies - Special Broadcast")
+  bitrate        Int      @default(320)
+  quality        String   @default("HD Stereo 44.1kHz")
+  status         String   @default("OFFLINE") // LIVE, OFFLINE, MAINTENANCE
+  liveListeners  Int      @default(42)
+  updatedAt      DateTime @updatedAt
+}
+
+model Program {
+  id          String     @id @default(uuid())
+  slug        String     @unique
+  name        String
+  description String
+  hostId      String?
+  hostName    String     @default("Radio Ninada RJ")
+  category    String     @default("Music")
+  thumbnail   String?
+  banner      String?
+  duration    String     @default("60 min")
+  language    String     @default("Kannada")
+  tags        String     @default("entertainment,music")
+  schedule    String     @default("Mon - Fri @ 8:00 AM")
+  featured    Boolean    @default(false)
+  status      String     @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  schedules   Schedule[]
+}
+
+model Podcast {
+  id            String    @id @default(uuid())
+  slug          String    @unique
+  title         String
+  audioUrl      String
+  coverUrl      String?
+  category      String    @default("Talk Show")
+  episodeNumber Int       @default(1)
+  season        Int       @default(1)
+  description   String
+  duration      String    @default("45:00")
+  downloads     Int       @default(0)
+  featured      Boolean   @default(false)
+  visibility    String    @default("PUBLIC") // PUBLIC, PRIVATE, DRAFT
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+}
+
+model Schedule {
+  id          String    @id @default(uuid())
+  programId   String
+  program     Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int       // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  startTime   String    // e.g. "08:00"
+  endTime     String    // e.g. "09:00"
+  isRecurring Boolean   @default(true)
+  isSpecial   Boolean   @default(false)
+  holidayName String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+}
+
+model News {
+  id            String    @id @default(uuid())
+  slug          String    @unique
+  title         String
+  content       String
+  category      String    @default("Local") // College, Local, State, National, International
+  featuredImage String?
+  gallery       String?   // JSON array of strings
+  status        String    @default("PUBLISHED") // DRAFT, PUBLISHED, SCHEDULED
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+}
+
+model RJProfile {
+  id           String    @id @default(uuid())
+  userId       String?
+  name         String
+  photo        String?
+  designation  String    @default("Senior RJ")
+  bio          String
+  socialMedia  String?   // JSON string of social handles
+  achievements String?   // JSON or text
+  status       String    @default("ACTIVE") // ACTIVE, ON_LEAVE, INACTIVE
+  followers    Int       @default(0)
+  episodeCount Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+}
+
+model Event {
+  id                   String             @id @default(uuid())
+  slug                 String             @unique
+  title                String
+  description          String
+  banner               String?
+  gallery              String?            // JSON string array
+  eventDate            DateTime
+  location             String             @default("Radio Ninada Studio / Online")
+  registrationRequired Boolean            @default(true)
+  participantsCount    Int                @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  deletedAt            DateTime?
+  participants         EventParticipant[]
+}
+
+model EventParticipant {
+  id         String   @id @default(uuid())
+  eventId    String
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name       String
+  email      String
+  phone      String
+  qrCode     String?  // Data URL or string
+  attendance String   @default("REGISTERED") // REGISTERED, ATTENDED, CANCELLED
+  status     String   @default("APPROVED") // PENDING, APPROVED, REJECTED
+  createdAt  DateTime @default(now())
+}
+
+model GalleryItem {
+  id        String    @id @default(uuid())
+  title     String
+  type      String    @default("PHOTO") // PHOTO, VIDEO
+  mediaUrl  String
+  album     String    @default("General")
+  category  String    @default("Events")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model Notification {
+  id          String    @id @default(uuid())
+  title       String
+  message     String
+  audience    String    @default("ALL") // ALL, SUBSCRIBERS, RJS
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  status      String    @default("DRAFT") // DRAFT, SCHEDULED, SENT
+  createdAt   DateTime  @default(now())
+}
+
+model Banner {
+  id         String    @id @default(uuid())
+  title      String
+  imageUrl   String
+  targetUrl  String?
+  type       String    @default("HOMEPAGE") // HOMEPAGE, EVENT, SPONSOR, POPUP
+  priority   Int       @default(1)
+  expiryDate DateTime?
+  status     String    @default("ACTIVE") // ACTIVE, EXPIRED, INACTIVE
+  createdAt  DateTime  @default(now())
+}
+
+model Sponsor {
+  id         String    @id @default(uuid())
+  name       String
+  logoUrl    String
+  website    String?
+  campaign   String    @default("Brand Awareness")
+  clicks     Int       @default(0)
+  views      Int       @default(0)
+  expiryDate DateTime?
+  status     String    @default("ACTIVE") // ACTIVE, EXPIRED, INACTIVE
+  createdAt  DateTime  @default(now())
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  eventType String   // PAGE_VIEW, PODCAST_LISTEN, LIVE_LISTEN, DOWNLOAD
+  path      String?
+  ip        String?
+  userAgent String?
+  country   String?  @default("India")
+  device    String?  @default("Mobile")
+  browser   String?  @default("Chrome")
+  timestamp DateTime @default(now())
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  userId         String?
+  userEmail      String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action         String   // LOGIN, LOGOUT, CREATE, UPDATE, DELETE, ROLE_CHANGE
+  targetResource String   // e.g. "Program:123"
+  details        String?  // JSON detail
+  ipAddress      String?
+  createdAt      DateTime @default(now())
+}
+
+model UserBookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemType  String   // PODCAST, PROGRAM, NEWS
+  itemId    String
+  createdAt DateTime @default(now())
+}
+
+model UserHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemType   String   // PODCAST, PROGRAM
+  itemId     String
+  listenedAt DateTime @default(now())
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  userId     String?
+  userName   String   @default("Guest Listener")
+  targetType String   // PODCAST, NEWS, PROGRAM
+  targetId   String
+  text       String
+  status     String   @default("APPROVED") // PENDING, APPROVED, REJECTED
+  createdAt  DateTime @default(now())
+}
+
+model Like {
+  id         String   @id @default(uuid())
+  userId     String?
+  targetType String   // PODCAST, NEWS, PROGRAM
+  targetId   String
+  createdAt  DateTime @default(now())
+}
