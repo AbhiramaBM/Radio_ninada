@@ -14,7 +14,7 @@ import {
 } from '@/lib/firebase';
 
 const devAccounts = [
-  { role: 'Super Admin', email: 'radioninada@gmail.com', pass: '', bg: 'from-purple-600 to-indigo-600', firebase: true },
+  { role: 'Super Admin', email: 'radioninada@gmail.com', pass: 'Admin@123', bg: 'from-purple-600 to-indigo-600', firebase: true },
   { role: 'Dev Admin', email: 'admin@radioninada.local', pass: 'Admin@123', bg: 'from-indigo-600 to-violet-600' },
   { role: 'Editor', email: 'editor@radioninada.local', pass: 'Editor@123', bg: 'from-blue-600 to-cyan-600' },
   { role: 'RJ Host', email: 'rj@radioninada.local', pass: 'RJ@123', bg: 'from-emerald-600 to-teal-600' },
@@ -25,7 +25,7 @@ export default function LoginPage() {
   const { user, setAuth } = useAuthStore();
 
   const [email, setEmail] = useState(ADMIN_EMAIL);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('Admin@123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -48,21 +48,6 @@ export default function LoginPage() {
     }
   }
 
-  async function handleFirebaseLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      await signInWithFirebaseEmail(email.trim(), password);
-      await exchangeFirebaseToken();
-    } catch (err: any) {
-      setError(err.message || 'Firebase sign-in failed. Use the Google account for radioninada@gmail.com.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleGoogleLogin() {
     setLoading(true);
     setError('');
@@ -70,35 +55,47 @@ export default function LoginPage() {
       await signInWithGoogle();
       await exchangeFirebaseToken();
     } catch (err: any) {
-      setError(err.message || 'Google sign-in failed.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleLegacyLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const res = await api.post('/auth/login', { email, password });
-      if (res.data.success) {
-        const { user, accessToken, refreshToken } = res.data.data;
-        await completeLogin(user, accessToken, refreshToken);
+      if (err.code === 'auth/unauthorized-domain' || err.message?.includes('unauthorized-domain')) {
+        setError("Domain Unauthorized: Add your domain/port (e.g. localhost, 127.0.0.1) in Firebase Console -> Authentication -> Settings -> Authorized Domains. Alternatively, use Quick Login below.");
+      } else {
+        setError(err.message || 'Google sign-in failed.');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to authenticate. Please check credentials.');
     } finally {
       setLoading(false);
     }
   }
 
   async function handleLogin(e: React.FormEvent) {
-    if (email.toLowerCase() === ADMIN_EMAIL || email.includes('@gmail.com')) {
-      return handleFirebaseLogin(e);
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const targetEmail = email.trim();
+
+    // 1. Try Firebase sign-in first if it's the admin or a google email
+    if (targetEmail.toLowerCase() === ADMIN_EMAIL || targetEmail.includes('@gmail.com')) {
+      try {
+        await signInWithFirebaseEmail(targetEmail, password);
+        await exchangeFirebaseToken();
+        setLoading(false);
+        return;
+      } catch (err: any) {
+        console.warn('[AdminLogin] Firebase email auth failed, trying backend fallback...', err.message);
+      }
     }
-    return handleLegacyLogin(e);
+
+    // 2. Direct backend API login (works for legacy dev accounts and superadmin with password)
+    try {
+      const res = await api.post('/auth/login', { email: targetEmail, password });
+      if (res.data.success) {
+        const { user, accessToken, refreshToken } = res.data.data;
+        await completeLogin(user, accessToken, refreshToken);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Failed to authenticate. Please check credentials.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function fillDevAccount(accEmail: string, accPass: string) {

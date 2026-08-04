@@ -61,7 +61,35 @@
         return { success: false };
       }
     },
+
+    async getEvents() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/events`);
+        return await res.json();
+      } catch (e) {
+        return { success: false };
+      }
+    },
+
+    async getGallery() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/gallery`);
+        return await res.json();
+      } catch (e) {
+        return { success: false };
+      }
+    },
+
+    async getBanners() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/banners`);
+        return await res.json();
+      } catch (e) {
+        return { success: false };
+      }
+    },
   };
 
   console.log('📡 Radio Ninada API Connector Initialized ->', API_BASE_URL);
 })();
+

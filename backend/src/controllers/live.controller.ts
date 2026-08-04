@@ -36,13 +36,13 @@ export async function updateLiveState(req: Request, res: Response, next: NextFun
       create: {
         id: 'live-config',
         isLive: isLive ?? true,
-        streamUrl: streamUrl || 'https://stream.radioninada.com/live',
-        title: title || 'Radio Ninada Live',
-        currentProgram: currentProgram || 'Morning Beats',
+        streamUrl: streamUrl || 'https://stream.zeno.fm/f3wvbbqmdg8uv',
+        title: title || 'Radio Ninada Live 90.4 FM',
+        currentProgram: currentProgram || 'Ninada Morning Buzz',
         currentRJ: currentRJ || 'RJ Ananya',
-        currentSong: currentSong || 'Radio Theme',
+        currentSong: currentSong || 'Bengaluru Beat - Acoustic Sunrise',
         bitrate: bitrate || 320,
-        quality: quality || 'HD Stereo',
+        quality: quality || 'Ultra HD 320 kbps',
         status: status || 'LIVE',
       },
     });

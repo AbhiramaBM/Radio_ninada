@@ -35,53 +35,43 @@ window.RadioPlayer = {
     },
 
     loadLiveConfig: async function () {
+        const defaultStream = 'https://stream.zeno.fm/f3wvbbqmdg8uv';
         if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.getLiveState === 'function') {
             try {
                 const liveRes = await window.RadioNinadaAPI.getLiveState();
                 if (liveRes && liveRes.success && liveRes.data) {
                     const data = liveRes.data;
-                    this.liveStreamReady = Boolean(data.isLive && this.isValidLiveStreamUrl(data.streamUrl));
-                    if (this.liveStreamReady) {
-                        this.currentTrack.url = data.streamUrl;
-                    }
-                    if (data.title) {
-                        this.currentTrack.title = data.title;
-                    }
+                    const validUrl = this.isValidLiveStreamUrl(data.streamUrl) ? data.streamUrl : defaultStream;
+                    this.liveStreamReady = true;
+                    this.currentTrack.url = validUrl;
+                    if (data.title) this.currentTrack.title = data.title;
                     if (data.currentRJ || data.currentProgram) {
-                        this.currentTrack.artist = `${data.currentRJ || 'RJ Host'} • ${data.currentProgram || 'Live Show'}`;
-                    }
-                    if (!this.liveStreamReady) {
-                        this.currentTrack.url = '';
-                        this.currentTrack.artist = data.isLive
-                            ? 'Live stream temporarily unavailable'
-                            : 'The station is currently off air';
+                        this.currentTrack.artist = `${data.currentRJ || 'RJ Ananya'} • ${data.currentProgram || 'Ninada Morning Buzz'}`;
                     }
                     this.updateUI();
+                    return;
                 }
             } catch (err) {}
         }
+        this.liveStreamReady = true;
+        this.currentTrack.url = defaultStream;
+        this.updateUI();
     },
 
     isValidLiveStreamUrl: function (url) {
         if (!url || typeof url !== 'string') return false;
         try {
             const parsed = new URL(url);
-            return /^https?:$/.test(parsed.protocol) && parsed.hostname !== 'stream.radioninada.com';
+            return /^https?:$/.test(parsed.protocol) && !url.includes('stream.radioninada.com');
         } catch (_) {
             return false;
         }
     },
 
     togglePlay: async function (url, title, artist, cover, isLive = true) {
-        const configPromise = this.init();
+        await this.init();
 
-        if (isLive && !url) {
-            await configPromise;
-            if (!this.liveStreamReady || !this.currentTrack.url) {
-                showToast('Radio Ninada live stream is not available yet. Please try again soon.');
-                return;
-            }
-        }
+        const streamTarget = url || this.currentTrack.url || 'https://stream.zeno.fm/f3wvbbqmdg8uv';
 
         if (url && url !== this.currentTrack.url) {
             this.currentTrack = {
@@ -92,48 +82,38 @@ window.RadioPlayer = {
                 isLive: isLive
             };
             this.audio.src = url;
-            this.audio.play().then(() => {
-                this.isPlaying = true;
-                this.updateUI();
-                showToast(`▶ Now Playing: ${this.currentTrack.title}`);
-            }).catch(() => {
-                this.isPlaying = false;
-                this.updateUI();
-                showToast('Unable to start this audio stream.');
-            });
-            return;
-        }
-
-        if (!this.audio.src) {
-            if (!this.currentTrack.url) {
-                showToast('Radio Ninada live stream is not available yet. Please try again soon.');
-                return;
-            }
-            this.audio.src = this.currentTrack.url;
+        } else if (!this.audio.src || this.audio.src === '' || this.audio.src !== this.currentTrack.url) {
+            this.currentTrack.url = streamTarget;
+            this.audio.src = streamTarget;
         }
 
         if (this.audio.paused) {
-            this.audio.play().then(() => {
+            try {
+                await this.audio.play();
                 this.isPlaying = true;
                 this.updateUI();
                 showToast(`▶ Streaming ${this.currentTrack.title}`);
-            }).catch(() => {
-                this.audio.src = '';
-                this.isPlaying = false;
-                this.updateUI();
-                showToast('Unable to start the Radio Ninada live stream.');
-                return;
-                this.audio.play().then(() => {
+            } catch (err) {
+                console.warn('[RadioPlayer] Primary stream unreachable, attempting fallback stream...', err);
+                const fallbackStream = 'https://stream.zeno.fm/f3wvbbqmdg8uv';
+                this.currentTrack.url = fallbackStream;
+                this.audio.src = fallbackStream;
+                try {
+                    await this.audio.play();
                     this.isPlaying = true;
                     this.updateUI();
-                    showToast(`▶ Streaming Radio Ninada 90.4 FM`);
-                }).catch(() => {});
-            });
+                    showToast('▶ Streaming Radio Ninada 90.4 FM');
+                } catch (fallbackErr) {
+                    this.isPlaying = false;
+                    this.updateUI();
+                    showToast('Unable to start live stream playback.');
+                }
+            }
         } else {
             this.audio.pause();
             this.isPlaying = false;
             this.updateUI();
-            showToast(`⏸ Stream Paused`);
+            showToast('⏸ Stream Paused');
         }
     },
 
@@ -157,6 +137,16 @@ window.RadioPlayer = {
     onPlayStateChange: function (playing) {
         this.isPlaying = playing;
         this.updateUI();
+        if (playing && window.RadioAuth && typeof window.RadioAuth.recordListeningHistory === 'function') {
+            window.RadioAuth.recordListeningHistory(this.currentTrack);
+        }
+    },
+
+    playTrack: function (url, title, artist, cover) {
+        this.togglePlay(url, title, artist, cover, false);
+        if (window.RadioAuth && typeof window.RadioAuth.recordListeningHistory === 'function') {
+            window.RadioAuth.recordListeningHistory({ title, artist, cover, url });
+        }
     },
 
     updateUI: function () {
@@ -383,68 +373,20 @@ function switchNewsTab(cat, btn) {
 // RJ Data & Modal Handler
 const rjData = {
     rj1: {
-        name: "RJ Sarah Jenkins",
-        show: "Echoes of the City",
-        timing: "Mon - Fri • 09:00 AM - 12:00 PM",
-        img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBb2VF3wCoDGHfh6TGp5p6b_jhGFpVZxO5FKyBripLrowZivmbbJRz3IeG6fIejBg2mNnh4epO43EfzM1D8qxhOfizGttDfLj8dWwMW42oLDhTf_JBug_ZeyDmYWEHegLVut6m8P3qT2zBg7_ITbLj7qGJujTd9zeeBFEMv3Gs9o9PZVp93qDphfV-7bZJccHM1mCuQNBVhbeLKsvTEBJRSVlIOnZcqDoAkbvxp5IDlkCREyBkbNqyo",
-        bio: "Sarah brings 6+ years of radio hosting experience, specializing in electronic beats, city stories, and student life banter.",
-        genre: "Electronic, Synthwave, Indie Pop"
+        name: "RJ Ananya",
+        show: "Ninada Morning Buzz",
+        timing: "Mon - Fri • 07:00 AM - 09:00 AM",
+        img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80",
+        bio: "Ananya brings 5+ years of prime-time radio hosting experience, waking up the city with energetic tunes, local stories, and community banter.",
+        genre: "Pop, Folk Fusion, Morning Melodies"
     },
     rj2: {
-        name: "RJ Marcus T",
-        show: "Sunrise Melodies",
-        timing: "Mon - Sat • 06:00 AM - 09:00 AM",
-        img: "https://lh3.googleusercontent.com/aida-public/AB6AXuACFpvBKgMslehjn0gsX5RgpP_3oKPXVAO6JweoPkIxEpwvwCvWiLz4SCBvtUuFe4g9MhjeMg8YqK0CWBVRx-d4EcMhR1af8iILh8Kyl3RF5V6mB5B9J4GmWDLW_Th9A-491XOt5T_m3L84oJi7v89i3EAarGWZP9caN-AmCpq500JBrIiqiGkpx4ugq8MJgbQx07aWP2PuvSEyjq5l28kb_sslCeLamjlh_DVrP_Qo9F6raz9IleTB",
-        bio: "Marcus wakes up the city with acoustic classics, morning news bulletins, and motivational coffee banter.",
-        genre: "Acoustic, Classic Rock, Folk"
-    },
-    rj3: {
-        name: "RJ Felix Blaze",
-        show: "The Midday Mix",
-        timing: "Mon - Fri • 12:00 PM - 03:00 PM",
-        img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDwvjeP5BqUWif1pkeErOMskk58NPsXhlBo9h5cslP0f5JY39SKecU9fwA3KIPUlhjmkAuogZU6smGBWYGUX8d7bjgOYQ-pCJxUh-I28DNV6Z8T6TDi74D-WoQso8tM7oEhBfvrA90KfDhLHmHjEZcLLO7ZtHZwgamksEdxRACIz6912xYZlcMEsrXmuJQaJydZmNU6sPyS7h1xjU8zAlulAu_TvX1Ovl-ZZnRc2q6AMCO7-8bU6juo",
-        bio: "Felix delivers high-energy pop hits, listener call-in requests, and campus celebrity trivia.",
-        genre: "Pop Hits, Dancehall, Top 40"
-    },
-    rj4: {
-        name: "RJ Elena Rose",
-        show: "Drive Time Groove",
-        timing: "Mon - Fri • 03:00 PM - 06:00 PM",
-        img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDRHlQb6PO9AAvyktSCxBOv5d7hjTQXwJ3XR8CWrOkzMOpSDyJN-kUx7R8vRELYpO9coD3_j-yQZinDu98lyvZLWt1cdKp8wq7xYM9V7V654n1AdMZPumUoNxI_mn1Luue6hsGPTR5h8REDWGntxhjexXyNgPcHZgOMbyrtIhfjZedo0wnlo3Uvco7TF8XXnMdjFABPGWfyPBVgvC3c8ZZOMFHZt6wZk-S1f1bcp9HtjiQ6aaiVqzuw",
-        bio: "Elena accompanies evening commuters with smooth jazz, lo-fi beats, and relaxing traffic updates.",
-        genre: "Nu-Jazz, Soul, Lo-Fi Chill"
-    },
-    rj5: {
-        name: "RJ David Vibe",
-        show: "Midnight Sessions",
-        timing: "Mon - Fri • 06:00 PM - 09:00 PM",
-        img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDdGetlHqpowTFO1qeKIFG-BfNxIecYMIGRDLqXTfF77IlDhnGzm4orKb-KgI7RszhIkT6OlgWAIxtn-tvk95Ms2nr9UYeVZ2f2jTRT6nH8L52Ct92U6ybti6vIn4hZ8owrnZlwMfJg9eiNytus7zlAaLQQjKrYkb5X1JLPu_aQTTdHB0QqZLkVdT14BhQMNfLahnWJHiayriAc0i-oXELUxIlCQDn3rWcbQE0F_ciRnZWfPVp3170i",
-        bio: "David curates deep house tracks and tech trends for evening music enthusiasts.",
-        genre: "Deep House, Progressive, Techno"
-    },
-    rj6: {
-        name: "RJ Clara Skye",
-        show: "The Indie Hour",
-        timing: "Mon - Sun • 09:00 PM - 12:00 AM",
-        img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDgxIorA-i-iRBlAcw6h70sZWduzBiwUUS27iT8i5g_p_iLhCaJ1biQWR7Cynw_HDlrHwFzzqG76Z3SxUNGC5x47W9EmYGICmfSvpltQiG9TMxFLvsqYfgYldtaEZs6PqYj12TeijHNZylk0UftTK7DBxrZ5xcnrLKTqjAz0GXcD-kdu2S9TcmITrwIdKeUU80S8v16lDMubA-I7g57zxyumgmxTUwjo5dN-jqpANEofak7wJyG1AYh",
-        bio: "Clara champions underground independent artists, live acoustic jams, and poetry readings.",
-        genre: "Alternative, Indie Rock, Ambient"
-    },
-    rj7: {
-        name: "RJ Ananya Rao",
-        show: "Kannada Express & Regional Beats",
-        timing: "Sat - Sun • 04:00 PM - 07:00 PM",
-        img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-        bio: "Ananya hosts regional music specials, Kannada chartbusters, and campus talent interviews.",
-        genre: "Kannada Melodies, Folk, Fusion"
-    },
-    rj8: {
-        name: "RJ Vikram Roy",
-        show: "Late Night Chill & Confessions",
-        timing: "Daily • 12:00 AM - 03:00 AM",
-        img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
-        bio: "Vikram keeps late night owls company with smooth voice dialogues, acoustic ballads, and night stories.",
-        genre: "Ambient, Soft Rock, Classical Fusion"
+        name: "RJ Vikram",
+        show: "Campus Beats & Tech Byte",
+        timing: "Mon, Wed, Fri • 05:00 PM - 06:30 PM",
+        img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+        bio: "Vikram spotlights indie rock, college fest stories, tech trends, and campus startup pioneers.",
+        genre: "Indie Rock, Tech Discussions, Youth Beats"
     }
 };
 
@@ -496,10 +438,169 @@ function openMediaPreview(title, kind) {
     showToast(kind === 'video' ? `🎬 Opening Video Short: "${title}"` : `📷 Viewing High-Res Photo: "${title}"`);
 }
 
+// Helper to resolve server upload URLs to absolute backend URLs
+function resolveServerUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('/uploads/')) {
+        return 'http://localhost:5000' + url;
+    }
+    return url;
+}
+
+// Global Dynamic Data Synchronizer
+async function loadDynamicData() {
+    if (!window.RadioNinadaAPI) return;
+
+    // 1. Synchronize RJs
+    try {
+        const rjRes = await window.RadioNinadaAPI.getRJs();
+        if (rjRes && rjRes.success && Array.isArray(rjRes.data)) {
+            const container = document.getElementById('rj-list-container');
+            if (container) {
+                for (const k in rjData) {
+                    if (k.startsWith('dyn_')) delete rjData[k];
+                }
+                if (rjRes.data.length === 0) {
+                    container.innerHTML = `<div class="text-xs text-on-surface-variant italic py-4 col-span-full">No RJ hosts listed at this moment.</div>`;
+                } else {
+                    container.innerHTML = rjRes.data.map(rj => {
+                        const rjKey = 'dyn_' + rj.id;
+                        const photoUrl = resolveServerUrl(rj.photo) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80';
+                        
+                        rjData[rjKey] = {
+                            name: rj.name,
+                            show: rj.designation || 'On-Air Host',
+                            timing: rj.status === 'ACTIVE' ? 'On Air Active' : 'Station Host',
+                            img: photoUrl,
+                            bio: rj.bio || 'Station Presenter at Radio Ninada.',
+                            genre: rj.achievements || 'Pop, Classical, Regional Beats'
+                        };
+
+                        return `
+                            <div onclick="openRjModal('${rjKey}')" class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
+                                <div class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
+                                    <img class="w-full h-full object-cover rounded-full" src="${photoUrl}" alt="${rj.name}" />
+                                </div>
+                                <span class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight truncate w-full">${rj.name}</span>
+                                <span class="text-[11px] text-on-surface-variant truncate w-full">${rj.designation || 'Host'}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Error loading RJs from API:', e);
+    }
+
+    // 2. Synchronize Podcasts
+    try {
+        const podRes = await window.RadioNinadaAPI.getPodcasts();
+        if (podRes && podRes.success && Array.isArray(podRes.data) && podRes.data.length > 0) {
+            const podGrid = document.getElementById('podcast-grid');
+            if (podGrid) {
+                podGrid.innerHTML = podRes.data.map((pod, idx) => {
+                    const coverUrl = resolveServerUrl(pod.coverUrl) || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80';
+                    const audioUrl = resolveServerUrl(pod.audioUrl) || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+                    const catClass = pod.category ? pod.category.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'talk-show';
+
+                    return `
+                        <div class="podcast-card popular recently-added ${catClass} bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all group flex flex-col justify-between">
+                            <div>
+                                <div class="relative aspect-video rounded-xl overflow-hidden mb-md">
+                                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="${coverUrl}" alt="${pod.title}" />
+                                    <span class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">${pod.category || 'Podcast'}</span>
+                                    <button onclick="RadioPlayer.playTrack('${audioUrl}', '${pod.title.replace(/'/g, "\\'")}', 'S${pod.season || 1} E${pod.episodeNumber || 1}', '${coverUrl}')"
+                                        class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
+                                        <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                                    </button>
+                                </div>
+                                <h3 class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">${pod.title}</h3>
+                                <p class="text-on-surface-variant text-xs mb-sm">S${pod.season || 1} E${pod.episodeNumber || 1} • ${pod.duration || '30:00'}</p>
+                                <p class="text-on-surface-variant text-sm line-clamp-2">${pod.description || ''}</p>
+                            </div>
+                            <div class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
+                                <span>${pod.downloads || 0} Downloads</span>
+                                <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer" onclick="showToast('Episode bookmarked!')">bookmark</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+    } catch (e) {
+        console.warn('Error loading podcasts from API:', e);
+    }
+
+    // 3. Synchronize News
+    try {
+        const newsRes = await window.RadioNinadaAPI.getNews();
+        if (newsRes && newsRes.success && Array.isArray(newsRes.data) && newsRes.data.length > 0) {
+            // Group news by category
+            newsRes.data.forEach(item => {
+                const cat = (item.category || 'Local').toLowerCase();
+                const targetCat = newsData[cat] ? cat : 'local';
+                const formattedItem = {
+                    title: item.title,
+                    date: new Date(item.createdAt).toLocaleDateString(),
+                    desc: item.content,
+                    tag: item.category || 'News'
+                };
+                if (!newsData[targetCat].some(n => n.title === item.title)) {
+                    newsData[targetCat].unshift(formattedItem);
+                }
+            });
+            renderNews('college');
+        }
+    } catch (e) {
+        console.warn('Error loading news from API:', e);
+    }
+
+    // 4. Synchronize Events
+    try {
+        const evtRes = await window.RadioNinadaAPI.getEvents();
+        if (evtRes && evtRes.success && Array.isArray(evtRes.data) && evtRes.data.length > 0) {
+            const eventsContainer = document.querySelector('#events .grid');
+            if (eventsContainer) {
+                eventsContainer.innerHTML = evtRes.data.map(evt => {
+                    const bannerUrl = resolveServerUrl(evt.banner) || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80';
+                    const dateStr = new Date(evt.eventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+                    
+                    return `
+                        <div class="bg-white rounded-2xl overflow-hidden border border-outline-variant/30 hover:shadow-2xl transition-all duration-300 group">
+                            <div class="relative h-48 overflow-hidden">
+                                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${bannerUrl}" alt="${evt.title}" />
+                                <div class="absolute top-3 right-3 bg-primary text-white font-bold text-xs px-md py-xs rounded-full shadow-md">${dateStr}</div>
+                            </div>
+                            <div class="p-md">
+                                <div class="flex items-center gap-xs text-xs text-primary font-semibold uppercase mb-xs">
+                                    <span class="material-symbols-outlined text-sm">location_on</span>
+                                    <span>${evt.location || 'Radio Ninada Studio'}</span>
+                                </div>
+                                <h3 class="font-headline-md text-[20px] font-bold mb-xs group-hover:text-primary transition-colors">${evt.title}</h3>
+                                <p class="text-on-surface-variant text-sm mb-md line-clamp-2">${evt.description || ''}</p>
+                                <button onclick="rsvpToast('${evt.title.replace(/'/g, "\\'")}')"
+                                    class="w-full bg-surface-container-low text-primary font-bold py-sm rounded-xl hover:bg-primary hover:text-white transition-all text-sm cursor-pointer">
+                                    RSVP / Get Free Pass
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+    } catch (e) {
+        console.warn('Error loading events from API:', e);
+    }
+}
+
 // Global Event Listeners & Initialization
 document.addEventListener('DOMContentLoaded', () => {
     // Initial render of college news
     renderNews('college');
+
+    // Fetch dynamic backend data
+    loadDynamicData();
 
     // Close modal when clicking backdrop
     window.addEventListener('click', (e) => {
@@ -509,3 +610,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+

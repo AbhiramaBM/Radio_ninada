@@ -5,10 +5,8 @@ import { auditLog } from '../middlewares/audit';
 
 const router = Router();
 
-router.use(authenticate);
-
-router.get('/', requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), getNotifications);
-router.post('/', requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), auditLog('CREATE', 'Notification'), createNotification);
-router.delete('/:id', requireRole(['SUPER_ADMIN', 'ADMIN']), auditLog('DELETE', 'Notification'), deleteNotification);
+router.get('/', getNotifications);
+router.post('/', authenticate, requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), auditLog('CREATE', 'Notification'), createNotification);
+router.delete('/:id', authenticate, requireRole(['SUPER_ADMIN', 'ADMIN']), auditLog('DELETE', 'Notification'), deleteNotification);
 
 export default router;

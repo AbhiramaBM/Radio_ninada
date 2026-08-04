@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Newspaper, Plus, Trash2, Edit, AlertTriangle } from 'lucide-react';
 import { api } from '@/lib/api';
+import ImageUpload from '@/components/common/ImageUpload';
 
 const newsCategories = ['College', 'Local', 'State', 'National', 'International'];
 
@@ -16,7 +17,7 @@ export default function NewsManager() {
     title: '',
     content: '',
     category: 'Local',
-    featuredImage: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80',
+    featuredImage: '',
     status: 'PUBLISHED',
   });
 
@@ -44,6 +45,13 @@ export default function NewsManager() {
     try {
       await api.post('/news', form);
       setModalOpen(false);
+      setForm({
+        title: '',
+        content: '',
+        category: 'Local',
+        featuredImage: '',
+        status: 'PUBLISHED',
+      });
       fetchNews();
     } catch (err: any) {
       if (err.response?.data?.message) {
@@ -59,6 +67,12 @@ export default function NewsManager() {
     }
   }
 
+  function resolveImage(url?: string) {
+    if (!url) return 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=400&q=80';
+    if (url.startsWith('/uploads/')) return `http://localhost:5000${url}`;
+    return url;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -69,7 +83,7 @@ export default function NewsManager() {
 
         <button
           onClick={() => { setWarning(''); setModalOpen(true); }}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center space-x-2"
+          className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center space-x-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Publish News Article</span>
@@ -86,7 +100,7 @@ export default function NewsManager() {
           {newsList.map((item) => (
             <div key={item.id} className="bg-surface border border-border rounded-xl p-4 flex space-x-4">
               <img
-                src={item.featuredImage || 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=400&q=80'}
+                src={resolveImage(item.featuredImage)}
                 alt={item.title}
                 className="w-24 h-24 rounded-lg object-cover shrink-0"
               />
@@ -110,7 +124,8 @@ export default function NewsManager() {
                   </span>
                   <button
                     onClick={() => handleDelete(item.id)}
-                    className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                    className="p-1 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
+                    title="Delete news article"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -124,7 +139,7 @@ export default function NewsManager() {
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-white">Create News Article</h3>
 
             {warning && (
@@ -135,6 +150,13 @@ export default function NewsManager() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-3">
+              <ImageUpload
+                label="Article Featured Cover Image"
+                value={form.featuredImage}
+                onChange={(url) => setForm({ ...form, featuredImage: url })}
+                placeholder="Click to upload article cover image"
+              />
+
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Headline Title</label>
                 <input
@@ -142,6 +164,7 @@ export default function NewsManager() {
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   required
+                  placeholder="e.g. Campus Cultural Fest Registrations Open Next Week"
                   className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -166,6 +189,7 @@ export default function NewsManager() {
                   onChange={(e) => setForm({ ...form, content: e.target.value })}
                   required
                   rows={4}
+                  placeholder="Full bulletin body text..."
                   className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -174,13 +198,13 @@ export default function NewsManager() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold"
+                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 cursor-pointer shadow-md"
                 >
                   Publish Article
                 </button>
@@ -192,3 +216,4 @@ export default function NewsManager() {
     </div>
   );
 }
+
