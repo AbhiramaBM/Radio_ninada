@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Plus, Search, Trash2, Edit, CheckCircle, AlertTriangle, Filter, Music } from 'lucide-react';
-import { api } from '@/lib/api';
+import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc } from 'firebase/firestore';
+import { getFirebaseDb } from '@/lib/firebase';
 
 export default function ProgramManager() {
   const [programs, setPrograms] = useState<any[]>([]);
@@ -26,24 +27,27 @@ export default function ProgramManager() {
     status: 'PUBLISHED',
   });
 
-  async function fetchPrograms() {
-    setLoading(true);
-    try {
-      const res = await api.get('/programs', {
-        params: { search: search || undefined, category: category || undefined },
-      });
-      if (res.data.success) {
-        setPrograms(res.data.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    fetchPrograms();
+    const db = getFirebaseDb();
+    const programsCollection = collection(db, 'programs');
+    const q = query(programsCollection, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const rows = snapshot.docs
+        .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+        .filter((item: any) => {
+          const matchSearch = !search || `${item.name} ${item.hostName} ${item.category}`.toLowerCase().includes(search.toLowerCase());
+          const matchCategory = !category || item.category === category;
+          return matchSearch && matchCategory;
+        });
+      setPrograms(rows as any[]);
+      setLoading(false);
+    }, (err) => {
+      console.error(err);
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, [search, category]);
 
   function openCreateModal() {
@@ -86,24 +90,27 @@ export default function ProgramManager() {
     e.preventDefault();
     setWarning('');
     try {
+      const db = getFirebaseDb();
+      const payload = {
+        ...form,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
       if (editId) {
-        await api.put(`/programs/${editId}`, form);
+        await updateDoc(doc(db, 'programs', editId), payload);
       } else {
-        await api.post('/programs', form);
+        await setDoc(doc(db, 'programs', crypto.randomUUID()), payload);
       }
       setModalOpen(false);
-      fetchPrograms();
     } catch (err: any) {
-      if (err.response?.data?.message) {
-        setWarning(err.response.data.message);
-      }
+      setWarning(err.message || 'Unable to save program.');
     }
   }
 
   async function handleDelete(id: string) {
     if (confirm('Are you sure you want to delete this program?')) {
-      await api.delete(`/programs/${id}`);
-      fetchPrograms();
+      const db = getFirebaseDb();
+      await deleteDoc(doc(db, 'programs', id));
     }
   }
 

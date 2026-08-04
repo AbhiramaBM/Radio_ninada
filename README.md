@@ -6,14 +6,37 @@ Modern digital community radio backend server and Next.js 15 Admin Dashboard pow
 
 ## Development Login Credentials
 
-The server automatically seeds the following credentials on first startup:
-
-| Role | Email | Password | Permissions Scope |
+| Role | Email | Login Method | Permissions Scope |
 | :--- | :--- | :--- | :--- |
-| **Super Admin** | `admin@radioninada.local` | `Admin@123` | Full system access, role assignment, system settings |
-| **Editor** | `editor@radioninada.local` | `Editor@123` | Content CRUD: Programs, Podcasts, News, Schedule, Events |
-| **RJ (Host)** | `rj@radioninada.local` | `RJ@123` | Live streaming control, host profile, podcast uploads |
-| **Moderator** | `mod@radioninada.local` | `Mod@123` | User registration moderation, participant approvals |
+| **Super Admin** | `radioninada@gmail.com` | Firebase (Email / Google) | Full system access, role assignment, system settings |
+| **Dev Admin** | `admin@radioninada.local` | Password `Admin@123` | Local development admin |
+| **Editor** | `editor@radioninada.local` | Password `Editor@123` | Content CRUD: Programs, Podcasts, News, Schedule, Events |
+| **RJ (Host)** | `rj@radioninada.local` | Password `RJ@123` | Live streaming control, host profile, podcast uploads |
+| **Moderator** | `mod@radioninada.local` | Password `Mod@123` | User registration moderation, participant approvals |
+
+---
+
+## Firebase Setup (Authentication + Firestore + Phone OTP)
+
+1. Create or use the Firebase project at [https://console.firebase.google.com](https://console.firebase.google.com) with **radioninada@gmail.com**.
+2. Enable **Authentication** providers:
+   - Email/Password
+   - Google (use radioninada@gmail.com as owner)
+   - Phone (for OTP login)
+3. Create a **Web app** and copy the config into:
+   - `admin/.env.local` (see `admin/.env.local.example`)
+   - `frontend/js/firebase-config.js` (`window.__FIREBASE_CONFIG__`)
+4. Create a **Service Account** key (Project Settings → Service Accounts) and add to `backend/.env`:
+   - `FIREBASE_PROJECT_ID`
+   - `FIREBASE_CLIENT_EMAIL`
+   - `FIREBASE_PRIVATE_KEY`
+5. Enable **Firestore Database** and deploy rules:
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+6. Set `ADMIN_EMAIL=radioninada@gmail.com` in backend `.env` (default).
+
+When `radioninada@gmail.com` signs in via Firebase, the backend assigns **SUPER_ADMIN** automatically.
 
 ---
 
@@ -73,6 +96,7 @@ Admin Dashboard will open on `http://localhost:3000`. Navigate to `http://localh
 | Module | Method | Endpoint | Description |
 | :--- | :--- | :--- | :--- |
 | **Auth** | `POST` | `/api/auth/login` | Authenticate user & issue JWT Access/Refresh tokens |
+| | `POST` | `/api/auth/firebase` | Verify Firebase ID token & issue JWT (admin: radioninada@gmail.com) |
 | | `POST` | `/api/auth/refresh` | Refresh expired access token |
 | | `GET` | `/api/auth/me` | Fetch active user profile |
 | **Users** | `GET/POST` | `/api/users` | List / Create user accounts |

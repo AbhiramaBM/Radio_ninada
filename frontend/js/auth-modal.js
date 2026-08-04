@@ -23,24 +23,71 @@
         },
 
         isAdminUser: function (userData) {
-            if (!userData) return false;
-            const role = String(userData.role || userData.userRole || '').toLowerCase();
-            const email = String(userData.email || userData.contact || '').toLowerCase();
-            const name = String(userData.name || '').toLowerCase();
-            return Boolean(
-                userData.isAdmin ||
-                role === 'admin' ||
-                role === 'super_admin' ||
-                role === 'superadmin' ||
-                role === 'administrator' ||
-                email === 'admin@radioninada.local' ||
-                email.includes('admin') ||
-                name.includes('admin')
-            );
+            return this.canAccessAdminDashboard(userData);
+        },
+
+        getUserRole: function (userData) {
+            const role = String(userData?.role || userData?.userRole || '').trim().toUpperCase();
+            const aliases = {
+                SUPERADMIN: 'SUPER_ADMIN',
+                ADMINISTRATOR: 'ADMIN'
+            };
+            return aliases[role] || role || 'LISTENER';
+        },
+
+        getRoleLabel: function (userData) {
+            const labels = {
+                SUPER_ADMIN: 'Super Admin',
+                ADMIN: 'Administrator',
+                EDITOR: 'Editor',
+                RJ: 'RJ Host',
+                MODERATOR: 'Moderator',
+                LISTENER: 'Listener'
+            };
+            return labels[this.getUserRole(userData)] || 'Listener';
+        },
+
+        canAccessAdminDashboard: function (userData) {
+            const role = this.getUserRole(userData);
+            return role === 'SUPER_ADMIN' || role === 'ADMIN';
+        },
+
+        useFirebase: function () {
+            return window.RadioFirebaseAuth && window.RadioFirebaseAuth.isReady();
+        },
+
+        showAuthError: function (message) {
+            if (window.showToast) window.showToast('⚠️ ' + message);
+            else alert(message);
+        },
+
+        mapFirebaseProfile: function (profile, user) {
+            const email = profile?.email || user?.email || '';
+            const phone = profile?.phone || user?.phoneNumber || '';
+            return {
+                name: profile?.name || user?.displayName || 'Radio Listener',
+                email,
+                contact: email || phone,
+                phone,
+                role: profile?.role || 'LISTENER',
+                isAdmin: profile?.isAdmin || this.isAdminUser({ email, role: profile?.role }),
+            };
         },
 
         getAdminDashboardUrl: function () {
             return window.__RADIO_ADMIN_DASHBOARD_URL__ || 'https://admin-eight-indol-30.vercel.app/dashboard';
+        },
+
+        updateRoleBasedUI: function () {
+            const canAccessDashboard = this.canAccessAdminDashboard(this.currentUser);
+            const roleLabel = this.getRoleLabel(this.currentUser);
+
+            document.querySelectorAll('[data-user-role-label]').forEach((element) => {
+                element.textContent = roleLabel;
+            });
+            document.querySelectorAll('[data-role-dashboard]').forEach((element) => {
+                element.classList.toggle('hidden', !canAccessDashboard);
+            });
         },
 
         // 1. Inject Modal HTML into Document Body if missing
@@ -310,6 +357,8 @@
                             <p id="success-message" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Welcome back to Radio Ninada. Enjoy HD music streaming.</p>
                         </div>
                     </div>
+
+                    <div id="firebase-recaptcha-container"></div>
                 </div>
             </div>
             `;
@@ -509,20 +558,103 @@
             }
         },
 
+        attemptBackendSignup: async function (name, email, password) {
+            if (this.pendingCallback) {
+                const cb = this.pendingCallback;
+                this.pendingCallback = null;
+                cb();
+            }
+
+            try {
+                const res = await fetch(`${window.__RADIO_API_BASE__ || 'http://localhost:5000/api'}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const userData = {
+                        id: data.data.user.id,
+                        email: data.data.user.email,
+                        name: name,
+                        role: data.data.user.role,
+                        avatar: data.data.user.avatar,
+                        status: data.data.user.status
+                    };
+
+                    // Store tokens
+                    localStorage.setItem('ninada_access_token', data.data.accessToken);
+                    localStorage.setItem('ninada_refresh_token', data.data.refreshToken);
+
+                    this.openModal('success');
+                    setTimeout(() => this.completeUserAuthentication(userData), 800);
+                } else {
+                    this.showAuthError(data.message || 'Sign up failed');
+                }
+            } catch (err) {
+                this.showAuthError('Network error. Please check your connection.');
+            }
+        },
+
         // 5. Form Submissions
-        handleSigninSubmit: function (e) {
+        handleSigninSubmit: async function (e) {
             e.preventDefault();
             const emailInput = document.getElementById('signin-email');
             const phoneInput = document.getElementById('signin-phone');
+            const password = document.getElementById('signin-password')?.value || '';
 
+            if (this.signinMethod === 'phone') {
+                const phone = '+91' + (phoneInput ? phoneInput.value.replace(/\D/g, '') : '');
+                if (phone.length < 13) {
+                    this.showAuthError('Enter a valid 10-digit phone number.');
+                    return;
+                }
+
+                if (this.useFirebase()) {
+                    try {
+                        this.pendingUser = { phone, contact: phone, name: 'Radio Listener' };
+                        document.getElementById('otp-destination-display').innerText = phone;
+                        await window.RadioFirebaseAuth.sendPhoneOTP(phone, 'firebase-recaptcha-container');
+                        this.openModal('otp');
+                        this.startOTPTimer();
+                        return;
+                    } catch (err) {
+                        this.showAuthError(err.message || 'Failed to send OTP.');
+                        return;
+                    }
+                }
+            } else {
+                const email = emailInput ? emailInput.value.trim() : '';
+                if (this.useFirebase()) {
+                    try {
+                        const result = await window.RadioFirebaseAuth.signInWithEmail(email, password);
+                        const userData = this.mapFirebaseProfile(result.profile, result.user);
+                        this.openModal('success');
+                        setTimeout(() => this.completeUserAuthentication(userData), 800);
+                        return;
+                    } catch (err) {
+                        this.showAuthError(err.message || 'Sign in failed.');
+                        return;
+                    }
+                }
+            }
+
+            // Backend API login (email/password for legacy accounts)
             const contactVal = this.signinMethod === 'email'
                 ? (emailInput ? emailInput.value : '')
                 : '+91 ' + (phoneInput ? phoneInput.value : '');
+            const emailForLogin = this.signinMethod === 'email' ? contactVal : null;
+            const phoneForLogin = this.signinMethod === 'phone' ? contactVal : null;
 
+            if (this.signinMethod === 'email' && emailForLogin && password) {
+                this.attemptBackendLogin(emailForLogin, password);
+                return;
+            }
+
+            // Fallback demo mode (no backend available)
             const nameFromEmail = contactVal.split('@')[0] || 'Radio Listener';
             const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
-
-            // Direct Sign In (No OTP required for Sign In)
             this.openModal('success');
             setTimeout(() => {
                 this.completeUserAuthentication({
@@ -533,32 +665,119 @@
             }, 800);
         },
 
-        handleSignupSubmit: function (e) {
+        handleSignupSubmit: async function (e) {
             e.preventDefault();
             const pass = document.getElementById('signup-password').value;
             const confirmPass = document.getElementById('signup-confirm-password').value;
 
             if (pass !== confirmPass) {
-                if (window.showToast) window.showToast("⚠️ Passwords do not match!");
-                else alert("Passwords do not match!");
+                this.showAuthError('Passwords do not match!');
                 return;
             }
 
             const name = document.getElementById('signup-name').value;
-            const contactVal = this.signupMethod === 'email'
-                ? document.getElementById('signup-email').value
-                : '+91 ' + document.getElementById('signup-phone').value;
+            const email = document.getElementById('signup-email').value.trim();
+            const phoneRaw = document.getElementById('signup-phone').value.replace(/\D/g, '');
+            const phone = '+91' + phoneRaw;
 
-            // Sign Up requires OTP Verification step!
+            if (this.signupMethod === 'phone') {
+                if (phoneRaw.length !== 10) {
+                    this.showAuthError('Enter a valid 10-digit phone number.');
+                    return;
+                }
+                if (this.useFirebase()) {
+                    try {
+                        this.pendingUser = { name, phone, contact: phone, email: '' };
+                        document.getElementById('otp-destination-display').innerText = phone;
+                        await window.RadioFirebaseAuth.sendPhoneOTP(phone, 'firebase-recaptcha-container');
+                        this.openModal('otp');
+                        this.startOTPTimer();
+                        return;
+                    } catch (err) {
+                        this.showAuthError(err.message || 'Failed to send OTP.');
+                        return;
+                    }
+                }
+            } else if (this.useFirebase()) {
+                try {
+                    const result = await window.RadioFirebaseAuth.signUpWithEmail(email, pass, name);
+                    const userData = this.mapFirebaseProfile(result.profile, result.user);
+                    this.openModal('success');
+                    setTimeout(() => this.completeUserAuthentication(userData), 800);
+                    return;
+                } catch (err) {
+                    this.showAuthError(err.message || 'Sign up failed.');
+                    return;
+                }
+            }
+
+            // Backend API signup (email/password for legacy accounts)
+            if (this.signupMethod === 'email' && email && pass) {
+                this.attemptBackendSignup(name, email, pass);
+                return;
+            }
+
+            const contactVal = this.signupMethod === 'email' ? email : phone;
             this.pendingUser = { name: name, contact: contactVal, email: contactVal };
             document.getElementById('otp-destination-display').innerText = contactVal;
             this.openModal('otp');
         },
 
-        handleGoogleAuth: function () {
+        handleGoogleAuth: async function () {
+            if (this.useFirebase()) {
+                try {
+                    const result = await window.RadioFirebaseAuth.signInWithGoogle();
+                    const userData = this.mapFirebaseProfile(result.profile, result.user);
+                    this.openModal('success');
+                    setTimeout(() => this.completeUserAuthentication(userData), 800);
+                    return;
+                } catch (err) {
+                    this.showAuthError(err.message || 'Google sign-in failed.');
+                    return;
+                }
+            }
             this.pendingUser = { name: "Alex Rivera", contact: "alex.ninada@google.com" };
             document.getElementById('otp-destination-display').innerText = "alex.ninada@google.com";
             this.openModal('otp');
+        },
+
+        attemptBackendLogin: async function (email, password) {
+            if (this.pendingCallback) {
+                const cb = this.pendingCallback;
+                this.pendingCallback = null;
+                cb();
+            }
+
+            try {
+                const res = await fetch(`${window.__RADIO_API_BASE__ || 'http://localhost:5000/api'}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const userData = {
+                        id: data.data.user.id,
+                        email: data.data.user.email,
+                        name: data.data.user.name,
+                        role: data.data.user.role,
+                        avatar: data.data.user.avatar,
+                        status: data.data.user.status
+                    };
+
+                    // Store tokens
+                    localStorage.setItem('ninada_access_token', data.data.accessToken);
+                    localStorage.setItem('ninada_refresh_token', data.data.refreshToken);
+
+                    this.openModal('success');
+                    setTimeout(() => this.completeUserAuthentication(userData), 800);
+                } else {
+                    this.showAuthError(data.message || 'Login failed');
+                }
+            } catch (err) {
+                this.showAuthError('Network error. Please check your connection.');
+            }
         },
 
         openForgotPasswordView: function () {
@@ -568,10 +787,34 @@
             this.openModal('forgot');
         },
 
-        handleForgotStep1: function (e) {
+        handleForgotStep1: async function (e) {
             e.preventDefault();
-            const contact = document.getElementById('forgot-contact').value;
+            const contact = document.getElementById('forgot-contact').value.trim();
+            if (contact.includes('@') && this.useFirebase()) {
+                try {
+                    await window.RadioFirebaseAuth.sendPasswordReset(contact);
+                    if (window.showToast) window.showToast('📧 Password reset email sent!');
+                    this.switchMainTab('signin');
+                    return;
+                } catch (err) {
+                    this.showAuthError(err.message || 'Could not send reset email.');
+                    return;
+                }
+            }
             document.getElementById('otp-destination-display').innerText = contact;
+            if (this.useFirebase() && /^[0-9]{10}$/.test(contact.replace(/\D/g, ''))) {
+                try {
+                    const phone = '+91' + contact.replace(/\D/g, '');
+                    this.pendingUser = { phone, contact: phone, name: 'Radio Listener' };
+                    await window.RadioFirebaseAuth.sendPhoneOTP(phone, 'firebase-recaptcha-container');
+                    this.openModal('otp');
+                    this.startOTPTimer();
+                    return;
+                } catch (err) {
+                    this.showAuthError(err.message || 'Failed to send OTP.');
+                    return;
+                }
+            }
             this.openModal('otp');
         },
 
@@ -620,24 +863,46 @@
             }
         },
 
-        resendOTP: function () {
+        resendOTP: async function () {
+            if (this.useFirebase() && this.pendingUser?.phone) {
+                try {
+                    await window.RadioFirebaseAuth.resendPhoneOTP(this.pendingUser.phone, 'firebase-recaptcha-container');
+                    this.startOTPTimer();
+                    if (window.showToast) window.showToast('📩 New OTP sent!');
+                    return;
+                } catch (err) {
+                    this.showAuthError(err.message || 'Failed to resend OTP.');
+                    return;
+                }
+            }
             this.startOTPTimer();
             if (window.showToast) window.showToast("📩 New 6-digit OTP code sent!");
         },
 
-        verifyOTP: function () {
+        verifyOTP: async function () {
             const boxes = document.querySelectorAll('.otp-box');
             let enteredOTP = '';
             boxes.forEach(b => enteredOTP += b.value);
 
             if (enteredOTP.length < 6) {
-                if (window.showToast) window.showToast("⚠️ Please enter complete 6-digit OTP!");
+                this.showAuthError('Please enter complete 6-digit OTP!');
                 return;
             }
 
-            // Trigger Success Screen
-            this.openModal('success');
+            if (this.useFirebase()) {
+                try {
+                    const result = await window.RadioFirebaseAuth.verifyPhoneOTP(enteredOTP, this.pendingUser || {});
+                    const userData = this.mapFirebaseProfile(result.profile, result.user);
+                    this.openModal('success');
+                    setTimeout(() => this.completeUserAuthentication(userData), 800);
+                    return;
+                } catch (err) {
+                    this.showAuthError(err.message || 'Invalid OTP. Try again.');
+                    return;
+                }
+            }
 
+            this.openModal('success');
             setTimeout(() => {
                 const user = this.pendingUser || { name: "Alex Rivera", contact: "alex.ninada@gmail.com" };
                 this.completeUserAuthentication(user);
@@ -667,7 +932,21 @@
             }
         },
 
-        checkExistingSession: function () {
+        checkExistingSession: async function () {
+            if (this.useFirebase()) {
+                window.RadioFirebaseAuth.onAuthStateChanged(async (user) => {
+                    if (!user) return;
+                    try {
+                        const session = await window.RadioFirebaseAuth.getCurrentSession();
+                        if (session?.profile) {
+                            this.currentUser = this.mapFirebaseProfile(session.profile, session.user);
+                            localStorage.setItem('radio_ninada_user', JSON.stringify(this.currentUser));
+                            this.updateNavbarUserUI();
+                        }
+                    } catch (_) {}
+                });
+            }
+
             const saved = localStorage.getItem('radio_ninada_user');
             if (saved) {
                 try {
@@ -684,6 +963,8 @@
         },
 
         updateNavbarUserUI: function () {
+            this.updateRoleBasedUI();
+
             // Find all Login buttons in headers
             const loginBtns = document.querySelectorAll('header button:has(span), header button');
             loginBtns.forEach(btn => {
@@ -692,6 +973,10 @@
                     const avatarWrapper = document.createElement('div');
                     avatarWrapper.className = 'relative flex items-center gap-2 id-user-profile-wrapper';
                     avatarWrapper.innerHTML = `
+                        <button type="button" data-role-dashboard onclick="RadioAuth.profileMenuAction('Admin Dashboard')" class="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary" aria-label="Open Admin Dashboard">
+                            <span class="material-symbols-outlined text-base">admin_panel_settings</span>
+                            <span>Admin Portal</span>
+                        </button>
                         <div onclick="RadioAuth.toggleProfileDropdown(event)" class="flex items-center gap-2 cursor-pointer group">
                             <div class="relative w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-0.5 shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
                                 <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="User Avatar" class="w-full h-full rounded-full object-cover" />
@@ -710,6 +995,7 @@
                                 <div>
                                     <h4 class="font-bold text-sm text-gray-900 dark:text-white leading-tight">${this.currentUser.name}</h4>
                                     <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate max-w-[150px]">${this.currentUser.contact}</p>
+                                    <p data-user-role-label class="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">${this.getRoleLabel(this.currentUser)}</p>
                                 </div>
                             </div>
                             <button onclick="RadioAuth.profileMenuAction('Profile')" class="profile-menu-item">
@@ -739,12 +1025,10 @@
                                 <span class="material-symbols-outlined text-base">settings</span>
                                 <span>Settings</span>
                             </button>
-                            ${this.isAdminUser(this.currentUser) ? `
-                            <button onclick="RadioAuth.profileMenuAction('Admin Dashboard')" class="profile-menu-item">
+                            <button data-role-dashboard onclick="RadioAuth.profileMenuAction('Admin Dashboard')" class="profile-menu-item hidden">
                                 <span class="material-symbols-outlined text-base text-primary">dashboard</span>
                                 <span>Admin Dashboard</span>
                             </button>
-                            ` : ''}
                             <div class="h-px bg-gray-200 dark:bg-gray-800 my-1"></div>
                             <button onclick="RadioAuth.logout()" class="profile-menu-item logout">
                                 <span class="material-symbols-outlined text-base">logout</span>
@@ -754,6 +1038,7 @@
                     `;
 
                     btn.parentNode.replaceChild(avatarWrapper, btn);
+                    this.updateRoleBasedUI();
                 }
             });
         },
@@ -771,6 +1056,10 @@
             if (menu) menu.classList.remove('open');
 
             if (actionName === 'Admin Dashboard') {
+                if (!this.canAccessAdminDashboard(this.currentUser)) {
+                    this.showAuthError('Your account does not have access to the admin dashboard.');
+                    return;
+                }
                 window.open(this.getAdminDashboardUrl(), '_blank', 'noopener,noreferrer');
                 return;
             }
@@ -780,7 +1069,10 @@
             }
         },
 
-        logout: function () {
+        logout: async function () {
+            if (this.useFirebase()) {
+                try { await window.RadioFirebaseAuth.signOut(); } catch (_) {}
+            }
             this.currentUser = null;
             localStorage.removeItem('radio_ninada_user');
             if (window.showToast) window.showToast("👋 Logged out of Radio Ninada.");

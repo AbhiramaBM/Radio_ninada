@@ -27,25 +27,29 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 
 const navigationItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: Radio },
-  { name: 'Live Radio', href: '/dashboard/live', icon: RadioTower, badge: 'LIVE' },
-  { name: 'Programs', href: '/dashboard/programs', icon: Music },
-  { name: 'Podcasts & Sessions', href: '/dashboard/podcasts', icon: Mic },
-  { name: 'Weekly Schedule', href: '/dashboard/schedule', icon: Calendar },
-  { name: 'News & Editorial', href: '/dashboard/news', icon: Newspaper },
-  { name: 'RJs & Hosts', href: '/dashboard/rjs', icon: UserCheck },
-  { name: 'Events & Tickets', href: '/dashboard/events', icon: CalendarDays },
-  { name: 'Media Gallery', href: '/dashboard/gallery', icon: ImageIcon },
+  { name: 'Dashboard', href: '/dashboard', icon: Radio, accessKey: 'dashboard' },
+  { name: 'Live Radio', href: '/dashboard/live', icon: RadioTower, badge: 'LIVE', accessKey: 'live' },
+  { name: 'Programs', href: '/dashboard/programs', icon: Music, accessKey: 'programs' },
+  { name: 'Podcasts & Sessions', href: '/dashboard/podcasts', icon: Mic, accessKey: 'podcasts' },
+  { name: 'Weekly Schedule', href: '/dashboard/schedule', icon: Calendar, accessKey: 'schedule' },
+  { name: 'News & Editorial', href: '/dashboard/news', icon: Newspaper, accessKey: 'news' },
+  { name: 'RJs & Hosts', href: '/dashboard/rjs', icon: UserCheck, accessKey: 'rj' },
+  { name: 'Events & Tickets', href: '/dashboard/events', icon: CalendarDays, accessKey: 'events' },
+  { name: 'Media Gallery', href: '/dashboard/gallery', icon: ImageIcon, accessKey: 'gallery' },
   { name: 'Server Storage Dump', href: '/dashboard/media', icon: HardDrive },
-  { name: 'User & Roles', href: '/dashboard/users', icon: Users },
-  { name: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing },
+  { name: 'User & Roles', href: '/dashboard/users', icon: Users, accessKey: 'users' },
+  { name: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing, accessKey: 'notifications' },
   { name: 'My Admin Profile', href: '/dashboard/profile', icon: User },
-  { name: 'Banners', href: '/dashboard/banners', icon: ImagePlus },
-  { name: 'Sponsors', href: '/dashboard/sponsors', icon: Handshake },
-  { name: 'Analytics & Reports', href: '/dashboard/analytics', icon: BarChart3 },
+  { name: 'Banners', href: '/dashboard/banners', icon: ImagePlus, accessKey: 'banners' },
+  { name: 'Sponsors', href: '/dashboard/sponsors', icon: Handshake, accessKey: 'sponsors' },
+  { name: 'Analytics & Reports', href: '/dashboard/analytics', icon: BarChart3, accessKey: 'analytics' },
 ];
 
-export default function AdminSidebar() {
+type AdminSidebarProps = {
+  canAccess?: Record<string, boolean>;
+};
+
+export default function AdminSidebar({ canAccess = {} }: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
 
@@ -67,7 +71,7 @@ export default function AdminSidebar() {
 
         {/* Navigation List */}
         <nav className="p-3 space-y-1">
-          {navigationItems.map((item) => {
+          {navigationItems.filter((item) => !item.accessKey || canAccess[item.accessKey] !== false).map((item) => {
             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
             const Icon = item.icon;
 

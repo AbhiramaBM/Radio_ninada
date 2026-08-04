@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { BellRing, Send, Clock, Trash2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { BellRing, Send, Trash2 } from 'lucide-react';
+import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from 'firebase/firestore';
+import { getFirebaseDb } from '@/lib/firebase';
 
 export default function NotificationManager() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -14,36 +15,35 @@ export default function NotificationManager() {
     sendImmediately: true,
   });
 
-  async function fetchNotifications() {
-    setLoading(true);
-    try {
-      const res = await api.get('/notifications');
-      if (res.data.success) {
-        setNotifications(res.data.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    fetchNotifications();
+    const db = getFirebaseDb();
+    const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setNotifications(snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })) as any[]);
+      setLoading(false);
+    }, (err) => {
+      console.error(err);
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    try {
-      await api.post('/notifications', form);
-      setForm({ title: '', message: '', audience: 'ALL', sendImmediately: true });
-      fetchNotifications();
-    } catch (err) {}
+    const db = getFirebaseDb();
+    await setDoc(doc(db, 'notifications', crypto.randomUUID()), {
+      ...form,
+      status: form.sendImmediately ? 'SENT' : 'QUEUED',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    setForm({ title: '', message: '', audience: 'ALL', sendImmediately: true });
   }
 
   async function handleDelete(id: string) {
-    await api.delete(`/notifications/${id}`);
-    fetchNotifications();
+    const db = getFirebaseDb();
+    await deleteDoc(doc(db, 'notifications', id));
   }
 
   return (

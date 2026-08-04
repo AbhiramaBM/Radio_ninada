@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Modern FM - Your Music. Your Voice. Your Radio.</title>
+    <title>Radio Ninada 90.4 FM - Your Music. Your Voice. Your Radio.</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Poppins:wght@600;700;800&amp;display=swap"
@@ -342,17 +342,15 @@
                     Broadcasted in high fidelity.
                 </p>
                 <div class="flex items-center gap-md mt-md">
-                    <button onclick="https://radio.garden/visit/ujire/1VelQ804#google_vignette" id="hero-play-btn"
+                    <button onclick="RadioPlayer.togglePlay()" id="hero-play-btn"
                         class="group relative flex items-center justify-center h-20 w-20 rounded-full bg-primary text-on-primary shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all duration-300">
                         <span id="hero-play-icon" class="material-symbols-outlined text-[40px]"
                             style="font-variation-settings: 'FILL' 1;">play_arrow</span>
                         <div class="absolute -inset-2 border-2 border-primary/20 rounded-full animate-pulse"></div>
                     </button>
-                    <div class="flex flex-col cursor-pointer" onclick="toggleAudioPlay()">
-                        <span id="hero-play-text"
-                            class="font-headline-md text-headline-md text-on-background leading-none">▶ Play Live</span>
-                        <span class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Modern FM HD Stream •
-                            98.4 FM</span>
+                    <div class="flex flex-col cursor-pointer" onclick="RadioPlayer.togglePlay()">
+                        <span data-live-title class="font-headline-md text-headline-md text-on-background leading-none">Radio Ninada 90.4 FM</span>
+                        <span data-live-description class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Loading live stream details…</span>
                     </div>
                 </div>
             </div>
@@ -407,7 +405,7 @@
                 </div>
                 <div>
                     <h3 class="font-headline-md text-headline-md font-bold">24.5k Listening Now</h3>
-                    <p class="text-on-surface-variant font-body-md text-[14px]">Active listeners tuned into Modern FM
+                    <p class="text-on-surface-variant font-body-md text-[14px]">Active listeners tuned into Radio Ninada 90.4 FM
                         Live</p>
                 </div>
             </div>
@@ -756,7 +754,7 @@
                 <div class="p-md">
                     <div class="flex items-center gap-xs text-xs text-primary font-semibold uppercase mb-xs">
                         <span class="material-symbols-outlined text-sm">mic</span>
-                        <span>Modern FM Studio A</span>
+                        <span>Radio Ninada Studio A</span>
                     </div>
                     <h3 class="font-headline-md text-[20px] font-bold mb-xs group-hover:text-primary transition-colors">
                         Radio Operator &amp; Podcast Masterclass</h3>
@@ -849,7 +847,7 @@
         <div class="mb-lg">
             <div class="flex items-center gap-xs text-primary font-label-sm uppercase tracking-widest mb-xs">
                 <span class="material-symbols-outlined text-lg">record_voice_over</span>
-                <span>The Voices of Modern FM</span>
+                <span>The Voices of Radio Ninada</span>
             </div>
             <h2 class="font-headline-lg text-headline-lg font-bold">Meet Our RJ Team</h2>
             <p class="text-on-surface-variant font-body-md">Tap any RJ to view their bio, show timings, and music
@@ -1126,7 +1124,7 @@
     <nav id="persistent-player"
         class="fixed bottom-6 left-1/2 -translate-x-1/2 flex justify-between items-center px-md py-sm z-40 w-[calc(100%-1.5rem)] max-w-4xl bg-surface/90 backdrop-blur-2xl border border-white/40 shadow-2xl shadow-primary/10 rounded-full opacity-0 translate-y-10 pointer-events-none invisible transition-all duration-350 ease-in-out">
         <div class="flex justify-between items-center w-full">
-            <button onclick="toggleAudioPlay()" aria-label="Toggle Audio Playback"
+            <button onclick="RadioPlayer.togglePlay()" aria-label="Toggle Audio Playback"
                 class="flex items-center gap-sm text-left px-2 focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-full">
                 <div
                     class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-md shrink-0">
@@ -1134,8 +1132,8 @@
                         style="font-variation-settings: 'FILL' 1;">play_arrow</span>
                 </div>
                 <div>
-                    <p class="font-bold text-xs leading-none text-on-background">Modern FM Live</p>
-                    <p class="text-[10px] text-on-surface-variant mt-0.5">Echoes of the City</p>
+                    <p data-live-title class="font-bold text-xs leading-none text-on-background">Radio Ninada 90.4 FM</p>
+                    <p data-live-description class="text-[10px] text-on-surface-variant mt-0.5">Loading live stream details…</p>
                 </div>
             </button>
             <div class="flex items-center gap-xs sm:gap-md">
@@ -1167,7 +1165,7 @@
     <footer class="w-full py-xl bg-surface-container-lowest border-t border-outline-variant pb-28">
         <div class="max-w-container-max mx-auto px-md lg:px-xl grid grid-cols-1 md:grid-cols-4 gap-gutter">
             <div class="col-span-1">
-                <span class="font-headline-md text-headline-md font-bold text-primary mb-base block">Modern FM</span>
+                <span class="font-headline-md text-headline-md font-bold text-primary mb-base block">Radio Ninada 90.4 FM</span>
                 <p class="text-on-surface-variant font-body-md text-body-md mb-md">Elevating your auditory experience
                     with curated live sessions, campus news, and premium audio content.</p>
                 <div class="flex gap-md">
@@ -1219,7 +1217,7 @@
         </div>
         <div
             class="max-w-container-max mx-auto px-md lg:px-xl mt-xl pt-lg border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-md">
-            <p class="text-on-surface-variant text-[12px]">© 2026 Modern FM Radio Platform. All rights reserved.</p>
+            <p class="text-on-surface-variant text-[12px]">© 2026 Radio Ninada 90.4 FM. All rights reserved.</p>
             <div class="flex gap-lg">
                 <a class="text-on-surface-variant hover:text-primary text-[12px]" href="#">Facebook</a>
                 <a class="text-on-surface-variant hover:text-primary text-[12px]" href="#">Instagram</a>
@@ -1253,7 +1251,7 @@
                 <p><strong class="text-on-background">Favorite Genres:</strong> <span id="modal-rj-genre"></span></p>
             </div>
             <div class="flex gap-md">
-                <button onclick="closeRjModal(); toggleAudioPlay();"
+                <button onclick="closeRjModal(); RadioPlayer.togglePlay();"
                     class="flex-1 bg-primary text-white font-bold py-sm rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-xs">
                     <span class="material-symbols-outlined text-lg">play_circle</span> Listen Live
                 </button>
@@ -1269,6 +1267,12 @@
     </div>
 
     <!-- JavaScript Logic -->
+    <script src="js/firebase-config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-auth-service.js"></script>
+    <script src="js/api-client.js"></script>
     <script src="js/app.js"></script>
     <script src="js/auth-modal.js"></script>
 </body>

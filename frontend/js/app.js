@@ -1,16 +1,287 @@
-// Modern FM - Home Page Interactivity
+// Real HTML5 Audio Engine & Global Media Controller
+window.RadioPlayer = {
+    audio: null,
+    isPlaying: false,
+    liveConfigPromise: null,
+    liveStreamReady: false,
+    currentTrack: {
+        url: '',
+        title: 'Radio Ninada Live',
+        artist: 'RJ Sarah Jenkins • Morning Vibe',
+        cover: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=400&q=80',
+        isLive: true
+    },
+    volume: 0.8,
 
-// Audio Play State Simulation
-let isPlaying = false;
+    init: function () {
+        if (!this.audio) {
+            this.audio = new Audio();
+            this.audio.preload = 'none';
+            this.audio.volume = this.volume;
+
+            this.audio.addEventListener('play', () => this.onPlayStateChange(true));
+            this.audio.addEventListener('pause', () => this.onPlayStateChange(false));
+            this.audio.addEventListener('ended', () => this.onPlayStateChange(false));
+            this.audio.addEventListener('timeupdate', () => this.updateTimeProgress());
+            this.audio.addEventListener('error', () => {
+                this.isPlaying = false;
+                this.updateUI();
+                showToast('The live stream could not be played. Please try again shortly.');
+            });
+        }
+        this.injectStickyPlayerBar();
+        this.liveConfigPromise = this.liveConfigPromise || this.loadLiveConfig();
+        return this.liveConfigPromise;
+    },
+
+    loadLiveConfig: async function () {
+        if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.getLiveState === 'function') {
+            try {
+                const liveRes = await window.RadioNinadaAPI.getLiveState();
+                if (liveRes && liveRes.success && liveRes.data) {
+                    const data = liveRes.data;
+                    this.liveStreamReady = Boolean(data.isLive && this.isValidLiveStreamUrl(data.streamUrl));
+                    if (this.liveStreamReady) {
+                        this.currentTrack.url = data.streamUrl;
+                    }
+                    if (data.title) {
+                        this.currentTrack.title = data.title;
+                    }
+                    if (data.currentRJ || data.currentProgram) {
+                        this.currentTrack.artist = `${data.currentRJ || 'RJ Host'} • ${data.currentProgram || 'Live Show'}`;
+                    }
+                    if (!this.liveStreamReady) {
+                        this.currentTrack.url = '';
+                        this.currentTrack.artist = data.isLive
+                            ? 'Live stream temporarily unavailable'
+                            : 'The station is currently off air';
+                    }
+                    this.updateUI();
+                }
+            } catch (err) {}
+        }
+    },
+
+    isValidLiveStreamUrl: function (url) {
+        if (!url || typeof url !== 'string') return false;
+        try {
+            const parsed = new URL(url);
+            return /^https?:$/.test(parsed.protocol) && parsed.hostname !== 'stream.radioninada.com';
+        } catch (_) {
+            return false;
+        }
+    },
+
+    togglePlay: async function (url, title, artist, cover, isLive = true) {
+        const configPromise = this.init();
+
+        if (isLive && !url) {
+            await configPromise;
+            if (!this.liveStreamReady || !this.currentTrack.url) {
+                showToast('Radio Ninada live stream is not available yet. Please try again soon.');
+                return;
+            }
+        }
+
+        if (url && url !== this.currentTrack.url) {
+            this.currentTrack = {
+                url: url,
+                title: title || 'Radio Ninada 90.4 FM',
+                artist: artist || 'Radio Ninada RJ',
+                cover: cover || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=400&q=80',
+                isLive: isLive
+            };
+            this.audio.src = url;
+            this.audio.play().then(() => {
+                this.isPlaying = true;
+                this.updateUI();
+                showToast(`▶ Now Playing: ${this.currentTrack.title}`);
+            }).catch(() => {
+                this.isPlaying = false;
+                this.updateUI();
+                showToast('Unable to start this audio stream.');
+            });
+            return;
+        }
+
+        if (!this.audio.src) {
+            if (!this.currentTrack.url) {
+                showToast('Radio Ninada live stream is not available yet. Please try again soon.');
+                return;
+            }
+            this.audio.src = this.currentTrack.url;
+        }
+
+        if (this.audio.paused) {
+            this.audio.play().then(() => {
+                this.isPlaying = true;
+                this.updateUI();
+                showToast(`▶ Streaming ${this.currentTrack.title}`);
+            }).catch(() => {
+                this.audio.src = '';
+                this.isPlaying = false;
+                this.updateUI();
+                showToast('Unable to start the Radio Ninada live stream.');
+                return;
+                this.audio.play().then(() => {
+                    this.isPlaying = true;
+                    this.updateUI();
+                    showToast(`▶ Streaming Radio Ninada 90.4 FM`);
+                }).catch(() => {});
+            });
+        } else {
+            this.audio.pause();
+            this.isPlaying = false;
+            this.updateUI();
+            showToast(`⏸ Stream Paused`);
+        }
+    },
+
+    playTrack: function(url, title, artist, cover) {
+        this.togglePlay(url, title, artist, cover, false);
+    },
+
+    setVolume: function (val) {
+        this.volume = parseFloat(val);
+        if (this.audio) this.audio.volume = this.volume;
+        const volSlider = document.getElementById('sticky-vol-slider');
+        if (volSlider) volSlider.value = this.volume;
+    },
+
+    seek: function (percent) {
+        if (this.audio && this.audio.duration && !isNaN(this.audio.duration)) {
+            this.audio.currentTime = (percent / 100) * this.audio.duration;
+        }
+    },
+
+    onPlayStateChange: function (playing) {
+        this.isPlaying = playing;
+        this.updateUI();
+    },
+
+    updateUI: function () {
+        const iconName = this.isPlaying ? 'pause' : 'play_arrow';
+
+        const heroIcon = document.getElementById('hero-play-icon');
+        if (heroIcon) heroIcon.innerText = iconName;
+
+        const livePagePlayButtons = document.querySelectorAll('.glass-player button span.material-symbols-outlined, #live-main-play-icon');
+        livePagePlayButtons.forEach(icon => {
+            if (icon) icon.innerText = iconName;
+        });
+
+        document.querySelectorAll('.equalizer-bar').forEach(bar => {
+            if (this.isPlaying) {
+                bar.style.animationPlayState = 'running';
+                bar.classList.add('active');
+            } else {
+                bar.style.animationPlayState = 'paused';
+                bar.classList.remove('active');
+            }
+        });
+
+        const stickyBar = document.getElementById('sticky-player-bar');
+        if (stickyBar) {
+            if (this.currentTrack.title) {
+                stickyBar.classList.remove('translate-y-full', 'opacity-0');
+            }
+            const stickyPlayIcon = document.getElementById('sticky-play-icon');
+            if (stickyPlayIcon) stickyPlayIcon.innerText = iconName;
+
+            const stickyTitle = document.getElementById('sticky-track-title');
+            if (stickyTitle) stickyTitle.innerText = this.currentTrack.title;
+
+            const stickyArtist = document.getElementById('sticky-track-artist');
+            if (stickyArtist) stickyArtist.innerText = this.currentTrack.artist;
+
+            document.querySelectorAll('[data-live-title]').forEach((element) => {
+                element.textContent = this.currentTrack.title;
+            });
+            document.querySelectorAll('[data-live-description]').forEach((element) => {
+                element.textContent = this.currentTrack.artist;
+            });
+
+            const stickyCover = document.getElementById('sticky-track-cover');
+            if (stickyCover && this.currentTrack.cover) stickyCover.src = this.currentTrack.cover;
+        }
+    },
+
+    updateTimeProgress: function () {
+        if (!this.audio) return;
+        const curTime = this.audio.currentTime || 0;
+        const dur = this.audio.duration || 0;
+
+        const curTimeStr = this.formatTime(curTime);
+        const durStr = (!isNaN(dur) && dur > 0) ? this.formatTime(dur) : 'LIVE';
+
+        const timeCurEl = document.getElementById('sticky-time-current');
+        const timeDurEl = document.getElementById('sticky-time-duration');
+        const sliderEl = document.getElementById('sticky-progress-slider');
+
+        if (timeCurEl) timeCurEl.innerText = curTimeStr;
+        if (timeDurEl) timeDurEl.innerText = durStr;
+        if (sliderEl && dur > 0) {
+            sliderEl.value = (curTime / dur) * 100;
+        }
+
+        const liveProgressBar = document.querySelector('.glass-player .bg-primary');
+        if (liveProgressBar && dur > 0) {
+            liveProgressBar.style.width = `${(curTime / dur) * 100}%`;
+        }
+    },
+
+    formatTime: function (secs) {
+        const m = Math.floor(secs / 60);
+        const s = Math.floor(secs % 60);
+        return `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+    },
+
+    injectStickyPlayerBar: function () {
+        if (document.getElementById('sticky-player-bar')) return;
+
+        const barHTML = `
+        <div id="sticky-player-bar" class="fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-xl border-t border-outline-variant/30 shadow-2xl px-4 py-3 transition-all duration-300 transform translate-y-full opacity-0">
+            <div class="max-w-container-max mx-auto flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 w-1/4 min-w-[200px]">
+                    <img id="sticky-track-cover" class="w-12 h-12 rounded-xl object-cover shadow-md border border-white/20 shrink-0" src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=150&q=80" alt="Cover" />
+                    <div class="truncate">
+                        <h4 id="sticky-track-title" class="font-bold text-sm text-on-background truncate">Radio Ninada 90.4 FM Live</h4>
+                        <p id="sticky-track-artist" class="text-xs text-on-surface-variant truncate">RJ Sarah Jenkins • Morning Vibe</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center gap-1 w-2/4 max-w-md">
+                    <div class="flex items-center gap-4">
+                        <button onclick="RadioPlayer.seek(0)" class="text-on-surface-variant hover:text-primary transition-colors" title="Restart">
+                            <span class="material-symbols-outlined text-xl">replay_10</span>
+                        </button>
+                        <button onclick="RadioPlayer.togglePlay()" class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all">
+                            <span id="sticky-play-icon" class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </button>
+                        <button onclick="RadioPlayer.seek(100)" class="text-on-surface-variant hover:text-primary transition-colors" title="Forward">
+                            <span class="material-symbols-outlined text-xl">forward_10</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 w-full text-[10px] text-on-surface-variant font-mono">
+                        <span id="sticky-time-current">00:00</span>
+                        <input id="sticky-progress-slider" type="range" min="0" max="100" value="0" oninput="RadioPlayer.seek(this.value)" class="w-full h-1 bg-outline-variant/40 rounded-lg appearance-none cursor-pointer accent-primary" />
+                        <span id="sticky-time-duration">LIVE</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 w-1/4 min-w-[140px]">
+                    <span class="material-symbols-outlined text-sm text-on-surface-variant">volume_up</span>
+                    <input id="sticky-vol-slider" type="range" min="0" max="1" step="0.05" value="0.8" oninput="RadioPlayer.setVolume(this.value)" class="w-20 h-1 bg-outline-variant/40 rounded-lg appearance-none cursor-pointer accent-primary" />
+                </div>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', barHTML);
+    }
+};
+
 function toggleAudioPlay() {
-    isPlaying = !isPlaying;
-    const heroIcon = document.getElementById('hero-play-icon');
-    const navIcon = document.getElementById('nav-play-icon');
-    const iconName = isPlaying ? 'pause' : 'play_arrow';
-    if (heroIcon) heroIcon.innerText = iconName;
-    if (navIcon) navIcon.innerText = iconName;
-
-    showToast(isPlaying ? "▶ Streaming Modern FM 98.4 Live HD" : "⏸ Stream Paused");
+    RadioPlayer.togglePlay();
 }
 
 // Toast Notification Utility

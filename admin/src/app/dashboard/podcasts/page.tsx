@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Mic, Download, Plus, Trash2, Edit, Play, AlertTriangle, Upload, Link } from 'lucide-react';
-import { api } from '@/lib/api';
+import { Mic, Download, Plus, Trash2, Play, AlertTriangle, Upload, Link } from 'lucide-react';
+import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from 'firebase/firestore';
+import { getFirebaseDb, uploadFileToStorage } from '@/lib/firebase';
 
 export default function PodcastManager() {
   const [podcasts, setPodcasts] = useState<any[]>([]);
@@ -29,22 +30,18 @@ export default function PodcastManager() {
     visibility: 'PUBLIC',
   });
 
-  async function fetchPodcasts() {
-    setLoading(true);
-    try {
-      const res = await api.get('/podcasts');
-      if (res.data.success) {
-        setPodcasts(res.data.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    fetchPodcasts();
+    const db = getFirebaseDb();
+    const q = query(collection(db, 'podcasts'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setPodcasts(snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })) as any[]);
+      setLoading(false);
+    }, (err) => {
+      console.error(err);
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -53,42 +50,51 @@ export default function PodcastManager() {
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append('title', form.title);
-      formData.append('description', form.description);
-      formData.append('category', form.category);
-      formData.append('season', String(form.season));
-      formData.append('episodeNumber', String(form.episodeNumber));
-      formData.append('duration', form.duration);
-      formData.append('visibility', form.visibility);
-      formData.append('featured', String(form.featured));
+      let audioUrl = form.audioUrl;
+      let coverUrl = form.coverUrl;
 
       if (sourceType === 'file' && audioFile) {
-        formData.append('audio', audioFile);
-      } else if (form.audioUrl) {
-        formData.append('audioUrl', form.audioUrl);
+        audioUrl = await uploadFileToStorage(audioFile, 'podcasts/audio');
       }
 
       if (coverFile) {
-        formData.append('cover', coverFile);
-      } else if (form.coverUrl) {
-        formData.append('coverUrl', form.coverUrl);
+        coverUrl = await uploadFileToStorage(coverFile, 'podcasts/covers');
       }
 
-      await api.post('/podcasts', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      const db = getFirebaseDb();
+      await setDoc(doc(db, 'podcasts', crypto.randomUUID()), {
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        season: form.season,
+        episodeNumber: form.episodeNumber,
+        duration: form.duration,
+        audioUrl,
+        coverUrl,
+        featured: form.featured,
+        visibility: form.visibility,
+        downloads: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
 
       setModalOpen(false);
       setAudioFile(null);
       setCoverFile(null);
-      fetchPodcasts();
+      setForm({
+        title: '',
+        description: '',
+        category: 'Talk Show',
+        season: 1,
+        episodeNumber: 1,
+        duration: '35:00',
+        audioUrl: '',
+        coverUrl: '',
+        featured: false,
+        visibility: 'PUBLIC',
+      });
     } catch (err: any) {
-      if (err.response?.data?.message) {
-        setWarning(err.response.data.message);
-      } else {
-        setWarning('Error uploading session. Please verify file format and size.');
-      }
+      setWarning(err.message || 'Error uploading session. Please verify file format and size.');
     } finally {
       setSubmitting(false);
     }
@@ -96,16 +102,13 @@ export default function PodcastManager() {
 
   async function handleDelete(id: string) {
     if (confirm('Delete this recorded session / podcast episode?')) {
-      await api.delete(`/podcasts/${id}`);
-      fetchPodcasts();
+      const db = getFirebaseDb();
+      await deleteDoc(doc(db, 'podcasts', id));
     }
   }
 
   function resolveAudioUrl(url: string) {
     if (!url) return '';
-    if (url.startsWith('/uploads/')) {
-      return `http://localhost:5000${url}`;
-    }
     return url;
   }
 

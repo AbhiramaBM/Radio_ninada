@@ -18,6 +18,13 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       return res.status(403).json({ success: false, message: `Account is ${user.status.toLowerCase()}. Please contact system admin.` });
     }
 
+    if (!user.password) {
+      return res.status(401).json({
+        success: false,
+        message: 'This account uses Firebase sign-in. Please log in with Google, email OTP, or phone OTP.',
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -116,6 +123,13 @@ export async function changePassword(req: AuthenticatedRequest, res: Response, n
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password change is managed through Firebase for this account.',
+      });
     }
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);
