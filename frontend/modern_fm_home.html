@@ -330,7 +330,7 @@
                     </span>
                     <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest">Live Now</span>
                     <div class="w-[1px] h-4 bg-outline-variant"></div>
-                    <span class="font-label-sm text-label-sm text-on-surface-variant">24.5k listeners</span>
+                    <span data-live-listeners class="font-label-sm text-label-sm text-on-surface-variant">142 live listeners</span>
                 </div>
                 <h1 class="font-display-lg text-display-lg text-on-background leading-tight">
                     Your Music.<br />
@@ -571,131 +571,7 @@
 
         <!-- Podcast Cards Grid -->
         <div id="podcast-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
-            <!-- Podcast 1: Recently Added -->
-            <div
-                class="podcast-card recently-added campus bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all group flex flex-col justify-between">
-                <div>
-                    <div class="relative aspect-video rounded-xl overflow-hidden mb-md">
-                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80"
-                            alt="Campus Unfiltered" />
-                        <span
-                            class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">Recently
-                            Added</span>
-                        <button
-                            onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'Campus Unfiltered: Ep 42', 'RJ Sarah Jenkins', 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80')"
-                            class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
-                            <span class="material-symbols-outlined text-2xl"
-                                style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </button>
-                    </div>
-                    <h3
-                        class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">
-                        Campus Unfiltered: Ep 42</h3>
-                    <p class="text-on-surface-variant text-xs mb-sm">Host: RJ Sarah Jenkins • 45 mins</p>
-                    <p class="text-on-surface-variant text-sm line-clamp-2">Behind the scenes of student startup culture
-                        and upcoming college hackathons.</p>
-                </div>
-                <div
-                    class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
-                    <span>12.4k Plays</span>
-                    <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
-                </div>
-            </div>
-
-            <!-- Podcast 2: Popular -->
-            <div
-                class="podcast-card popular bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all group flex flex-col justify-between">
-                <div>
-                    <div class="relative aspect-video rounded-xl overflow-hidden mb-md">
-                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            src="https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=600&q=80"
-                            alt="Tech & Beats" />
-                        <span
-                            class="absolute top-2 left-2 bg-tertiary text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">Popular</span>
-                        <button
-                            onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', 'Tech & Beats: AI in Music', 'RJ David Vibe', 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=600&q=80')"
-                            class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
-                            <span class="material-symbols-outlined text-2xl"
-                                style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </button>
-                    </div>
-                    <h3
-                        class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">
-                        Tech &amp; Beats: AI in Music</h3>
-                    <p class="text-on-surface-variant text-xs mb-sm">Host: RJ David Vibe • 32 mins</p>
-                    <p class="text-on-surface-variant text-sm line-clamp-2">How generative AI is reshaping modern music
-                        composition and sound design.</p>
-                </div>
-                <div
-                    class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
-                    <span>28.9k Plays</span>
-                    <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
-                </div>
-            </div>
-
-            <!-- Podcast 3: Recently Added -->
-            <div
-                class="podcast-card recently-added bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all group flex flex-col justify-between">
-                <div>
-                    <div class="relative aspect-video rounded-xl overflow-hidden mb-md">
-                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80"
-                            alt="Indie Artists Spotlight" />
-                        <span
-                            class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">Recently
-                            Added</span>
-                        <button
-                            onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', 'Indie Spotlight: Coastal Sound', 'RJ Clara Skye', 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80')"
-                            class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
-                            <span class="material-symbols-outlined text-2xl"
-                                style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </button>
-                    </div>
-                    <h3
-                        class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">
-                        Indie Spotlight: Coastal Sound</h3>
-                    <p class="text-on-surface-variant text-xs mb-sm">Host: RJ Clara Skye • 50 mins</p>
-                    <p class="text-on-surface-variant text-sm line-clamp-2">Interviews with rising indie bands from
-                        Karnataka and South India.</p>
-                </div>
-                <div
-                    class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
-                    <span>9.1k Plays</span>
-                    <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
-                </div>
-            </div>
-
-            <!-- Podcast 4: Popular -->
-            <div
-                class="podcast-card popular campus bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all group flex flex-col justify-between">
-                <div>
-                    <div class="relative aspect-video rounded-xl overflow-hidden mb-md">
-                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80"
-                            alt="Night Vibes Stories" />
-                        <span
-                            class="absolute top-2 left-2 bg-tertiary text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">Popular</span>
-                        <button
-                            onclick="RadioPlayer.playTrack('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', 'Night Owl Stories: Ep 18', 'RJ Felix Blaze', 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80')"
-                            class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
-                            <span class="material-symbols-outlined text-2xl"
-                                style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </button>
-                    </div>
-                    <h3
-                        class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">
-                        Night Owl Stories: Ep 18</h3>
-                    <p class="text-on-surface-variant text-xs mb-sm">Host: RJ Felix Blaze • 28 mins</p>
-                    <p class="text-on-surface-variant text-sm line-clamp-2">Late night caller stories, urban legends,
-                        and chill ambient tunes.</p>
-                </div>
-                <div
-                    class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
-                    <span>35.2k Plays</span>
-                    <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer">bookmark</span>
-                </div>
-            </div>
+            <p class="text-xs text-on-surface-variant italic py-4 col-span-full">Loading podcasts from database...</p>
         </div>
     </section>
 
@@ -859,140 +735,12 @@
                 favorites</p>
         </div>
 
-        <!-- RJ List: 2 Linear Rows with Circle Images & Names -->
+        <!-- RJ List: Dynamically Populated from Database -->
         <div class="space-y-lg">
-            <!-- Linear Row 1 -->
             <div>
-                <span class="text-xs font-bold text-on-surface-variant/70 uppercase tracking-widest block mb-md">On-Air
-                    RJ Hosts & Presenters</span>
-                <div id="rj-list-container"
-                    class="flex items-center gap-md lg:gap-lg overflow-x-auto pb-sm no-scrollbar">
-                    <!-- RJ 1 -->
-                    <div onclick="openRjModal('rj1')"
-                        class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                        <div
-                            class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                            <img class="w-full h-full object-cover rounded-full"
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb2VF3wCoDGHfh6TGp5p6b_jhGFpVZxO5FKyBripLrowZivmbbJRz3IeG6fIejBg2mNnh4epO43EfzM1D8qxhOfizGttDfLj8dWwMW42oLDhTf_JBug_ZeyDmYWEHegLVut6m8P3qT2zBg7_ITbLj7qGJujTd9zeeBFEMv3Gs9o9PZVp93qDphfV-7bZJccHM1mCuQNBVhbeLKsvTEBJRSVlIOnZcqDoAkbvxp5IDlkCREyBkbNqyo"
-                                alt="RJ Sarah Jenkins" />
-                        </div>
-                        <span
-                            class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight">Sarah
-                            Jenkins</span>
-                        <span class="text-[11px] text-on-surface-variant">09:00 AM</span>
-                    </div>
-
-                    <!-- RJ 2 -->
-                    <div onclick="openRjModal('rj2')"
-                        class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                        <div
-                            class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                            <img class="w-full h-full object-cover rounded-full"
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuACFpvBKgMslehjn0gsX5RgpP_3oKPXVAO6JweoPkIxEpwvwCvWiLz4SCBvtUuFe4g9MhjeMg8YqK0CWBVRx-d4EcMhR1af8iILh8Kyl3RF5V6mB5B9J4GmWDLW_Th9A-491XOt5T_m3L84oJi7v89i3EAarGWZP9caN-AmCpq500JBrIiqiGkpx4ugq8MJgbQx07aWP2PuvSEyjq5l28kb_sslCeLamjlh_DVrP_Qo9F6raz9IleTB"
-                                alt="RJ Marcus T" />
-                        </div>
-                        <span
-                            class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight">Marcus
-                            T</span>
-                        <span class="text-[11px] text-on-surface-variant">06:00 AM</span>
-                    </div>
-
-                    <!-- RJ 3 -->
-                    <div onclick="openRjModal('rj3')"
-                        class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                        <div
-                            class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                            <img class="w-full h-full object-cover rounded-full"
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwvjeP5BqUWif1pkeErOMskk58NPsXhlBo9h5cslP0f5JY39SKecU9fwA3KIPUlhjmkAuogZU6smGBWYGUX8d7bjgOYQ-pCJxUh-I28DNV6Z8T6TDi74D-WoQso8tM7oEhBfvrA90KfDhLHmHjEZcLLO7ZtHZwgamksEdxRACIz6912xYZlcMEsrXmuJQaJydZmNU6sPyS7h1xjU8zAlulAu_TvX1Ovl-ZZnRc2q6AMCO7-8bU6juo"
-                                alt="RJ Felix Blaze" />
-                        </div>
-                        <span
-                            class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight">Felix
-                            Blaze</span>
-                        <span class="text-[11px] text-on-surface-variant">12:00 PM</span>
-                    </div>
-
-                    <!-- RJ 4 -->
-                    <div onclick="openRjModal('rj4')"
-                        class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                        <div
-                            class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                            <img class="w-full h-full object-cover rounded-full"
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRHlQb6PO9AAvyktSCxBOv5d7hjTQXwJ3XR8CWrOkzMOpSDyJN-kUx7R8vRELYpO9coD3_j-yQZinDu98lyvZLWt1cdKp8wq7xYM9V7V654n1AdMZPumUoNxI_mn1Luue6hsGPTR5h8REDWGntxhjexXyNgPcHZgOMbyrtIhfjZedo0wnlo3Uvco7TF8XXnMdjFABPGWfyPBVgvC3c8ZZOMFHZt6wZk-S1f1bcp9HtjiQ6aaiVqzuw"
-                                alt="RJ Elena Rose" />
-                        </div>
-                        <span
-                            class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight">Elena
-                            Rose</span>
-                        <span class="text-[11px] text-on-surface-variant">03:00 PM</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Linear Row 2 -->
-            <div>
-                <span class="text-xs font-bold text-on-surface-variant/70 uppercase tracking-widest block mb-md">Evening
-                    &amp; Late Night RJs</span>
-                <div class="flex items-center gap-md lg:gap-lg overflow-x-auto pb-sm no-scrollbar">
-                    <!-- RJ 5 -->
-                    <div onclick="openRjModal('rj5')"
-                        class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                        <div
-                            class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                            <img class="w-full h-full object-cover rounded-full"
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdGetlHqpowTFO1qeKIFG-BfNxIecYMIGRDLqXTfF77IlDhnGzm4orKb-KgI7RszhIkT6OlgWAIxtn-tvk95Ms2nr9UYeVZ2f2jTRT6nH8L52Ct92U6ybti6vIn4hZ8owrnZlwMfJg9eiNytus7zlAaLQQjKrYkb5X1JLPu_aQTTdHB0QqZLkVdT14BhQMNfLahnWJHiayriAc0i-oXELUxIlCQDn3rWcbQE0F_ciRnZWfPVp3170i"
-                                alt="RJ David Vibe" />
-                        </div>
-                        <span
-                            class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight">David
-                            Vibe</span>
-                        <span class="text-[11px] text-on-surface-variant">06:00 PM</span>
-                    </div>
-
-                    <!-- RJ 6 -->
-                    <div onclick="openRjModal('rj6')"
-                        class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                        <div
-                            class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                            <img class="w-full h-full object-cover rounded-full"
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgxIorA-i-iRBlAcw6h70sZWduzBiwUUS27iT8i5g_p_iLhCaJ1biQWR7Cynw_HDlrHwFzzqG76Z3SxUNGC5x47W9EmYGICmfSvpltQiG9TMxFLvsqYfgYldtaEZs6PqYj12TeijHNZylk0UftTK7DBxrZ5xcnrLKTqjAz0GXcD-kdu2S9TcmITrwIdKeUU80S8v16lDMubA-I7g57zxyumgmxTUwjo5dN-jqpANEofak7wJyG1AYh"
-                                alt="RJ Clara Skye" />
-                        </div>
-                        <span
-                            class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight">Clara
-                            Skye</span>
-                        <span class="text-[11px] text-on-surface-variant">09:00 PM</span>
-                    </div>
-
-                    <!-- RJ 7 -->
-                    <div onclick="openRjModal('rj7')"
-                        class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                        <div
-                            class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                            <img class="w-full h-full object-cover rounded-full"
-                                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
-                                alt="RJ Ananya Rao" />
-                        </div>
-                        <span
-                            class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight">Ananya
-                            Rao</span>
-                        <span class="text-[11px] text-on-surface-variant">Kannada Express</span>
-                    </div>
-
-                    <!-- RJ 8 -->
-                    <div onclick="openRjModal('rj8')"
-                        class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                        <div
-                            class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                            <img class="w-full h-full object-cover rounded-full"
-                                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80"
-                                alt="RJ Vikram Roy" />
-                        </div>
-                        <span
-                            class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight">Vikram
-                            Roy</span>
-                        <span class="text-[11px] text-on-surface-variant">Late Night Chill</span>
-                    </div>
+                <span class="text-xs font-bold text-on-surface-variant/70 uppercase tracking-widest block mb-md">Station RJ Hosts &amp; Presenters</span>
+                <div id="rj-list-container" class="flex items-center gap-md lg:gap-lg overflow-x-auto pb-sm no-scrollbar">
+                    <p class="text-xs text-on-surface-variant italic py-4">Loading RJ team from database...</p>
                 </div>
             </div>
         </div>

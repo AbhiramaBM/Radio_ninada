@@ -98,7 +98,19 @@
 
     signInWithGoogle: async function () {
       const provider = new firebase.auth.GoogleAuthProvider();
-      const cred = await auth.signInWithPopup(provider);
+      provider.setCustomParameters({ prompt: 'select_account' });
+      let cred = null;
+      try {
+        cred = await auth.signInWithPopup(provider);
+      } catch (err) {
+        if (err.code === 'auth/popup-blocked') {
+          console.warn('[RadioAuth] Google Sign-In popup blocked, attempting redirect...');
+          await auth.signInWithRedirect(provider);
+          return null;
+        }
+        throw err;
+      }
+      if (!cred?.user) throw new Error('Google authentication was cancelled or failed.');
       const profile = await syncUserProfile(cred.user);
       const idToken = await cred.user.getIdToken();
       await exchangeBackendToken(idToken);

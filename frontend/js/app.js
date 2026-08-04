@@ -5,9 +5,9 @@ window.RadioPlayer = {
     liveConfigPromise: null,
     liveStreamReady: false,
     currentTrack: {
-        url: '',
-        title: 'Radio Ninada Live',
-        artist: 'RJ Sarah Jenkins • Morning Vibe',
+        url: 'https://stream.zeno.fm/f3wvbbqmdg8uv',
+        title: 'Radio Ninada 90.4 FM Live',
+        artist: 'RJ Ananya • Ninada Morning Buzz (SDM Ujire)',
         cover: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=400&q=80',
         isLive: true
     },
@@ -44,6 +44,7 @@ window.RadioPlayer = {
                     const validUrl = this.isValidLiveStreamUrl(data.streamUrl) ? data.streamUrl : defaultStream;
                     this.liveStreamReady = true;
                     this.currentTrack.url = validUrl;
+                    this.liveListeners = data.liveListeners || 142;
                     if (data.title) this.currentTrack.title = data.title;
                     if (data.currentRJ || data.currentProgram) {
                         this.currentTrack.artist = `${data.currentRJ || 'RJ Ananya'} • ${data.currentProgram || 'Ninada Morning Buzz'}`;
@@ -54,6 +55,9 @@ window.RadioPlayer = {
             } catch (err) {}
         }
         this.liveStreamReady = true;
+        this.liveListeners = 142;
+        this.currentTrack.title = 'Radio Ninada 90.4 FM Live';
+        this.currentTrack.artist = 'RJ Ananya • Ninada Morning Buzz (SDM Ujire)';
         this.currentTrack.url = defaultStream;
         this.updateUI();
     },
@@ -62,7 +66,7 @@ window.RadioPlayer = {
         if (!url || typeof url !== 'string') return false;
         try {
             const parsed = new URL(url);
-            return /^https?:$/.test(parsed.protocol) && !url.includes('stream.radioninada.com');
+            return /^https?:$/.test(parsed.protocol);
         } catch (_) {
             return false;
         }
@@ -189,6 +193,9 @@ window.RadioPlayer = {
             });
             document.querySelectorAll('[data-live-description]').forEach((element) => {
                 element.textContent = this.currentTrack.artist;
+            });
+            document.querySelectorAll('[data-live-listeners]').forEach((element) => {
+                element.textContent = `${this.liveListeners || 142} live listeners`;
             });
 
             const stickyCover = document.getElementById('sticky-track-cover');
@@ -596,6 +603,11 @@ async function loadDynamicData() {
 
 // Global Event Listeners & Initialization
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Radio Ninada 90.4 FM Live Stream Player & Config
+    if (window.RadioPlayer && typeof window.RadioPlayer.init === 'function') {
+        window.RadioPlayer.init();
+    }
+
     // Initial render of college news
     renderNews('college');
 
