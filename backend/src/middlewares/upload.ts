@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 
 export const upload = multer({
   storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit for podcast audio
+  limits: { fileSize: 250 * 1024 * 1024 }, // 250MB limit for video/audio uploads
   fileFilter: (req, file, cb) => {
     const allowedMimeTypes = [
       'image/jpeg',
@@ -32,11 +32,22 @@ export const upload = multer({
       'audio/wav',
       'audio/aac',
       'audio/ogg',
+      'video/mp4',
+      'video/webm',
+      'video/ogg',
+      'video/quicktime',
+      'video/x-msvideo',
+      'video/3gpp',
     ];
-    if (allowedMimeTypes.includes(file.mimetype)) {
+    if (
+      allowedMimeTypes.includes(file.mimetype) ||
+      file.mimetype.startsWith('image/') ||
+      file.mimetype.startsWith('video/') ||
+      file.mimetype.startsWith('audio/')
+    ) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file format. Only JPG, PNG, WEBP, GIF, MP3, WAV, AAC are allowed.'));
+      cb(new Error('Invalid file format. Only images, audio, and video files (MP4, WEBM, MOV, etc.) are allowed.'));
     }
   },
 });

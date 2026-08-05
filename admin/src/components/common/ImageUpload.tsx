@@ -10,16 +10,16 @@ type ImageUploadProps = {
   accept?: string;
   label?: string;
   placeholder?: string;
-  fileType?: 'image' | 'audio' | 'any';
+  fileType?: 'image' | 'audio' | 'video' | 'any';
 };
 
 export default function ImageUpload({
   value,
   onChange,
-  accept = 'image/*',
+  accept = 'image/*,video/*',
   label = 'Upload Media File',
   placeholder = 'Click or drag & drop file to upload',
-  fileType = 'image',
+  fileType = 'any',
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -180,7 +180,11 @@ export default function ImageUpload({
               </div>
               <p className="text-xs font-semibold text-slate-200">{placeholder}</p>
               <p className="text-[10px] text-slate-400">
-                {fileType === 'audio' ? 'MP3, WAV, AAC, M4A up to 50MB' : 'PNG, JPG, WEBP, GIF up to 10MB'}
+                {fileType === 'audio'
+                  ? 'MP3, WAV, AAC, M4A up to 50MB'
+                  : fileType === 'video'
+                  ? 'MP4, WEBM, MOV up to 250MB'
+                  : 'MP4, WEBM, MOV, JPG, PNG, WEBP up to 250MB'}
               </p>
             </div>
           )}

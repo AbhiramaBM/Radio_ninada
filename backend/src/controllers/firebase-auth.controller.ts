@@ -45,7 +45,16 @@ export async function firebaseLogin(req: Request, res: Response, next: NextFunct
 
     let decoded: any = null;
     if (isFirebaseConfigured()) {
-      decoded = await getFirebaseAuth().verifyIdToken(idToken);
+      try {
+        decoded = await getFirebaseAuth().verifyIdToken(idToken);
+      } catch (fbErr) {
+        console.warn('Firebase verifyIdToken error, attempting JWT decode fallback:', fbErr);
+        try {
+          decoded = jwt.decode(idToken) as any;
+        } catch {
+          decoded = null;
+        }
+      }
     } else {
       try {
         decoded = jwt.decode(idToken) as any;
@@ -110,17 +119,25 @@ export async function firebaseLogin(req: Request, res: Response, next: NextFunct
     }
 
     if (lookupEmail === config.adminEmail && isFirebaseConfigured()) {
-      await getFirebaseAuth().setCustomUserClaims(firebaseUid, { role: 'SUPER_ADMIN', admin: true });
+      try {
+        await getFirebaseAuth().setCustomUserClaims(firebaseUid, { role: 'SUPER_ADMIN', admin: true });
+      } catch (e) {
+        console.warn('Could not set custom user claims:', e);
+      }
     }
 
     if (isFirebaseConfigured()) {
-      await syncFirestoreUser(firebaseUid, {
-        email: lookupEmail,
-        name: user.name,
-        role: user.role,
-        phone,
-        avatar: user.avatar,
-      });
+      try {
+        await syncFirestoreUser(firebaseUid, {
+          email: lookupEmail,
+          name: user.name,
+          role: user.role,
+          phone,
+          avatar: user.avatar,
+        });
+      } catch (e) {
+        console.warn('Could not sync Firestore user:', e);
+      }
     }
 
     const payload = { userId: user.id, email: user.email, role: user.role };

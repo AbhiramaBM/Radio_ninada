@@ -35,5 +35,7 @@ export function getFirestore() {
 
 export function isFirebaseConfigured(): boolean {
   const { projectId, clientEmail, privateKey } = config.firebase;
-  return Boolean(projectId && clientEmail && privateKey);
+  if (!projectId || !clientEmail || !privateKey) return false;
+  if (privateKey.includes('YOUR_KEY_HERE') || clientEmail.includes('xxxxx')) return false;
+  return true;
 }

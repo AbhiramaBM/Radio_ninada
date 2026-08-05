@@ -2,6 +2,7 @@
 window.RadioPlayer = {
     audio: null,
     isPlaying: false,
+    isDismissed: false,
     liveConfigPromise: null,
     liveStreamReady: false,
     currentTrack: {
@@ -26,10 +27,9 @@ window.RadioPlayer = {
             this.audio.addEventListener('error', () => {
                 this.isPlaying = false;
                 this.updateUI();
-                showToast('The live stream could not be played. Please try again shortly.');
+                showToast('The audio stream could not be played. Please try again shortly.');
             });
         }
-        this.injectStickyPlayerBar();
         this.liveConfigPromise = this.liveConfigPromise || this.loadLiveConfig();
         return this.liveConfigPromise;
     },
@@ -52,7 +52,9 @@ window.RadioPlayer = {
                     this.updateUI();
                     return;
                 }
-            } catch (err) {}
+            } catch (err) {
+                console.warn('[RadioPlayer] Error fetching live config:', err);
+            }
         }
         this.liveStreamReady = true;
         this.liveListeners = 142;
@@ -72,8 +74,35 @@ window.RadioPlayer = {
         }
     },
 
+    hideAudioPlayer: function () {
+        this.isDismissed = true;
+
+        if (this.audio && !this.audio.paused) {
+            this.audio.pause();
+            this.isPlaying = false;
+            this.updateUI();
+        }
+
+        const globalPlayer = document.getElementById('global-audio-player');
+        if (globalPlayer) {
+            globalPlayer.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+            globalPlayer.classList.remove('opacity-100', 'translate-y-0');
+        }
+    },
+
+    showAudioPlayer: function () {
+        this.isDismissed = false;
+
+        const globalPlayer = document.getElementById('global-audio-player');
+        if (globalPlayer) {
+            globalPlayer.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+            globalPlayer.classList.add('opacity-100', 'translate-y-0');
+        }
+    },
+
     togglePlay: async function (url, title, artist, cover, isLive = true) {
         await this.init();
+        this.showAudioPlayer();
 
         const streamTarget = url || this.currentTrack.url || 'https://stream.zeno.fm/f3wvbbqmdg8uv';
 
@@ -96,9 +125,9 @@ window.RadioPlayer = {
                 await this.audio.play();
                 this.isPlaying = true;
                 this.updateUI();
-                showToast(`▶ Streaming ${this.currentTrack.title}`);
+                showToast(`▶ Playing: ${this.currentTrack.title}`);
             } catch (err) {
-                console.warn('[RadioPlayer] Primary stream unreachable, attempting fallback stream...', err);
+                console.warn('[RadioPlayer] Stream playback error, retrying fallback stream...', err);
                 const fallbackStream = 'https://stream.zeno.fm/f3wvbbqmdg8uv';
                 this.currentTrack.url = fallbackStream;
                 this.audio.src = fallbackStream;
@@ -110,31 +139,44 @@ window.RadioPlayer = {
                 } catch (fallbackErr) {
                     this.isPlaying = false;
                     this.updateUI();
-                    showToast('Unable to start live stream playback.');
+                    showToast('Unable to start audio playback.');
                 }
             }
         } else {
             this.audio.pause();
             this.isPlaying = false;
             this.updateUI();
-            showToast('⏸ Stream Paused');
+            showToast('⏸ Audio Paused');
         }
     },
 
-    playTrack: function(url, title, artist, cover) {
+    playTrack: function (url, title, artist, cover) {
         this.togglePlay(url, title, artist, cover, false);
+        if (window.RadioAuth && typeof window.RadioAuth.recordListeningHistory === 'function') {
+            window.RadioAuth.recordListeningHistory({ title, artist, cover, url });
+        }
     },
 
     setVolume: function (val) {
         this.volume = parseFloat(val);
         if (this.audio) this.audio.volume = this.volume;
-        const volSlider = document.getElementById('sticky-vol-slider');
+        const volSlider = document.getElementById('global-player-vol-slider');
         if (volSlider) volSlider.value = this.volume;
     },
 
     seek: function (percent) {
         if (this.audio && this.audio.duration && !isNaN(this.audio.duration)) {
             this.audio.currentTime = (percent / 100) * this.audio.duration;
+        }
+    },
+
+    seekRelative: function (seconds) {
+        if (this.audio) {
+            if (this.audio.duration && !isNaN(this.audio.duration)) {
+                this.audio.currentTime = Math.max(0, Math.min(this.audio.duration, this.audio.currentTime + seconds));
+            } else {
+                this.audio.currentTime = 0;
+            }
         }
     },
 
@@ -146,18 +188,14 @@ window.RadioPlayer = {
         }
     },
 
-    playTrack: function (url, title, artist, cover) {
-        this.togglePlay(url, title, artist, cover, false);
-        if (window.RadioAuth && typeof window.RadioAuth.recordListeningHistory === 'function') {
-            window.RadioAuth.recordListeningHistory({ title, artist, cover, url });
-        }
-    },
-
     updateUI: function () {
         const iconName = this.isPlaying ? 'pause' : 'play_arrow';
 
         const heroIcon = document.getElementById('hero-play-icon');
         if (heroIcon) heroIcon.innerText = iconName;
+
+        const globalPlayIcon = document.getElementById('global-player-play-icon');
+        if (globalPlayIcon) globalPlayIcon.innerText = iconName;
 
         const livePagePlayButtons = document.querySelectorAll('.glass-player button span.material-symbols-outlined, #live-main-play-icon');
         livePagePlayButtons.forEach(icon => {
@@ -174,33 +212,39 @@ window.RadioPlayer = {
             }
         });
 
-        const stickyBar = document.getElementById('sticky-player-bar');
-        if (stickyBar) {
-            if (this.currentTrack.title) {
-                stickyBar.classList.remove('translate-y-full', 'opacity-0');
-            }
-            const stickyPlayIcon = document.getElementById('sticky-play-icon');
-            if (stickyPlayIcon) stickyPlayIcon.innerText = iconName;
-
-            const stickyTitle = document.getElementById('sticky-track-title');
-            if (stickyTitle) stickyTitle.innerText = this.currentTrack.title;
-
-            const stickyArtist = document.getElementById('sticky-track-artist');
-            if (stickyArtist) stickyArtist.innerText = this.currentTrack.artist;
-
-            document.querySelectorAll('[data-live-title]').forEach((element) => {
-                element.textContent = this.currentTrack.title;
-            });
-            document.querySelectorAll('[data-live-description]').forEach((element) => {
-                element.textContent = this.currentTrack.artist;
-            });
-            document.querySelectorAll('[data-live-listeners]').forEach((element) => {
-                element.textContent = `${this.liveListeners || 142} live listeners`;
-            });
-
-            const stickyCover = document.getElementById('sticky-track-cover');
-            if (stickyCover && this.currentTrack.cover) stickyCover.src = this.currentTrack.cover;
+        const globalPlayer = document.getElementById('global-audio-player');
+        if (globalPlayer && !this.isDismissed && this.currentTrack.title) {
+            globalPlayer.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
         }
+
+        const titleEl = document.getElementById('global-player-title');
+        if (titleEl) titleEl.innerText = this.currentTrack.title;
+
+        const artistEl = document.getElementById('global-player-artist');
+        if (artistEl) artistEl.innerText = this.currentTrack.artist;
+
+        const coverEl = document.getElementById('global-player-cover');
+        if (coverEl && this.currentTrack.cover) coverEl.src = this.currentTrack.cover;
+
+        const badgeEl = document.getElementById('global-player-badge');
+        if (badgeEl) {
+            badgeEl.innerText = this.currentTrack.isLive ? 'LIVE' : 'PODCAST';
+            if (this.currentTrack.isLive) {
+                badgeEl.className = 'bg-primary/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider';
+            } else {
+                badgeEl.className = 'bg-surface-container text-primary font-bold text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider';
+            }
+        }
+
+        document.querySelectorAll('[data-live-title]').forEach((element) => {
+            element.textContent = this.currentTrack.title;
+        });
+        document.querySelectorAll('[data-live-description]').forEach((element) => {
+            element.textContent = this.currentTrack.artist;
+        });
+        document.querySelectorAll('[data-live-listeners]').forEach((element) => {
+            element.textContent = `${this.liveListeners || 142} live listeners`;
+        });
     },
 
     updateTimeProgress: function () {
@@ -211,9 +255,9 @@ window.RadioPlayer = {
         const curTimeStr = this.formatTime(curTime);
         const durStr = (!isNaN(dur) && dur > 0) ? this.formatTime(dur) : 'LIVE';
 
-        const timeCurEl = document.getElementById('sticky-time-current');
-        const timeDurEl = document.getElementById('sticky-time-duration');
-        const sliderEl = document.getElementById('sticky-progress-slider');
+        const timeCurEl = document.getElementById('global-player-time-current');
+        const timeDurEl = document.getElementById('global-player-time-duration');
+        const sliderEl = document.getElementById('global-player-progress-slider');
 
         if (timeCurEl) timeCurEl.innerText = curTimeStr;
         if (timeDurEl) timeDurEl.innerText = durStr;
@@ -231,51 +275,20 @@ window.RadioPlayer = {
         const m = Math.floor(secs / 60);
         const s = Math.floor(secs % 60);
         return `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
-    },
-
-    injectStickyPlayerBar: function () {
-        if (document.getElementById('sticky-player-bar')) return;
-
-        const barHTML = `
-        <div id="sticky-player-bar" class="fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-xl border-t border-outline-variant/30 shadow-2xl px-4 py-3 transition-all duration-300 transform translate-y-full opacity-0">
-            <div class="max-w-container-max mx-auto flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3 w-1/4 min-w-[200px]">
-                    <img id="sticky-track-cover" class="w-12 h-12 rounded-xl object-cover shadow-md border border-white/20 shrink-0" src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=150&q=80" alt="Cover" />
-                    <div class="truncate">
-                        <h4 id="sticky-track-title" class="font-bold text-sm text-on-background truncate">Radio Ninada 90.4 FM Live</h4>
-                        <p id="sticky-track-artist" class="text-xs text-on-surface-variant truncate">RJ Sarah Jenkins • Morning Vibe</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-col items-center gap-1 w-2/4 max-w-md">
-                    <div class="flex items-center gap-4">
-                        <button onclick="RadioPlayer.seek(0)" class="text-on-surface-variant hover:text-primary transition-colors" title="Restart">
-                            <span class="material-symbols-outlined text-xl">replay_10</span>
-                        </button>
-                        <button onclick="RadioPlayer.togglePlay()" class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all">
-                            <span id="sticky-play-icon" class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </button>
-                        <button onclick="RadioPlayer.seek(100)" class="text-on-surface-variant hover:text-primary transition-colors" title="Forward">
-                            <span class="material-symbols-outlined text-xl">forward_10</span>
-                        </button>
-                    </div>
-                    <div class="flex items-center gap-2 w-full text-[10px] text-on-surface-variant font-mono">
-                        <span id="sticky-time-current">00:00</span>
-                        <input id="sticky-progress-slider" type="range" min="0" max="100" value="0" oninput="RadioPlayer.seek(this.value)" class="w-full h-1 bg-outline-variant/40 rounded-lg appearance-none cursor-pointer accent-primary" />
-                        <span id="sticky-time-duration">LIVE</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 w-1/4 min-w-[140px]">
-                    <span class="material-symbols-outlined text-sm text-on-surface-variant">volume_up</span>
-                    <input id="sticky-vol-slider" type="range" min="0" max="1" step="0.05" value="0.8" oninput="RadioPlayer.setVolume(this.value)" class="w-20 h-1 bg-outline-variant/40 rounded-lg appearance-none cursor-pointer accent-primary" />
-                </div>
-            </div>
-        </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', barHTML);
     }
 };
+
+function hideAudioPlayer() {
+    RadioPlayer.hideAudioPlayer();
+}
+
+function showAudioPlayer() {
+    RadioPlayer.showAudioPlayer();
+}
+
+function closePlayer() {
+    RadioPlayer.hideAudioPlayer();
+}
 
 function toggleAudioPlay() {
     RadioPlayer.togglePlay();
@@ -441,8 +454,47 @@ function filterGallery(type, btn) {
     });
 }
 
-function openMediaPreview(title, kind) {
-    showToast(kind === 'video' ? `🎬 Opening Video Short: "${title}"` : `📷 Viewing High-Res Photo: "${title}"`);
+function openMediaPreview(title, kind, rawUrl, desc) {
+    const modal = document.getElementById('media-lightbox-modal');
+    const content = document.getElementById('media-lightbox-content');
+    const titleEl = document.getElementById('media-lightbox-title');
+    const iconEl = document.getElementById('media-lightbox-icon');
+    const descEl = document.getElementById('media-lightbox-desc');
+
+    if (!modal || !content) return;
+
+    const fullUrl = resolveServerUrl(rawUrl);
+    titleEl.textContent = title || 'Media Preview';
+    descEl.textContent = desc || '';
+
+    if (kind === 'video' || kind === 'VIDEO') {
+        iconEl.textContent = 'videocam';
+        content.innerHTML = `
+            <video src="${fullUrl}" controls autoplay class="w-full h-full object-contain bg-black">
+                Your browser does not support HTML5 video playback.
+            </video>
+        `;
+    } else {
+        iconEl.textContent = 'photo_camera';
+        content.innerHTML = `
+            <img src="${fullUrl}" alt="${title}" class="w-full h-full object-contain" />
+        `;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeMediaLightbox() {
+    const modal = document.getElementById('media-lightbox-modal');
+    const content = document.getElementById('media-lightbox-content');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    if (content) {
+        content.innerHTML = '';
+    }
 }
 
 // Helper to resolve server upload URLs to absolute backend URLs
@@ -497,16 +549,16 @@ async function loadDynamicData() {
             }
         }
     } catch (e) {
-        console.warn('Error loading RJs from API:', e);
+        console.warn('[loadDynamicData] Error loading RJs from API:', e);
     }
 
     // 2. Synchronize Podcasts
+    const podGrid = document.getElementById('podcast-grid');
     try {
         const podRes = await window.RadioNinadaAPI.getPodcasts();
-        if (podRes && podRes.success && Array.isArray(podRes.data) && podRes.data.length > 0) {
-            const podGrid = document.getElementById('podcast-grid');
-            if (podGrid) {
-                podGrid.innerHTML = podRes.data.map((pod, idx) => {
+        if (podGrid) {
+            if (podRes && podRes.success && Array.isArray(podRes.data) && podRes.data.length > 0) {
+                podGrid.innerHTML = podRes.data.map((pod) => {
                     const coverUrl = resolveServerUrl(pod.coverUrl) || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80';
                     const audioUrl = resolveServerUrl(pod.audioUrl) || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
                     const catClass = pod.category ? pod.category.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'talk-show';
@@ -517,7 +569,7 @@ async function loadDynamicData() {
                                 <div class="relative aspect-video rounded-xl overflow-hidden mb-md">
                                     <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="${coverUrl}" alt="${pod.title}" />
                                     <span class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">${pod.category || 'Podcast'}</span>
-                                    <button onclick="RadioPlayer.playTrack('${audioUrl}', '${pod.title.replace(/'/g, "\\'")}', 'S${pod.season || 1} E${pod.episodeNumber || 1}', '${coverUrl}')"
+                                    <button onclick="RadioPlayer.playTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', 'S${pod.season || 1} E${pod.episodeNumber || 1}', '${coverUrl.replace(/'/g, "\\'")}')"
                                         class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
                                         <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
                                     </button>
@@ -533,17 +585,23 @@ async function loadDynamicData() {
                         </div>
                     `;
                 }).join('');
+            } else if (podRes && podRes.success && Array.isArray(podRes.data) && podRes.data.length === 0) {
+                podGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No podcast episodes published yet. Tune in soon for fresh shows!</div>`;
+            } else {
+                podGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant font-body-md flex flex-col items-center gap-xs"><span class="material-symbols-outlined text-amber-500 text-2xl">warning</span><span>Unable to load podcasts from server. Please refresh or try again.</span></div>`;
             }
         }
     } catch (e) {
-        console.warn('Error loading podcasts from API:', e);
+        console.warn('[loadDynamicData] Error loading podcasts from API:', e);
+        if (podGrid) {
+            podGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant font-body-md flex flex-col items-center gap-xs"><span class="material-symbols-outlined text-amber-500 text-2xl">warning</span><span>Unable to load podcasts from server. Please try again.</span></div>`;
+        }
     }
 
     // 3. Synchronize News
     try {
         const newsRes = await window.RadioNinadaAPI.getNews();
         if (newsRes && newsRes.success && Array.isArray(newsRes.data) && newsRes.data.length > 0) {
-            // Group news by category
             newsRes.data.forEach(item => {
                 const cat = (item.category || 'Local').toLowerCase();
                 const targetCat = newsData[cat] ? cat : 'local';
@@ -560,7 +618,7 @@ async function loadDynamicData() {
             renderNews('college');
         }
     } catch (e) {
-        console.warn('Error loading news from API:', e);
+        console.warn('[loadDynamicData] Error loading news from API:', e);
     }
 
     // 4. Synchronize Events
@@ -597,7 +655,48 @@ async function loadDynamicData() {
             }
         }
     } catch (e) {
-        console.warn('Error loading events from API:', e);
+        console.warn('[loadDynamicData] Error loading events from API:', e);
+    }
+
+    // 5. Synchronize Media Gallery & BTS Shorts
+    try {
+        const galRes = await window.RadioNinadaAPI.getGallery();
+        if (galRes && galRes.success && Array.isArray(galRes.data)) {
+            const galGrid = document.getElementById('gallery-grid');
+            if (galGrid) {
+                if (galRes.data.length === 0) {
+                    galGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No media items or BTS shorts uploaded yet. Admin can upload media from the dashboard.</div>`;
+                } else {
+                    galGrid.innerHTML = galRes.data.map(item => {
+                        const isVideo = item.type === 'VIDEO' || item.category === 'BTS Shorts' || (item.mediaUrl && item.mediaUrl.match(/\.(mp4|webm|mov|mkv)$/i));
+                        const itemClass = isVideo ? 'bts' : 'photos';
+                        const displayThumb = resolveServerUrl(item.thumbnail || item.mediaUrl);
+                        const durationTag = item.duration || (isVideo ? 'Shorts' : '');
+                        const desc = item.description || (isVideo ? 'Watch studio bloopers & Behind the mic moments' : 'Behind the mic photo');
+
+                        return `
+                            <div class="gallery-item ${itemClass} relative rounded-2xl overflow-hidden group shadow-md aspect-video cursor-pointer"
+                                onclick="openMediaPreview('${item.title.replace(/'/g, "\\'")}', '${isVideo ? 'video' : 'photo'}', '${item.mediaUrl.replace(/'/g, "\\'")}', '${desc.replace(/'/g, "\\'")}')">
+                                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    src="${displayThumb}" alt="${item.title}" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-md flex flex-col justify-between">
+                                    <span class="self-end bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full flex items-center gap-xs">
+                                        <span class="material-symbols-outlined text-xs">${isVideo ? 'videocam' : 'photo_camera'}</span>
+                                        ${durationTag}
+                                    </span>
+                                    <div>
+                                        <h4 class="text-white font-bold text-sm mb-xs group-hover:text-primary transition-colors">${item.title}</h4>
+                                        <p class="text-white/70 text-xs line-clamp-1">${desc}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[loadDynamicData] Error loading gallery from API:', e);
     }
 }
 
@@ -616,10 +715,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close modal when clicking backdrop
     window.addEventListener('click', (e) => {
-        const modal = document.getElementById('rj-modal');
-        if (e.target === modal) {
+        const rjModal = document.getElementById('rj-modal');
+        if (e.target === rjModal) {
             closeRjModal();
+        }
+        const mediaModal = document.getElementById('media-lightbox-modal');
+        if (e.target === mediaModal) {
+            closeMediaLightbox();
         }
     });
 });
-

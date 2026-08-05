@@ -582,7 +582,10 @@
 
         <!-- Podcast Cards Grid -->
         <div id="podcast-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
-            <p class="text-xs text-on-surface-variant italic py-4 col-span-full">Loading podcasts from database...</p>
+            <div class="col-span-full py-12 text-center text-on-surface-variant/60 italic font-body-md flex flex-col items-center justify-center gap-sm">
+                <span class="material-symbols-outlined text-3xl animate-spin text-primary">sync</span>
+                <span>Loading latest podcast episodes...</span>
+            </div>
         </div>
     </section>
 
@@ -783,151 +786,97 @@
             </div>
         </div>
 
-        <!-- Gallery Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
-            <!-- Media item 1 (Shorts / Video) -->
-            <div class="gallery-item bts relative rounded-2xl overflow-hidden group shadow-md aspect-video cursor-pointer"
-                onclick="openMediaPreview('Studio Operator Bloopers & Mixing Console Secret Tips', 'video')">
-                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80"
-                    alt="BTS Video 1" />
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-md flex flex-col justify-between">
-                    <span
-                        class="self-end bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full flex items-center gap-xs">
-                        <span class="material-symbols-outlined text-xs">videocam</span> 0:45 Shorts
-                    </span>
-                    <div>
-                        <h4 class="text-white font-bold text-sm mb-xs group-hover:text-primary transition-colors">Studio
-                            Console Setup &amp; Bloopers</h4>
-                        <p class="text-white/70 text-xs">Watch RJ Sarah &amp; Sound Tech in action</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Media item 2 (Photos) -->
-            <div class="gallery-item photos relative rounded-2xl overflow-hidden group shadow-md aspect-video cursor-pointer"
-                onclick="openMediaPreview('Live Radio Broadcast Booth', 'photo')">
-                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80"
-                    alt="Photo 1" />
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent p-md flex flex-col justify-end">
-                    <h4 class="text-white font-bold text-sm mb-xs">Live Broadcast Booth</h4>
-                    <p class="text-white/70 text-xs">High fidelity microphone &amp; monitoring setup</p>
-                </div>
-            </div>
-
-            <!-- Media item 3 (Shorts / Video) -->
-            <div class="gallery-item bts relative rounded-2xl overflow-hidden group shadow-md aspect-video cursor-pointer"
-                onclick="openMediaPreview('College Fest Live Outdoor Broadcast', 'video')">
-                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80"
-                    alt="BTS Video 2" />
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-md flex flex-col justify-between">
-                    <span
-                        class="self-end bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full flex items-center gap-xs">
-                        <span class="material-symbols-outlined text-xs">videocam</span> 1:15 Shorts
-                    </span>
-                    <div>
-                        <h4 class="text-white font-bold text-sm mb-xs group-hover:text-primary transition-colors">Campus
-                            Radio Fest Highlights</h4>
-                        <p class="text-white/70 text-xs">Outdoor broadcast stage energy</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Media item 4 (Photos) -->
-            <div class="gallery-item photos relative rounded-2xl overflow-hidden group shadow-md aspect-video cursor-pointer"
-                onclick="openMediaPreview('RJ Team Brainstorming Session', 'photo')">
-                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80"
-                    alt="Photo 2" />
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent p-md flex flex-col justify-end">
-                    <h4 class="text-white font-bold text-sm mb-xs">Morning Show Meeting</h4>
-                    <p class="text-white/70 text-xs">RJ Felix &amp; Sarah planning daily topics</p>
-                </div>
-            </div>
-
-            <!-- Media item 5 (Photos) -->
-            <div class="gallery-item photos relative rounded-2xl overflow-hidden group shadow-md aspect-video cursor-pointer"
-                onclick="openMediaPreview('Vintage Vinyl & Modern Turntables', 'photo')">
-                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?auto=format&fit=crop&w=600&q=80"
-                    alt="Photo 3" />
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent p-md flex flex-col justify-end">
-                    <h4 class="text-white font-bold text-sm mb-xs">Vinyl Records Vault</h4>
-                    <p class="text-white/70 text-xs">Over 5,000 vintage &amp; modern vinyl collection</p>
-                </div>
-            </div>
-
-            <!-- Media item 6 (Shorts / Video) -->
-            <div class="gallery-item bts relative rounded-2xl overflow-hidden group shadow-md aspect-video cursor-pointer"
-                onclick="openMediaPreview('Late Night RJ Sound Calibration', 'video')">
-                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80"
-                    alt="BTS Video 3" />
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-md flex flex-col justify-between">
-                    <span
-                        class="self-end bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full flex items-center gap-xs">
-                        <span class="material-symbols-outlined text-xs">videocam</span> 0:30 Shorts
-                    </span>
-                    <div>
-                        <h4 class="text-white font-bold text-sm mb-xs group-hover:text-primary transition-colors">Late
-                            Night Sound Calibration</h4>
-                        <p class="text-white/70 text-xs">Equalizer testing before Midnight Sessions</p>
-                    </div>
-                </div>
+        <!-- Gallery Grid (Dynamically Populated from Backend API) -->
+        <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
+            <div class="col-span-full py-12 text-center text-on-surface-variant/60 italic font-body-md flex flex-col items-center justify-center gap-sm">
+                <span class="material-symbols-outlined text-3xl animate-spin text-primary">sync</span>
+                <span>Loading Behind The Mic media items...</span>
             </div>
         </div>
     </section>
 
-    <!-- Bottom Persistent Player Bar -->
-    <nav id="persistent-player"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 flex justify-between items-center px-md py-sm z-40 w-[calc(100%-1.5rem)] max-w-4xl bg-surface/90 backdrop-blur-2xl border border-white/40 shadow-2xl shadow-primary/10 rounded-full opacity-0 translate-y-10 pointer-events-none invisible transition-all duration-350 ease-in-out">
-        <div class="flex justify-between items-center w-full">
-            <button onclick="RadioPlayer.togglePlay()" aria-label="Toggle Audio Playback"
-                class="flex items-center gap-sm text-left px-2 focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-full">
-                <div
-                    class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-md shrink-0">
-                    <span id="nav-play-icon" class="material-symbols-outlined text-xl"
-                        style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+    <!-- Media Preview Lightbox Modal -->
+    <div id="media-lightbox-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 transition-all">
+        <div class="relative bg-slate-900 border border-white/20 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between px-md py-sm border-b border-white/10 bg-slate-950/60">
+                <div class="flex items-center gap-xs">
+                    <span id="media-lightbox-icon" class="material-symbols-outlined text-primary text-xl">play_circle</span>
+                    <h3 id="media-lightbox-title" class="font-bold text-white text-base truncate max-w-md">Media Preview</h3>
                 </div>
-                <div>
-                    <p data-live-title class="font-bold text-xs leading-none text-on-background">Radio Ninada 90.4 FM
-                    </p>
-                    <p data-live-description class="text-[10px] text-on-surface-variant mt-0.5">Loading live stream
-                        details…</p>
-                </div>
-            </button>
-            <div class="flex items-center gap-xs sm:gap-md">
-                <button
-                    class="flex flex-col items-center gap-xs text-on-surface-variant hover:text-primary transition-colors text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg p-1">
-                    <span class="material-symbols-outlined text-xl">equalizer</span>
-                    <span class="hidden sm:inline">Equalizer</span>
-                </button>
-                <button
-                    class="flex flex-col items-center gap-xs text-on-surface-variant hover:text-primary transition-colors text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg p-1">
-                    <span class="material-symbols-outlined text-xl">volume_up</span>
-                    <span class="hidden sm:inline">Volume</span>
-                </button>
-                <a href="#home"
-                    class="flex flex-col items-center gap-xs text-primary text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg p-1">
-                    <span class="material-symbols-outlined text-xl">vertical_align_top</span>
-                    <span class="hidden sm:inline">Top</span>
-                </a>
-                <div class="w-[1px] h-6 bg-outline-variant/40 mx-xs"></div>
-                <button onclick="closePlayer()" aria-label="Close Player"
-                    class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-high/80 text-on-surface hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer shadow-sm shrink-0 focus:outline-none focus:ring-2 focus:ring-primary">
-                    <span class="material-symbols-outlined text-base">close</span>
+                <button onclick="closeMediaLightbox()" class="text-slate-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-2xl">close</span>
                 </button>
             </div>
+            <div id="media-lightbox-content" class="relative w-full aspect-video bg-black flex items-center justify-center overflow-hidden">
+                <!-- Video or Image injected dynamically -->
+            </div>
+            <div id="media-lightbox-footer" class="p-md bg-slate-950/80 border-t border-white/10">
+                <p id="media-lightbox-desc" class="text-xs text-slate-300"></p>
+            </div>
         </div>
-    </nav>
+    </div>
+
+    <!-- Global Persistent Audio Player Bar (Single Shared Instance) -->
+    <div id="global-audio-player"
+        class="fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-2xl border-t border-outline-variant/30 shadow-2xl px-4 py-3 transition-all duration-350 transform translate-y-full opacity-0 pointer-events-none">
+        <!-- Circular Dismiss (✕) Button -->
+        <button onclick="hideAudioPlayer()" aria-label="Close audio player"
+            class="absolute -top-3 right-3 sm:right-6 w-7 h-7 rounded-full bg-white text-primary shadow-md hover:scale-110 hover:bg-rose-100 transition-all duration-200 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0 border border-outline-variant/30">
+            <span class="material-symbols-outlined text-sm font-bold">close</span>
+        </button>
+
+        <div class="max-w-container-max mx-auto flex items-center justify-between gap-4">
+            <!-- Track Cover & Details -->
+            <div class="flex items-center gap-3 w-1/4 min-w-[200px]">
+                <img id="global-player-cover"
+                    class="w-12 h-12 rounded-xl object-cover shadow-md border border-white/20 shrink-0"
+                    src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=150&q=80"
+                    alt="Cover" />
+                <div class="truncate">
+                    <div class="flex items-center gap-1.5 mb-0.5">
+                        <span id="global-player-badge"
+                            class="bg-primary/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">LIVE</span>
+                        <h4 id="global-player-title" class="font-bold text-sm text-on-background truncate">Radio Ninada 90.4 FM Live</h4>
+                    </div>
+                    <p id="global-player-artist" class="text-xs text-on-surface-variant truncate">RJ Ananya • Ninada Morning Buzz</p>
+                </div>
+            </div>
+
+            <!-- Main Playback Controls & Progress Bar -->
+            <div class="flex flex-col items-center gap-1 w-2/4 max-w-md">
+                <div class="flex items-center gap-4">
+                    <button onclick="RadioPlayer.seekRelative(-10)" class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" title="Rewind 10s">
+                        <span class="material-symbols-outlined text-xl">replay_10</span>
+                    </button>
+                    <button onclick="RadioPlayer.togglePlay()" aria-label="Toggle Playback"
+                        class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer">
+                        <span id="global-player-play-icon" class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    </button>
+                    <button onclick="RadioPlayer.seekRelative(10)" class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" title="Forward 10s">
+                        <span class="material-symbols-outlined text-xl">forward_10</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 w-full text-[10px] text-on-surface-variant font-mono">
+                    <span id="global-player-time-current">00:00</span>
+                    <input id="global-player-progress-slider" type="range" min="0" max="100" value="0"
+                        oninput="RadioPlayer.seek(this.value)"
+                        class="w-full h-1 bg-outline-variant/40 rounded-lg appearance-none cursor-pointer accent-primary" />
+                    <span id="global-player-time-duration">LIVE</span>
+                </div>
+            </div>
+
+            <!-- Volume Slider & Top Link -->
+            <div class="flex items-center justify-end gap-3 w-1/4 min-w-[140px]">
+                <span class="material-symbols-outlined text-sm text-on-surface-variant">volume_up</span>
+                <input id="global-player-vol-slider" type="range" min="0" max="1" step="0.05" value="0.8"
+                    oninput="RadioPlayer.setVolume(this.value)"
+                    class="w-20 h-1 bg-outline-variant/40 rounded-lg appearance-none cursor-pointer accent-primary" />
+                <a href="#home" class="hidden sm:flex items-center text-primary hover:text-primary/80 transition-colors p-1" title="Back to top">
+                    <span class="material-symbols-outlined text-xl">vertical_align_top</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
     <footer class="w-full py-xl bg-surface-container-lowest border-t border-outline-variant pb-28">
         <div class="max-w-container-max mx-auto px-md lg:px-xl grid grid-cols-1 md:grid-cols-4 gap-gutter">

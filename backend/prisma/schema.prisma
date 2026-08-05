@@ -170,15 +170,18 @@ model EventParticipant {
 }
 
 model GalleryItem {
-  id        String    @id @default(uuid())
-  title     String
-  type      String    @default("PHOTO") // PHOTO, VIDEO
-  mediaUrl  String
-  album     String    @default("General")
-  category  String    @default("Events")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  type        String    @default("PHOTO") // PHOTO, VIDEO
+  mediaUrl    String
+  thumbnail   String?
+  duration    String?   // e.g. "0:45", "1:15"
+  album       String    @default("General")
+  category    String    @default("Events") // "BTS Shorts", "Studio Bloopers", "Behind The Mic", "Photos", "Events"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 }
 
 model Notification {

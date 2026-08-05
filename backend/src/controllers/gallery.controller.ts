@@ -28,14 +28,17 @@ export async function createGalleryItem(req: Request, res: Response, next: NextF
       mediaUrl = `/uploads/${file.filename}`;
     }
 
-    const { title, type, album, category } = req.body;
+    const { title, description, type, thumbnail, duration, album, category } = req.body;
     const item = await prisma.galleryItem.create({
       data: {
-        title: title || 'Gallery Image',
+        title: title || 'Gallery Item',
+        description: description || null,
         type: type || 'PHOTO',
         mediaUrl: mediaUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
-        album: album || 'General',
-        category: category || 'Events',
+        thumbnail: thumbnail || null,
+        duration: duration || null,
+        album: album || 'Behind The Mic',
+        category: category || 'BTS Shorts',
       },
     });
 
