@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { CalendarDays, Plus, Download, QrCode, Trash2, Users, MapPin } from 'lucide-react';
 import { api } from '@/lib/api';
+import ImageUpload from '@/components/common/ImageUpload';
 
 export default function EventManager() {
   const [events, setEvents] = useState<any[]>([]);
@@ -14,7 +15,7 @@ export default function EventManager() {
     description: '',
     location: 'Radio Ninada Main Studio Auditorium',
     eventDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
-    banner: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1200&q=80',
+    banner: '',
     registrationRequired: true,
   });
 
@@ -41,6 +42,14 @@ export default function EventManager() {
     try {
       await api.post('/events', form);
       setModalOpen(false);
+      setForm({
+        title: '',
+        description: '',
+        location: 'Radio Ninada Main Studio Auditorium',
+        eventDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+        banner: '',
+        registrationRequired: true,
+      });
       fetchEvents();
     } catch (err) {}
   }
@@ -56,6 +65,12 @@ export default function EventManager() {
     window.open(`http://localhost:5000/api/events/${eventId}/export-csv`, '_blank');
   }
 
+  function resolveBannerUrl(url?: string) {
+    if (!url) return 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=400&q=80';
+    if (url.startsWith('/uploads/')) return `http://localhost:5000${url}`;
+    return url;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -66,7 +81,7 @@ export default function EventManager() {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center space-x-2"
+          className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center space-x-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Create Event</span>
@@ -83,7 +98,7 @@ export default function EventManager() {
             <div key={evt.id} className="bg-surface border border-border rounded-xl p-4 flex flex-col justify-between space-y-4">
               <div className="flex space-x-4">
                 <img
-                  src={evt.banner || 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=400&q=80'}
+                  src={resolveBannerUrl(evt.banner)}
                   alt={evt.title}
                   className="w-24 h-24 rounded-lg object-cover shrink-0"
                 />
@@ -108,14 +123,15 @@ export default function EventManager() {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => downloadCSV(evt.id, evt.slug)}
-                    className="px-3 py-1.5 rounded-lg bg-slate-800 text-indigo-300 hover:bg-indigo-600 hover:text-white text-xs font-semibold flex items-center space-x-1 transition-all"
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 text-indigo-300 hover:bg-indigo-600 hover:text-white text-xs font-semibold flex items-center space-x-1 transition-all cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Export CSV</span>
                   </button>
                   <button
                     onClick={() => handleDelete(evt.id)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                    title="Delete event"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -129,9 +145,16 @@ export default function EventManager() {
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface border border-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-white">Schedule New Event</h3>
             <form onSubmit={handleSubmit} className="space-y-3">
+              <ImageUpload
+                label="Event Poster Banner Image"
+                value={form.banner}
+                onChange={(url) => setForm({ ...form, banner: url })}
+                placeholder="Click to upload event banner poster"
+              />
+
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Event Title</label>
                 <input
@@ -139,6 +162,7 @@ export default function EventManager() {
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   required
+                  placeholder="e.g. Annual Campus Radio Fest 2026"
                   className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -150,6 +174,7 @@ export default function EventManager() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   required
                   rows={2}
+                  placeholder="Details about concert lineups, RJ battles, and ticket rules"
                   className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -172,6 +197,7 @@ export default function EventManager() {
                   value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
                   required
+                  placeholder="e.g. Main Campus Auditorium"
                   className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -180,13 +206,13 @@ export default function EventManager() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold"
+                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 cursor-pointer shadow-md"
                 >
                   Create Event
                 </button>
@@ -198,3 +224,4 @@ export default function EventManager() {
     </div>
   );
 }
+

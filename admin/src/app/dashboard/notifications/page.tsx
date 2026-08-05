@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { BellRing, Send, Clock, Trash2 } from 'lucide-react';
+import { BellRing, Send, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function NotificationManager() {
@@ -35,15 +35,29 @@ export default function NotificationManager() {
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await api.post('/notifications', form);
+      await api.post('/notifications', {
+        title: form.title,
+        message: form.message,
+        type: 'PUSH',
+        targetAudience: form.audience,
+        status: form.sendImmediately ? 'SENT' : 'SCHEDULED',
+      });
       setForm({ title: '', message: '', audience: 'ALL', sendImmediately: true });
       fetchNotifications();
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   async function handleDelete(id: string) {
-    await api.delete(`/notifications/${id}`);
-    fetchNotifications();
+    if (confirm('Delete this notification?')) {
+      try {
+        await api.delete(`/notifications/${id}`);
+        fetchNotifications();
+      } catch (err) {
+        console.error(err);
+      }
+    }
   }
 
   return (
@@ -87,12 +101,12 @@ export default function NotificationManager() {
 
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center space-x-4 text-xs">
-              <label className="flex items-center space-x-2 text-slate-300">
+              <label className="flex items-center space-x-2 text-slate-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={form.sendImmediately}
                   onChange={(e) => setForm({ ...form, sendImmediately: e.target.checked })}
-                  className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500"
+                  className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                 />
                 <span>Send Immediately</span>
               </label>
@@ -100,7 +114,7 @@ export default function NotificationManager() {
 
             <button
               type="submit"
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2 rounded-xl text-xs flex items-center space-x-2 shadow-md"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2 rounded-xl text-xs flex items-center space-x-2 shadow-md cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Broadcast Push</span>
@@ -117,6 +131,8 @@ export default function NotificationManager() {
           <div className="flex items-center justify-center h-24">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" />
           </div>
+        ) : notifications.length === 0 ? (
+          <p className="text-xs text-slate-400 py-4 text-center">No notifications broadcasted yet.</p>
         ) : (
           <div className="space-y-3">
             {notifications.map((n) => (
@@ -132,7 +148,8 @@ export default function NotificationManager() {
                 </div>
                 <button
                   onClick={() => handleDelete(n.id)}
-                  className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                  className="p-1 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
+                  title="Delete notification"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -144,3 +161,4 @@ export default function NotificationManager() {
     </div>
   );
 }
+

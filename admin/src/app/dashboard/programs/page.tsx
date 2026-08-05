@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Search, Trash2, Edit, CheckCircle, AlertTriangle, Filter, Music } from 'lucide-react';
 import { api } from '@/lib/api';
+import ImageUpload from '@/components/common/ImageUpload';
 
 export default function ProgramManager() {
   const [programs, setPrograms] = useState<any[]>([]);
@@ -14,6 +15,7 @@ export default function ProgramManager() {
   const [warning, setWarning] = useState('');
 
   const [form, setForm] = useState({
+    title: '',
     name: '',
     description: '',
     hostName: 'RJ Ananya',
@@ -22,6 +24,7 @@ export default function ProgramManager() {
     language: 'Kannada',
     tags: 'music,morning',
     schedule: 'Mon - Fri @ 8:00 AM',
+    thumbnail: '',
     featured: false,
     status: 'PUBLISHED',
   });
@@ -29,9 +32,7 @@ export default function ProgramManager() {
   async function fetchPrograms() {
     setLoading(true);
     try {
-      const res = await api.get('/programs', {
-        params: { search: search || undefined, category: category || undefined },
-      });
+      const res = await api.get('/programs');
       if (res.data.success) {
         setPrograms(res.data.data);
       }
@@ -44,12 +45,13 @@ export default function ProgramManager() {
 
   useEffect(() => {
     fetchPrograms();
-  }, [search, category]);
+  }, []);
 
   function openCreateModal() {
     setEditId(null);
     setWarning('');
     setForm({
+      title: '',
       name: '',
       description: '',
       hostName: 'RJ Ananya',
@@ -58,6 +60,7 @@ export default function ProgramManager() {
       language: 'Kannada',
       tags: 'music,morning',
       schedule: 'Mon - Fri @ 8:00 AM',
+      thumbnail: '',
       featured: false,
       status: 'PUBLISHED',
     });
@@ -68,16 +71,18 @@ export default function ProgramManager() {
     setEditId(program.id);
     setWarning('');
     setForm({
-      name: program.name,
-      description: program.description,
-      hostName: program.hostName,
-      category: program.category,
-      duration: program.duration,
-      language: program.language,
-      tags: program.tags,
-      schedule: program.schedule,
-      featured: program.featured,
-      status: program.status,
+      title: program.title || program.name || '',
+      name: program.name || program.title || '',
+      description: program.description || '',
+      hostName: program.hostName || 'RJ Ananya',
+      category: program.category || 'Music',
+      duration: program.duration || '60 min',
+      language: program.language || 'Kannada',
+      tags: program.tags || 'music',
+      schedule: program.schedule || '',
+      thumbnail: program.thumbnail || '',
+      featured: program.featured || false,
+      status: program.status || 'PUBLISHED',
     });
     setModalOpen(true);
   }
@@ -86,25 +91,46 @@ export default function ProgramManager() {
     e.preventDefault();
     setWarning('');
     try {
+      const payload = {
+        ...form,
+        title: form.title || form.name,
+        name: form.name || form.title,
+      };
+
       if (editId) {
-        await api.put(`/programs/${editId}`, form);
+        await api.put(`/programs/${editId}`, payload);
       } else {
-        await api.post('/programs', form);
+        await api.post('/programs', payload);
       }
       setModalOpen(false);
       fetchPrograms();
     } catch (err: any) {
-      if (err.response?.data?.message) {
-        setWarning(err.response.data.message);
-      }
+      setWarning(err.response?.data?.message || 'Unable to save program.');
     }
   }
 
   async function handleDelete(id: string) {
     if (confirm('Are you sure you want to delete this program?')) {
-      await api.delete(`/programs/${id}`);
-      fetchPrograms();
+      try {
+        await api.delete(`/programs/${id}`);
+        fetchPrograms();
+      } catch (err) {
+        console.error(err);
+      }
     }
+  }
+
+  const filteredPrograms = programs.filter((item: any) => {
+    const titleText = item.title || item.name || '';
+    const matchSearch = !search || `${titleText} ${item.hostName} ${item.category}`.toLowerCase().includes(search.toLowerCase());
+    const matchCategory = !category || item.category === category;
+    return matchSearch && matchCategory;
+  });
+
+  function resolveImage(url?: string) {
+    if (!url) return '';
+    if (url.startsWith('/uploads/')) return `http://localhost:5000${url}`;
+    return url;
   }
 
   return (
@@ -117,7 +143,7 @@ export default function ProgramManager() {
 
         <button
           onClick={openCreateModal}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center space-x-2"
+          className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center space-x-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Program</span>
@@ -163,7 +189,7 @@ export default function ProgramManager() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border bg-slate-900/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                <th className="p-4">Program Name</th>
+                <th className="p-4">Program Title</th>
                 <th className="p-4">Host RJ</th>
                 <th className="p-4">Category</th>
                 <th className="p-4">Schedule</th>
@@ -172,15 +198,23 @@ export default function ProgramManager() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-xs text-slate-300">
-              {programs.map((prog) => (
+              {filteredPrograms.map((prog) => (
                 <tr key={prog.id} className="hover:bg-slate-800/40 transition-colors">
                   <td className="p-4 font-semibold text-white">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
-                        <Music className="w-4 h-4 text-indigo-400" />
-                      </div>
+                      {prog.thumbnail ? (
+                        <img
+                          src={resolveImage(prog.thumbnail)}
+                          alt={prog.title || prog.name}
+                          className="w-9 h-9 rounded-lg object-cover border border-border shrink-0"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                          <Music className="w-4 h-4 text-indigo-400" />
+                        </div>
+                      )}
                       <div>
-                        <p className="font-bold text-white">{prog.name}</p>
+                        <p className="font-bold text-white">{prog.title || prog.name}</p>
                         <p className="text-[10px] text-slate-500 truncate max-w-xs">{prog.description}</p>
                       </div>
                     </div>
@@ -200,13 +234,13 @@ export default function ProgramManager() {
                   <td className="p-4 text-right space-x-2">
                     <button
                       onClick={() => openEditModal(prog)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors cursor-pointer"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(prog.id)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -221,7 +255,7 @@ export default function ProgramManager() {
       {/* Program Add/Edit Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-white">{editId ? 'Edit Program' : 'Add New Program'}</h3>
 
             {warning && (
@@ -232,13 +266,21 @@ export default function ProgramManager() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-3">
+              <ImageUpload
+                label="Program Thumbnail Banner"
+                value={form.thumbnail}
+                onChange={(url) => setForm({ ...form, thumbnail: url })}
+                placeholder="Click to upload program show poster"
+              />
+
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Program Name</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Program Title</label>
                 <input
                   type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  value={form.title || form.name}
+                  onChange={(e) => setForm({ ...form, title: e.target.value, name: e.target.value })}
                   required
+                  placeholder="e.g. Sunrise Melodies"
                   className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -250,6 +292,7 @@ export default function ProgramManager() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   required
                   rows={2}
+                  placeholder="Overview of show format and music genre"
                   className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -262,6 +305,7 @@ export default function ProgramManager() {
                     value={form.hostName}
                     onChange={(e) => setForm({ ...form, hostName: e.target.value })}
                     required
+                    placeholder="e.g. RJ Marcus T"
                     className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -272,6 +316,7 @@ export default function ProgramManager() {
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
                     required
+                    placeholder="e.g. Morning Show"
                     className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -284,6 +329,7 @@ export default function ProgramManager() {
                     type="text"
                     value={form.duration}
                     onChange={(e) => setForm({ ...form, duration: e.target.value })}
+                    placeholder="e.g. 60 min"
                     className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -293,6 +339,7 @@ export default function ProgramManager() {
                     type="text"
                     value={form.schedule}
                     onChange={(e) => setForm({ ...form, schedule: e.target.value })}
+                    placeholder="e.g. Mon - Fri @ 8:00 AM"
                     className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -302,13 +349,13 @@ export default function ProgramManager() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700"
+                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 cursor-pointer shadow-md"
                 >
                   {editId ? 'Save Changes' : 'Create Program'}
                 </button>
@@ -320,3 +367,4 @@ export default function ProgramManager() {
     </div>
   );
 }
+

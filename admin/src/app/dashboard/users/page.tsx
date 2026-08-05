@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Users, Plus, ShieldCheck, Ban, Trash2, Search } from 'lucide-react';
+import { Plus, Trash2, Search } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const roles = ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'MODERATOR'];
@@ -20,55 +20,98 @@ export default function UserManager() {
     bio: '',
   });
 
-  async function fetchUsers() {
+  useEffect(() => {
+    fetchUsers();
+  }, [search]);
+
+  const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/users', { params: { search: search || undefined } });
+      const res = await api.get(`/users?search=${encodeURIComponent(search)}`);
       if (res.data.success) {
-        setUsers(res.data.data);
+        setUsers(res.data.data || []);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  async function handleRoleChange(userId: string, newRole: string) {
+    setLoading(true);
+    try {
+      const res = await api.patch(`/users/${userId}/role`, { role: newRole });
+      if (res.data.success) {
+        await fetchUsers();
+      }
+    } catch (err) {
+      console.error('Failed to change role:', err);
+      alert('Failed to change role');
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    fetchUsers();
-  }, [search]);
-
-  async function handleRoleChange(userId: string, newRole: string) {
-    try {
-      await api.patch(`/users/${userId}/role`, { role: newRole });
-      fetchUsers();
-    } catch (err) {
-      alert('Failed to change role');
-    }
-  }
-
   async function handleStatusChange(userId: string, newStatus: string) {
+    setLoading(true);
     try {
-      await api.patch(`/users/${userId}/status`, { status: newStatus });
-      fetchUsers();
+      const res = await api.patch(`/users/${userId}/status`, { status: newStatus });
+      if (res.data.success) {
+        await fetchUsers();
+      }
     } catch (err) {
+      console.error('Failed to update status:', err);
       alert('Failed to update status');
+    } finally {
+      setLoading(false);
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setLoading(true);
     try {
-      await api.post('/users', form);
-      setModalOpen(false);
-      fetchUsers();
-    } catch (err) {}
+      const res = await api.post('/users', {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+        bio: form.bio
+      });
+      if (res.data.success) {
+        setModalOpen(false);
+        setForm({
+          name: '',
+          email: '',
+          password: '',
+          role: 'EDITOR',
+          bio: '',
+        });
+        await fetchUsers();
+      }
+    } catch (err) {
+      console.error('Failed to create user:', err);
+      alert('Failed to create user');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleDelete(id: string) {
-    if (confirm('Delete this user?')) {
-      await api.delete(`/users/${id}`);
-      fetchUsers();
+    if (window.confirm('Delete this user?')) {
+      setLoading(true);
+      try {
+        const res = await api.delete(`/users/${id}`);
+        if (res.data.success) {
+          await fetchUsers();
+        }
+      } catch (err) {
+        console.error('Failed to delete user:', err);
+        alert('Failed to delete user');
+      } finally {
+        setLoading(false);
+      }
     }
   }
 

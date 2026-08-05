@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Mic, Download, Plus, Trash2, Edit, Play, AlertTriangle, Upload, Link } from 'lucide-react';
+import { Mic, Download, Plus, Trash2, Play, AlertTriangle, Upload, Link } from 'lucide-react';
 import { api } from '@/lib/api';
+import ImageUpload from '@/components/common/ImageUpload';
 
 export default function PodcastManager() {
   const [podcasts, setPodcasts] = useState<any[]>([]);
@@ -11,10 +12,6 @@ export default function PodcastManager() {
   const [warning, setWarning] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [playingUrl, setPlayingUrl] = useState<string | null>(null);
-
-  const [sourceType, setSourceType] = useState<'file' | 'url'>('file');
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -50,45 +47,30 @@ export default function PodcastManager() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setWarning('');
+    if (!form.audioUrl) {
+      setWarning('Please upload an audio file or provide an audio URL.');
+      return;
+    }
+
     setSubmitting(true);
-
     try {
-      const formData = new FormData();
-      formData.append('title', form.title);
-      formData.append('description', form.description);
-      formData.append('category', form.category);
-      formData.append('season', String(form.season));
-      formData.append('episodeNumber', String(form.episodeNumber));
-      formData.append('duration', form.duration);
-      formData.append('visibility', form.visibility);
-      formData.append('featured', String(form.featured));
-
-      if (sourceType === 'file' && audioFile) {
-        formData.append('audio', audioFile);
-      } else if (form.audioUrl) {
-        formData.append('audioUrl', form.audioUrl);
-      }
-
-      if (coverFile) {
-        formData.append('cover', coverFile);
-      } else if (form.coverUrl) {
-        formData.append('coverUrl', form.coverUrl);
-      }
-
-      await api.post('/podcasts', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
+      await api.post('/podcasts', form);
       setModalOpen(false);
-      setAudioFile(null);
-      setCoverFile(null);
+      setForm({
+        title: '',
+        description: '',
+        category: 'Talk Show',
+        season: 1,
+        episodeNumber: 1,
+        duration: '35:00',
+        audioUrl: '',
+        coverUrl: '',
+        featured: false,
+        visibility: 'PUBLIC',
+      });
       fetchPodcasts();
     } catch (err: any) {
-      if (err.response?.data?.message) {
-        setWarning(err.response.data.message);
-      } else {
-        setWarning('Error uploading session. Please verify file format and size.');
-      }
+      setWarning(err.response?.data?.message || 'Error publishing podcast session.');
     } finally {
       setSubmitting(false);
     }
@@ -96,16 +78,18 @@ export default function PodcastManager() {
 
   async function handleDelete(id: string) {
     if (confirm('Delete this recorded session / podcast episode?')) {
-      await api.delete(`/podcasts/${id}`);
-      fetchPodcasts();
+      try {
+        await api.delete(`/podcasts/${id}`);
+        fetchPodcasts();
+      } catch (err) {
+        console.error(err);
+      }
     }
   }
 
-  function resolveAudioUrl(url: string) {
+  function resolveMediaUrl(url?: string) {
     if (!url) return '';
-    if (url.startsWith('/uploads/')) {
-      return `http://localhost:5000${url}`;
-    }
+    if (url.startsWith('/uploads/')) return `http://localhost:5000${url}`;
     return url;
   }
 
@@ -133,7 +117,7 @@ export default function PodcastManager() {
             <Mic className="w-4 h-4 text-indigo-400" />
             <span>Playing Recorded Audio Session Preview</span>
           </span>
-          <audio controls autoPlay src={resolveAudioUrl(playingUrl)} className="h-8" />
+          <audio controls autoPlay src={resolveMediaUrl(playingUrl)} className="h-8" />
         </div>
       )}
 
@@ -148,13 +132,13 @@ export default function PodcastManager() {
             <div key={pod.id} className="bg-surface border border-border rounded-xl p-4 flex flex-col justify-between space-y-4">
               <div className="flex items-start space-x-3">
                 <img
-                  src={resolveAudioUrl(pod.coverUrl) || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80'}
+                  src={resolveMediaUrl(pod.coverUrl) || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80'}
                   alt={pod.title}
-                  className="w-16 h-16 rounded-lg object-cover"
+                  className="w-16 h-16 rounded-lg object-cover shrink-0"
                 />
                 <div className="overflow-hidden">
                   <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
-                    S{pod.season} E{pod.episodeNumber} • {pod.category}
+                    S{pod.season || 1} E{pod.episodeNumber || 1} • {pod.category}
                   </span>
                   <h3 className="font-bold text-white text-sm truncate mt-0.5">{pod.title}</h3>
                   <p className="text-[11px] text-slate-400 line-clamp-2 mt-1">{pod.description}</p>
@@ -165,9 +149,9 @@ export default function PodcastManager() {
                 <div className="flex items-center space-x-3 text-slate-400">
                   <span className="flex items-center space-x-1">
                     <Download className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>{pod.downloads}</span>
+                    <span>{pod.downloads || 0}</span>
                   </span>
-                  <span>{pod.duration}</span>
+                  <span>{pod.duration || '30:00'}</span>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -195,32 +179,8 @@ export default function PodcastManager() {
       {/* Upload Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-white">Upload Recorded Session</h3>
-              <div className="flex bg-slate-900 p-1 rounded-lg border border-border">
-                <button
-                  type="button"
-                  onClick={() => setSourceType('file')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center space-x-1 ${
-                    sourceType === 'file' ? 'bg-indigo-600 text-white' : 'text-slate-400'
-                  }`}
-                >
-                  <Upload className="w-3 h-3" />
-                  <span>Upload File</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSourceType('url')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center space-x-1 ${
-                    sourceType === 'url' ? 'bg-indigo-600 text-white' : 'text-slate-400'
-                  }`}
-                >
-                  <Link className="w-3 h-3" />
-                  <span>Server URL</span>
-                </button>
-              </div>
-            </div>
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-white">Upload Recorded Session</h3>
 
             {warning && (
               <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-center space-x-2">
@@ -254,42 +214,25 @@ export default function PodcastManager() {
                 />
               </div>
 
-              {/* Audio Source Input */}
-              {sourceType === 'file' ? (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Select Audio Recording File (.mp3, .wav, .aac, .m4a)</label>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-                    required
-                    className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-xs text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">External Storage Server Audio URL</label>
-                  <input
-                    type="url"
-                    value={form.audioUrl}
-                    onChange={(e) => setForm({ ...form, audioUrl: e.target.value })}
-                    required
-                    placeholder="https://your-storage-server.com/recordings/session.mp3"
-                    className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              )}
+              {/* Audio File Upload */}
+              <ImageUpload
+                label="Audio Recording File (.mp3, .wav, .aac, .m4a)"
+                accept="audio/*"
+                fileType="audio"
+                value={form.audioUrl}
+                onChange={(url) => setForm({ ...form, audioUrl: url })}
+                placeholder="Click or drop audio recording file here"
+              />
 
-              {/* Cover Image Input */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Cover Artwork Image (Optional)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-                  className="w-full bg-slate-900 border border-border rounded-lg px-3 py-2 text-xs text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"
-                />
-              </div>
+              {/* Cover Artwork Image Upload */}
+              <ImageUpload
+                label="Cover Artwork Image"
+                accept="image/*"
+                fileType="image"
+                value={form.coverUrl}
+                onChange={(url) => setForm({ ...form, coverUrl: url })}
+                placeholder="Click or drop podcast cover photo"
+              />
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
@@ -325,17 +268,17 @@ export default function PodcastManager() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center space-x-2 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center space-x-2 cursor-pointer shadow-md"
                 >
                   {submitting ? (
-                    <span>Uploading...</span>
+                    <span>Publishing...</span>
                   ) : (
                     <span>Publish Recording</span>
                   )}
@@ -348,3 +291,4 @@ export default function PodcastManager() {
     </div>
   );
 }
+

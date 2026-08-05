@@ -47,6 +47,10 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 // Static uploads serving
 app.use('/uploads', express.static(config.uploadDir));
 
+// Static Public Frontend Serving
+const frontendPath = path.join(__dirname, '../../frontend');
+app.use(express.static(frontendPath));
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({
@@ -73,6 +77,11 @@ app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/upload', uploadRoutes);
+
+// Root route serves the Public Website
+app.get('/', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'modern_fm_home.html'));
+});
 
 // Error Handler
 app.use(errorHandler);

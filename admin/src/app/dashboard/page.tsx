@@ -26,12 +26,18 @@ export default function DashboardHome() {
 
   async function loadData() {
     try {
-      const [statsRes, liveRes] = await Promise.all([
+      const [statsResult, liveResult] = await Promise.allSettled([
         api.get('/analytics/dashboard'),
         api.get('/live'),
       ]);
-      if (statsRes.data.success) setStats(statsRes.data.data);
-      if (liveRes.data.success) setLiveState(liveRes.data.data);
+
+      if (statsResult.status === 'fulfilled' && statsResult.value.data.success) {
+        setStats(statsResult.value.data.data);
+      }
+
+      if (liveResult.status === 'fulfilled' && liveResult.value.data.success) {
+        setLiveState(liveResult.value.data.data);
+      }
     } catch (err) {
       console.error(err);
     } finally {

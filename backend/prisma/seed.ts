@@ -24,15 +24,29 @@ async function main() {
   const passwordHashMod = await bcrypt.hash('Mod@123', 10);
 
   const superAdmin = await prisma.user.upsert({
-    where: { email: 'admin@radioninada.local' },
-    update: {},
+    where: { email: 'radioninada@gmail.com' },
+    update: { role: 'SUPER_ADMIN', status: 'ACTIVE', password: passwordHashAdmin },
     create: {
-      email: 'admin@radioninada.local',
+      email: 'radioninada@gmail.com',
       password: passwordHashAdmin,
       name: 'Radio Ninada Admin',
       role: 'SUPER_ADMIN',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
       bio: 'Platform System Administrator & Executive Director',
+      status: 'ACTIVE',
+    },
+  });
+
+  const legacyAdmin = await prisma.user.upsert({
+    where: { email: 'admin@radioninada.local' },
+    update: {},
+    create: {
+      email: 'admin@radioninada.local',
+      password: passwordHashAdmin,
+      name: 'Legacy Dev Admin',
+      role: 'ADMIN',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+      bio: 'Local development admin account',
       status: 'ACTIVE',
     },
   });
@@ -80,7 +94,8 @@ async function main() {
   });
 
   console.log('✅ Users seeded with credentials:');
-  console.log('   - SUPER_ADMIN: admin@radioninada.local (Admin@123)');
+  console.log('   - SUPER_ADMIN: radioninada@gmail.com (Firebase sign-in)');
+  console.log('   - DEV ADMIN:   admin@radioninada.local (Admin@123)');
   console.log('   - EDITOR:      editor@radioninada.local (Editor@123)');
   console.log('   - RJ:          rj@radioninada.local (RJ@123)');
   console.log('   - MODERATOR:   mod@radioninada.local (Mod@123)');
@@ -92,7 +107,7 @@ async function main() {
     create: {
       id: 'live-config',
       isLive: true,
-      streamUrl: 'https://stream.radioninada.com/live',
+      streamUrl: 'https://stream.zeno.fm/f3wvbbqmdg8uv',
       title: 'Morning Ninada Super Hits Live',
       currentProgram: 'Ninada Morning Buzz',
       currentRJ: 'RJ Ananya',
