@@ -190,7 +190,7 @@
             <a href="#home"
                 class="inline-flex items-center transition-transform duration-200 ease-in-out hover:scale-[1.03] cursor-pointer"
                 aria-label="Radio Ninada 90.4 FM - Home">
-                <img src="images/radio_ninada_logo.png" alt="Radio Ninada 90.4 FM Logo"
+                <img src="images/radio_ninada_logo.png" onerror="if (this.src.indexOf('../images/') === -1) this.src='../images/radio_ninada_logo.png';" alt="Radio Ninada 90.4 FM Logo"
                     class="h-[44px] sm:h-[48px] md:h-[56px] w-auto object-contain transition-transform duration-200 ease-in-out" />
             </a>
             <!-- Navigation Links -->
@@ -1163,11 +1163,12 @@
         </div>
     </nav>
 
-    <!-- Comprehensive Footer -->
     <footer class="w-full py-xl bg-surface-container-lowest border-t border-outline-variant pb-28">
         <div class="max-w-container-max mx-auto px-md lg:px-xl grid grid-cols-1 md:grid-cols-4 gap-gutter">
             <div class="col-span-1">
-                <span class="font-headline-md text-headline-md font-bold text-primary mb-base block">Modern FM</span>
+                <a href="#home" class="inline-flex items-center gap-2 mb-base block">
+                    <img src="images/radio_ninada_logo.png" onerror="if (this.src.indexOf('../images/') === -1) this.src='../images/radio_ninada_logo.png';" alt="Radio Ninada 90.4 FM Logo" class="h-10 w-auto object-contain" />
+                </a>
                 <p class="text-on-surface-variant font-body-md text-body-md mb-md">Elevating your auditory experience
                     with curated live sessions, campus news, and premium audio content.</p>
                 <div class="flex gap-md">
