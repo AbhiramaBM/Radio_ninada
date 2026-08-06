@@ -13,4 +13,7 @@
   };
 
   window.__RADIO_ADMIN_EMAIL__ = 'radioninada@gmail.com';
+  window.__RADIO_API_BASE__ = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000/api'
+    : 'https://admin-eight-indol-30.vercel.app/api';
 })();
