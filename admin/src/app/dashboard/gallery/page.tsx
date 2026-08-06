@@ -156,7 +156,7 @@ export default function GalleryManager() {
         <div className="text-center py-16 bg-surface/50 border border-border rounded-xl">
           <Film className="w-10 h-10 text-slate-600 mx-auto mb-2" />
           <p className="text-sm font-semibold text-slate-300">No media items found in this section</p>
-          <p className="text-xs text-slate-500 mt-1">Click "Add Photo / Video Short" to upload new media.</p>
+          <p className="text-xs text-slate-500 mt-1">Click &quot;Add Photo / Video Short&quot; to upload new media.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

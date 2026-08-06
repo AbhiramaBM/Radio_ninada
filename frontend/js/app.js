@@ -44,7 +44,6 @@ window.RadioPlayer = {
                     const validUrl = this.isValidLiveStreamUrl(data.streamUrl) ? data.streamUrl : defaultStream;
                     this.liveStreamReady = true;
                     this.currentTrack.url = validUrl;
-                    this.liveListeners = data.liveListeners || 142;
                     if (data.title) this.currentTrack.title = data.title;
                     if (data.currentRJ || data.currentProgram) {
                         this.currentTrack.artist = `${data.currentRJ || 'RJ Ananya'} • ${data.currentProgram || 'Ninada Morning Buzz'}`;
@@ -57,7 +56,6 @@ window.RadioPlayer = {
             }
         }
         this.liveStreamReady = true;
-        this.liveListeners = 142;
         this.currentTrack.title = 'Radio Ninada 90.4 FM Live';
         this.currentTrack.artist = 'RJ Ananya • Ninada Morning Buzz (SDM Ujire)';
         this.currentTrack.url = defaultStream;
@@ -241,9 +239,6 @@ window.RadioPlayer = {
         });
         document.querySelectorAll('[data-live-description]').forEach((element) => {
             element.textContent = this.currentTrack.artist;
-        });
-        document.querySelectorAll('[data-live-listeners]').forEach((element) => {
-            element.textContent = `${this.liveListeners || 142} live listeners`;
         });
     },
 
@@ -506,198 +501,272 @@ function resolveServerUrl(url) {
     return url;
 }
 
+// Realtime Firestore Sync Subscriptions
+function initRealtimeListeners() {
+    if (typeof firebase === 'undefined' || !firebase.apps.length) return;
+    try {
+        const db = firebase.firestore();
+
+        // 1. Live Radio State Sync
+        db.collection('live').doc('live-config').onSnapshot(snapshot => {
+            if (snapshot.exists) {
+                const data = snapshot.data();
+                if (data && window.RadioPlayer) {
+                    if (data.streamUrl && RadioPlayer.isValidLiveStreamUrl(data.streamUrl)) {
+                        RadioPlayer.currentTrack.url = data.streamUrl;
+                    }
+                    if (data.title) RadioPlayer.currentTrack.title = data.title;
+                    if (data.currentRJ || data.currentProgram) {
+                        RadioPlayer.currentTrack.artist = `${data.currentRJ || 'RJ Ananya'} • ${data.currentProgram || 'Ninada Morning Buzz'}`;
+                    }
+                    RadioPlayer.updateUI();
+
+                    const titleEl = document.getElementById('live-listeners-count-display');
+                    const subEl = document.getElementById('live-broadcast-status-subtitle');
+                    if (titleEl) {
+                        const statusLabel = data.isLive ? 'ON AIR LIVE 🔴' : 'OFF AIR ⚪';
+                        titleEl.innerText = `${data.title || 'Radio Ninada 90.4 FM'} — ${statusLabel}`;
+                    }
+                    if (subEl && (data.currentProgram || data.currentRJ)) {
+                        subEl.innerText = `${data.currentProgram || 'Live Radio Broadcast'} with ${data.currentRJ || 'Station Host'}`;
+                    }
+                }
+            }
+        }, err => console.warn('[RealtimeSync] Live state error:', err));
+
+        // 2. RJs Realtime Sync
+        db.collection('rjs').onSnapshot(snapshot => {
+            const rjs = [];
+            snapshot.forEach(doc => rjs.push({ id: doc.id, ...doc.data() }));
+            if (rjs.length > 0) renderRJsUI(rjs);
+        }, err => console.warn('[RealtimeSync] RJs error:', err));
+
+        // 3. Podcasts Realtime Sync
+        db.collection('podcasts').onSnapshot(snapshot => {
+            const pods = [];
+            snapshot.forEach(doc => pods.push({ id: doc.id, ...doc.data() }));
+            if (pods.length > 0) renderPodcastsUI(pods);
+        }, err => console.warn('[RealtimeSync] Podcasts error:', err));
+
+        // 4. Events Realtime Sync
+        db.collection('events').onSnapshot(snapshot => {
+            const evts = [];
+            snapshot.forEach(doc => evts.push({ id: doc.id, ...doc.data() }));
+            if (evts.length > 0) renderEventsUI(evts);
+        }, err => console.warn('[RealtimeSync] Events error:', err));
+
+        // 5. Gallery Realtime Sync
+        db.collection('gallery').onSnapshot(snapshot => {
+            const items = [];
+            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            if (items.length > 0) renderGalleryUI(items);
+        }, err => console.warn('[RealtimeSync] Gallery error:', err));
+
+        // 6. News Realtime Sync
+        db.collection('news').onSnapshot(snapshot => {
+            const newsItems = [];
+            snapshot.forEach(doc => newsItems.push({ id: doc.id, ...doc.data() }));
+            if (newsItems.length > 0) renderNewsUI(newsItems);
+        }, err => console.warn('[RealtimeSync] News error:', err));
+
+        console.log('⚡ Firestore Real-time Listeners Activated');
+    } catch (e) {
+        console.warn('[RealtimeSync] Initialization skipped:', e.message);
+    }
+}
+
+function renderRJsUI(rjList) {
+    const container = document.getElementById('rj-list-container');
+    if (!container) return;
+    for (const k in rjData) {
+        if (k.startsWith('dyn_')) delete rjData[k];
+    }
+    if (rjList.length === 0) {
+        container.innerHTML = `<div class="text-xs text-on-surface-variant italic py-4 col-span-full">No RJ hosts listed at this moment.</div>`;
+        return;
+    }
+    container.innerHTML = rjList.map(rj => {
+        const rjKey = 'dyn_' + rj.id;
+        const photoUrl = resolveServerUrl(rj.photo) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80';
+        rjData[rjKey] = {
+            name: rj.name,
+            show: rj.designation || 'On-Air Host',
+            timing: rj.status === 'ACTIVE' ? 'On Air Active' : 'Station Host',
+            img: photoUrl,
+            bio: rj.bio || 'Station Presenter at Radio Ninada.',
+            genre: rj.achievements || 'Pop, Classical, Regional Beats'
+        };
+        return `
+            <div onclick="openRjModal('${rjKey}')" class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
+                <div class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
+                    <img class="w-full h-full object-cover rounded-full" src="${photoUrl}" alt="${rj.name}" />
+                </div>
+                <span class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight truncate w-full">${rj.name}</span>
+                <span class="text-[11px] text-on-surface-variant truncate w-full">${rj.designation || 'Host'}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderPodcastsUI(podList) {
+    const podGrid = document.getElementById('podcast-grid');
+    if (!podGrid) return;
+    if (podList.length === 0) {
+        podGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No podcast episodes published yet. Tune in soon for fresh shows!</div>`;
+        return;
+    }
+    podGrid.innerHTML = podList.map((pod) => {
+        const coverUrl = resolveServerUrl(pod.coverUrl) || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80';
+        const audioUrl = resolveServerUrl(pod.audioUrl) || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+        const catClass = pod.category ? pod.category.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'talk-show';
+
+        return `
+            <div class="podcast-card popular recently-added ${catClass} bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all group flex flex-col justify-between">
+                <div>
+                    <div class="relative aspect-video rounded-xl overflow-hidden mb-md">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="${coverUrl}" alt="${pod.title}" />
+                        <span class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">${pod.category || 'Podcast'}</span>
+                        <button onclick="RadioPlayer.playTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', 'S${pod.season || 1} E${pod.episodeNumber || 1}', '${coverUrl.replace(/'/g, "\\'")}')"
+                            class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
+                            <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </button>
+                    </div>
+                    <h3 class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">${pod.title}</h3>
+                    <p class="text-on-surface-variant text-xs mb-sm">S${pod.season || 1} E${pod.episodeNumber || 1} • ${pod.duration || '30:00'}</p>
+                    <p class="text-on-surface-variant text-sm line-clamp-2">${pod.description || ''}</p>
+                </div>
+                <div class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
+                    <span>${pod.downloads || 0} Downloads</span>
+                    <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer" onclick="showToast('Episode bookmarked!')">bookmark</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderEventsUI(evtList) {
+    const eventsContainer = document.querySelector('#events .grid');
+    if (!eventsContainer) return;
+    if (evtList.length === 0) {
+        eventsContainer.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No upcoming events scheduled.</div>`;
+        return;
+    }
+    eventsContainer.innerHTML = evtList.map(evt => {
+        const bannerUrl = resolveServerUrl(evt.banner) || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80';
+        const dateStr = evt.eventDate ? new Date(evt.eventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'UPCOMING';
+
+        return `
+            <div class="bg-white rounded-2xl overflow-hidden border border-outline-variant/30 hover:shadow-2xl transition-all duration-300 group">
+                <div class="relative h-48 overflow-hidden">
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${bannerUrl}" alt="${evt.title}" />
+                    <div class="absolute top-3 right-3 bg-primary text-white font-bold text-xs px-md py-xs rounded-full shadow-md">${dateStr}</div>
+                </div>
+                <div class="p-md">
+                    <div class="flex items-center gap-xs text-xs text-primary font-semibold uppercase mb-xs">
+                        <span class="material-symbols-outlined text-sm">location_on</span>
+                        <span>${evt.location || 'Radio Ninada Studio'}</span>
+                    </div>
+                    <h3 class="font-headline-md text-[20px] font-bold mb-xs group-hover:text-primary transition-colors">${evt.title}</h3>
+                    <p class="text-on-surface-variant text-sm mb-md line-clamp-2">${evt.description || ''}</p>
+                    <button onclick="rsvpToast('${evt.title.replace(/'/g, "\\'")}')"
+                        class="w-full bg-surface-container-low text-primary font-bold py-sm rounded-xl hover:bg-primary hover:text-white transition-all text-sm cursor-pointer">
+                        RSVP / Get Free Pass
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderGalleryUI(galList) {
+    const galGrid = document.getElementById('gallery-grid');
+    if (!galGrid) return;
+    if (galList.length === 0) {
+        galGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No media items or BTS shorts uploaded yet. Admin can upload media from the dashboard.</div>`;
+        return;
+    }
+    galGrid.innerHTML = galList.map(item => {
+        const isVideo = item.type === 'VIDEO' || item.category === 'BTS Shorts' || (item.mediaUrl && item.mediaUrl.match(/\.(mp4|webm|mov|mkv)$/i));
+        const itemClass = isVideo ? 'bts' : 'photos';
+        const displayThumb = resolveServerUrl(item.thumbnail || item.mediaUrl);
+        const durationTag = item.duration || (isVideo ? 'Shorts' : '');
+        const desc = item.description || (isVideo ? 'Watch studio bloopers & Behind the mic moments' : 'Behind the mic photo');
+
+        return `
+            <div class="gallery-item ${itemClass} relative rounded-2xl overflow-hidden group shadow-md aspect-video cursor-pointer"
+                onclick="openMediaPreview('${item.title.replace(/'/g, "\\'")}', '${isVideo ? 'video' : 'photo'}', '${item.mediaUrl.replace(/'/g, "\\'")}', '${desc.replace(/'/g, "\\'")}')">
+                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    src="${displayThumb}" alt="${item.title}" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-md flex flex-col justify-between">
+                    <span class="self-end bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full flex items-center gap-xs">
+                        <span class="material-symbols-outlined text-xs">${isVideo ? 'videocam' : 'photo_camera'}</span>
+                        ${durationTag}
+                    </span>
+                    <div>
+                        <h4 class="text-white font-bold text-sm mb-xs group-hover:text-primary transition-colors">${item.title}</h4>
+                        <p class="text-white/70 text-xs line-clamp-1">${desc}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderNewsUI(newsItems) {
+    newsItems.forEach(item => {
+        const cat = (item.category || 'Local').toLowerCase();
+        const targetCat = newsData[cat] ? cat : 'local';
+        const formattedItem = {
+            title: item.title,
+            date: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today',
+            desc: item.content || item.description || '',
+            tag: item.category || 'News'
+        };
+        if (!newsData[targetCat].some(n => n.title === item.title)) {
+            newsData[targetCat].unshift(formattedItem);
+        }
+    });
+    renderNews('college');
+}
+
 // Global Dynamic Data Synchronizer
 async function loadDynamicData() {
     if (!window.RadioNinadaAPI) return;
 
-    // 1. Synchronize RJs
     try {
         const rjRes = await window.RadioNinadaAPI.getRJs();
         if (rjRes && rjRes.success && Array.isArray(rjRes.data)) {
-            const container = document.getElementById('rj-list-container');
-            if (container) {
-                for (const k in rjData) {
-                    if (k.startsWith('dyn_')) delete rjData[k];
-                }
-                if (rjRes.data.length === 0) {
-                    container.innerHTML = `<div class="text-xs text-on-surface-variant italic py-4 col-span-full">No RJ hosts listed at this moment.</div>`;
-                } else {
-                    container.innerHTML = rjRes.data.map(rj => {
-                        const rjKey = 'dyn_' + rj.id;
-                        const photoUrl = resolveServerUrl(rj.photo) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80';
-                        
-                        rjData[rjKey] = {
-                            name: rj.name,
-                            show: rj.designation || 'On-Air Host',
-                            timing: rj.status === 'ACTIVE' ? 'On Air Active' : 'Station Host',
-                            img: photoUrl,
-                            bio: rj.bio || 'Station Presenter at Radio Ninada.',
-                            genre: rj.achievements || 'Pop, Classical, Regional Beats'
-                        };
-
-                        return `
-                            <div onclick="openRjModal('${rjKey}')" class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                                <div class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                                    <img class="w-full h-full object-cover rounded-full" src="${photoUrl}" alt="${rj.name}" />
-                                </div>
-                                <span class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight truncate w-full">${rj.name}</span>
-                                <span class="text-[11px] text-on-surface-variant truncate w-full">${rj.designation || 'Host'}</span>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            }
+            renderRJsUI(rjRes.data);
         }
-    } catch (e) {
-        console.warn('[loadDynamicData] Error loading RJs from API:', e);
-    }
+    } catch (e) { console.warn('[loadDynamicData] RJs fetch fallback:', e); }
 
-    // 2. Synchronize Podcasts
-    const podGrid = document.getElementById('podcast-grid');
     try {
         const podRes = await window.RadioNinadaAPI.getPodcasts();
-        if (podGrid) {
-            if (podRes && podRes.success && Array.isArray(podRes.data) && podRes.data.length > 0) {
-                podGrid.innerHTML = podRes.data.map((pod) => {
-                    const coverUrl = resolveServerUrl(pod.coverUrl) || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80';
-                    const audioUrl = resolveServerUrl(pod.audioUrl) || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-                    const catClass = pod.category ? pod.category.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'talk-show';
-
-                    return `
-                        <div class="podcast-card popular recently-added ${catClass} bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all group flex flex-col justify-between">
-                            <div>
-                                <div class="relative aspect-video rounded-xl overflow-hidden mb-md">
-                                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="${coverUrl}" alt="${pod.title}" />
-                                    <span class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">${pod.category || 'Podcast'}</span>
-                                    <button onclick="RadioPlayer.playTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', 'S${pod.season || 1} E${pod.episodeNumber || 1}', '${coverUrl.replace(/'/g, "\\'")}')"
-                                        class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
-                                        <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                                    </button>
-                                </div>
-                                <h3 class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">${pod.title}</h3>
-                                <p class="text-on-surface-variant text-xs mb-sm">S${pod.season || 1} E${pod.episodeNumber || 1} • ${pod.duration || '30:00'}</p>
-                                <p class="text-on-surface-variant text-sm line-clamp-2">${pod.description || ''}</p>
-                            </div>
-                            <div class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
-                                <span>${pod.downloads || 0} Downloads</span>
-                                <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer" onclick="showToast('Episode bookmarked!')">bookmark</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } else if (podRes && podRes.success && Array.isArray(podRes.data) && podRes.data.length === 0) {
-                podGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No podcast episodes published yet. Tune in soon for fresh shows!</div>`;
-            } else {
-                podGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant font-body-md flex flex-col items-center gap-xs"><span class="material-symbols-outlined text-amber-500 text-2xl">warning</span><span>Unable to load podcasts from server. Please refresh or try again.</span></div>`;
-            }
+        if (podRes && podRes.success && Array.isArray(podRes.data)) {
+            renderPodcastsUI(podRes.data);
         }
-    } catch (e) {
-        console.warn('[loadDynamicData] Error loading podcasts from API:', e);
-        if (podGrid) {
-            podGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant font-body-md flex flex-col items-center gap-xs"><span class="material-symbols-outlined text-amber-500 text-2xl">warning</span><span>Unable to load podcasts from server. Please try again.</span></div>`;
-        }
-    }
+    } catch (e) { console.warn('[loadDynamicData] Podcasts fetch fallback:', e); }
 
-    // 3. Synchronize News
     try {
         const newsRes = await window.RadioNinadaAPI.getNews();
-        if (newsRes && newsRes.success && Array.isArray(newsRes.data) && newsRes.data.length > 0) {
-            newsRes.data.forEach(item => {
-                const cat = (item.category || 'Local').toLowerCase();
-                const targetCat = newsData[cat] ? cat : 'local';
-                const formattedItem = {
-                    title: item.title,
-                    date: new Date(item.createdAt).toLocaleDateString(),
-                    desc: item.content,
-                    tag: item.category || 'News'
-                };
-                if (!newsData[targetCat].some(n => n.title === item.title)) {
-                    newsData[targetCat].unshift(formattedItem);
-                }
-            });
-            renderNews('college');
+        if (newsRes && newsRes.success && Array.isArray(newsRes.data)) {
+            renderNewsUI(newsRes.data);
         }
-    } catch (e) {
-        console.warn('[loadDynamicData] Error loading news from API:', e);
-    }
+    } catch (e) { console.warn('[loadDynamicData] News fetch fallback:', e); }
 
-    // 4. Synchronize Events
     try {
         const evtRes = await window.RadioNinadaAPI.getEvents();
-        if (evtRes && evtRes.success && Array.isArray(evtRes.data) && evtRes.data.length > 0) {
-            const eventsContainer = document.querySelector('#events .grid');
-            if (eventsContainer) {
-                eventsContainer.innerHTML = evtRes.data.map(evt => {
-                    const bannerUrl = resolveServerUrl(evt.banner) || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80';
-                    const dateStr = new Date(evt.eventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-                    
-                    return `
-                        <div class="bg-white rounded-2xl overflow-hidden border border-outline-variant/30 hover:shadow-2xl transition-all duration-300 group">
-                            <div class="relative h-48 overflow-hidden">
-                                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${bannerUrl}" alt="${evt.title}" />
-                                <div class="absolute top-3 right-3 bg-primary text-white font-bold text-xs px-md py-xs rounded-full shadow-md">${dateStr}</div>
-                            </div>
-                            <div class="p-md">
-                                <div class="flex items-center gap-xs text-xs text-primary font-semibold uppercase mb-xs">
-                                    <span class="material-symbols-outlined text-sm">location_on</span>
-                                    <span>${evt.location || 'Radio Ninada Studio'}</span>
-                                </div>
-                                <h3 class="font-headline-md text-[20px] font-bold mb-xs group-hover:text-primary transition-colors">${evt.title}</h3>
-                                <p class="text-on-surface-variant text-sm mb-md line-clamp-2">${evt.description || ''}</p>
-                                <button onclick="rsvpToast('${evt.title.replace(/'/g, "\\'")}')"
-                                    class="w-full bg-surface-container-low text-primary font-bold py-sm rounded-xl hover:bg-primary hover:text-white transition-all text-sm cursor-pointer">
-                                    RSVP / Get Free Pass
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
+        if (evtRes && evtRes.success && Array.isArray(evtRes.data)) {
+            renderEventsUI(evtRes.data);
         }
-    } catch (e) {
-        console.warn('[loadDynamicData] Error loading events from API:', e);
-    }
+    } catch (e) { console.warn('[loadDynamicData] Events fetch fallback:', e); }
 
-    // 5. Synchronize Media Gallery & BTS Shorts
     try {
         const galRes = await window.RadioNinadaAPI.getGallery();
         if (galRes && galRes.success && Array.isArray(galRes.data)) {
-            const galGrid = document.getElementById('gallery-grid');
-            if (galGrid) {
-                if (galRes.data.length === 0) {
-                    galGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No media items or BTS shorts uploaded yet. Admin can upload media from the dashboard.</div>`;
-                } else {
-                    galGrid.innerHTML = galRes.data.map(item => {
-                        const isVideo = item.type === 'VIDEO' || item.category === 'BTS Shorts' || (item.mediaUrl && item.mediaUrl.match(/\.(mp4|webm|mov|mkv)$/i));
-                        const itemClass = isVideo ? 'bts' : 'photos';
-                        const displayThumb = resolveServerUrl(item.thumbnail || item.mediaUrl);
-                        const durationTag = item.duration || (isVideo ? 'Shorts' : '');
-                        const desc = item.description || (isVideo ? 'Watch studio bloopers & Behind the mic moments' : 'Behind the mic photo');
-
-                        return `
-                            <div class="gallery-item ${itemClass} relative rounded-2xl overflow-hidden group shadow-md aspect-video cursor-pointer"
-                                onclick="openMediaPreview('${item.title.replace(/'/g, "\\'")}', '${isVideo ? 'video' : 'photo'}', '${item.mediaUrl.replace(/'/g, "\\'")}', '${desc.replace(/'/g, "\\'")}')">
-                                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    src="${displayThumb}" alt="${item.title}" />
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-md flex flex-col justify-between">
-                                    <span class="self-end bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full flex items-center gap-xs">
-                                        <span class="material-symbols-outlined text-xs">${isVideo ? 'videocam' : 'photo_camera'}</span>
-                                        ${durationTag}
-                                    </span>
-                                    <div>
-                                        <h4 class="text-white font-bold text-sm mb-xs group-hover:text-primary transition-colors">${item.title}</h4>
-                                        <p class="text-white/70 text-xs line-clamp-1">${desc}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            }
+            renderGalleryUI(galRes.data);
         }
-    } catch (e) {
-        console.warn('[loadDynamicData] Error loading gallery from API:', e);
-    }
+    } catch (e) { console.warn('[loadDynamicData] Gallery fetch fallback:', e); }
 }
 
 // Global Event Listeners & Initialization
@@ -713,6 +782,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch dynamic backend data
     loadDynamicData();
 
+    // Initialize real-time listeners for instant synchronization
+    setTimeout(initRealtimeListeners, 1000);
+
     // Close modal when clicking backdrop
     window.addEventListener('click', (e) => {
         const rjModal = document.getElementById('rj-modal');
@@ -723,5 +795,120 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === mediaModal) {
             closeMediaLightbox();
         }
+        const searchModal = document.getElementById('global-search-modal');
+        if (e.target === searchModal) {
+            closeGlobalSearchModal();
+        }
     });
 });
+
+// Phase 10: Global Search Functionality
+function openGlobalSearchModal() {
+    const modal = document.getElementById('global-search-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        const input = document.getElementById('global-search-input');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+        performGlobalSearch();
+    }
+}
+
+function closeGlobalSearchModal() {
+    const modal = document.getElementById('global-search-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+async function performGlobalSearch() {
+    const input = document.getElementById('global-search-input');
+    const container = document.getElementById('global-search-results');
+    if (!container) return;
+
+    const query = input ? input.value.trim().toLowerCase() : '';
+    if (!query) {
+        container.innerHTML = `<p class="text-xs text-center text-gray-400 py-6">Type keywords above to search live Radio Ninada content...</p>`;
+        return;
+    }
+
+    container.innerHTML = `<p class="text-xs text-center text-primary py-6 flex items-center justify-center gap-2"><span class="material-symbols-outlined animate-spin text-sm">sync</span> Searching live catalog...</p>`;
+
+    const results = [];
+
+    // Search Podcasts
+    if (window.RadioNinadaAPI) {
+        try {
+            const pods = await window.RadioNinadaAPI.getPodcasts();
+            if (pods && pods.success && Array.isArray(pods.data)) {
+                pods.data.forEach(p => {
+                    if (p.title.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query))) {
+                        results.push({ type: 'PODCAST', title: p.title, subtitle: `Podcast • ${p.category || 'Audio'}`, icon: 'podcasts', action: `RadioPlayer.playTrack('${p.audioUrl}', '${p.title}', 'Podcast', '${p.coverUrl || ''}'); closeGlobalSearchModal();` });
+                    }
+                });
+            }
+        } catch (_) {}
+
+        // Search News
+        try {
+            const newsRes = await window.RadioNinadaAPI.getNews();
+            if (newsRes && newsRes.success && Array.isArray(newsRes.data)) {
+                newsRes.data.forEach(n => {
+                    if (n.title.toLowerCase().includes(query) || (n.content && n.content.toLowerCase().includes(query))) {
+                        results.push({ type: 'NEWS', title: n.title, subtitle: `News Bulletin • ${n.category || 'Local'}`, icon: 'newspaper', action: `document.getElementById('news').scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();` });
+                    }
+                });
+            }
+        } catch (_) {}
+
+        // Search Events
+        try {
+            const evts = await window.RadioNinadaAPI.getEvents();
+            if (evts && evts.success && Array.isArray(evts.data)) {
+                evts.data.forEach(e => {
+                    if (e.title.toLowerCase().includes(query) || (e.description && e.description.toLowerCase().includes(query))) {
+                        results.push({ type: 'EVENT', title: e.title, subtitle: `Event • ${e.location || 'Radio Studio'}`, icon: 'event', action: `document.getElementById('events').scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();` });
+                    }
+                });
+            }
+        } catch (_) {}
+
+        // Search RJs
+        try {
+            const rjs = await window.RadioNinadaAPI.getRJs();
+            if (rjs && rjs.success && Array.isArray(rjs.data)) {
+                rjs.data.forEach(r => {
+                    if (r.name.toLowerCase().includes(query) || (r.bio && r.bio.toLowerCase().includes(query))) {
+                        results.push({ type: 'RJ', title: r.name, subtitle: `RJ Host • ${r.designation || 'Presenter'}`, icon: 'mic', action: `document.getElementById('rj-team').scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();` });
+                    }
+                });
+            }
+        } catch (_) {}
+    }
+
+    if (results.length === 0) {
+        container.innerHTML = `<p class="text-xs text-center text-gray-500 py-6">No matching broadcasts, podcasts, or events found for "${query}".</p>`;
+        return;
+    }
+
+    container.innerHTML = results.map(item => `
+        <div onclick="${item.action}" class="p-3 bg-gray-50 dark:bg-gray-800 hover:bg-primary/10 dark:hover:bg-primary/20 rounded-2xl cursor-pointer transition-all flex items-center justify-between group">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-xl">${item.icon}</span>
+                </div>
+                <div>
+                    <p class="font-bold text-sm text-gray-900 dark:text-white group-hover:text-primary transition-colors">${item.title}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">${item.subtitle}</p>
+                </div>
+            </div>
+            <span class="material-symbols-outlined text-gray-400 text-sm group-hover:translate-x-1 transition-transform">chevron_right</span>
+        </div>
+    `).join('');
+}
+
+

@@ -51,7 +51,10 @@
   }
 
   async function exchangeBackendToken(idToken) {
-    const apiBase = window.__RADIO_API_BASE__ || 'http://localhost:5000/api';
+    const apiBase = window.__RADIO_API_BASE__ ||
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:5000/api'
+        : '/api');
     try {
       const res = await fetch(`${apiBase}/auth/firebase`, {
         method: 'POST',
@@ -118,12 +121,22 @@
     },
 
     initRecaptcha: function (containerId) {
+      const targetId = containerId || 'firebase-recaptcha-container';
+      let el = document.getElementById(targetId);
+      if (!el) {
+        el = document.createElement('div');
+        el.id = targetId;
+        document.body.appendChild(el);
+      }
       if (recaptchaVerifier) {
         try { recaptchaVerifier.clear(); } catch (_) {}
       }
-      recaptchaVerifier = new firebase.auth.RecaptchaVerifier(containerId, {
+      recaptchaVerifier = new firebase.auth.RecaptchaVerifier(targetId, {
         size: 'invisible',
         callback: function () {},
+        'expired-callback': function () {
+          console.warn('[RadioAuth] Recaptcha expired, resetting...');
+        }
       });
       return recaptchaVerifier;
     },

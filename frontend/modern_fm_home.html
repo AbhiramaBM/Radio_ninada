@@ -214,10 +214,10 @@
             </div>
             <!-- Actions -->
             <div class="flex items-center gap-sm">
-                <button
-                    class="material-symbols-outlined p-base text-on-surface-variant hover:bg-primary/10 rounded-full transition-all">search</button>
+                <button onclick="openGlobalSearchModal()"
+                    class="material-symbols-outlined p-base text-on-surface-variant hover:bg-primary/10 rounded-full transition-all cursor-pointer" title="Search programs, podcasts, news, events, RJs">search</button>
                 <button onclick="RadioAuth.openModal('signin')"
-                    class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-sm text-label-sm hover:scale-105 active:scale-95 transition-transform shadow-md shadow-primary/20">
+                    class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-sm text-label-sm hover:scale-105 active:scale-95 transition-transform shadow-md shadow-primary/20 cursor-pointer">
                     Login
                 </button>
             </div>
@@ -331,9 +331,6 @@
                         <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                     </span>
                     <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest">Live Now</span>
-                    <div class="w-[1px] h-4 bg-outline-variant"></div>
-                    <span data-live-listeners class="font-label-sm text-label-sm text-on-surface-variant">142 live
-                        listeners</span>
                 </div>
                 <h1 class="font-display-lg text-display-lg text-on-background leading-tight">
                     Your Music.<br />
@@ -407,22 +404,12 @@
         <div
             class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-md mb-xl bg-surface-container-low p-md lg:p-lg rounded-2xl border border-outline-variant/30">
             <div class="flex items-center gap-md">
-                <div class="flex -space-x-3 overflow-hidden">
-                    <img class="inline-block h-12 w-12 rounded-full ring-2 ring-surface" data-alt="Listener 1"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDggq_ZYsbWXKygXU1HIbHktzxMYtLHtFpfCTm7fy9_1E_5jLnqF08Ghej7N5kit-bckyz437VDSDGYJVNWXFM8hZkLgXRVriNGsWZyCCiOjI8AcAwVFsGyGWSHqYoRtJzlivhTkB7wp5obXu1KMg5nqBF4Bpvu066HN866RVQZHzTxYBQizlkygUwWrve9a2WX-3_oOte11Nc_kG2DnYSHs7e_1nbiN6VlpIbv9-LTBwvUeNSJmbjO" />
-                    <img class="inline-block h-12 w-12 rounded-full ring-2 ring-surface" data-alt="Listener 2"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCa1SDuDyW5KAdGMjqQCoiWolZGhyZASV67op8dxuilp29L52Ewvf4UeEomJH1isYLmOO6tfqvLcjpUfo-AaHfJqt-I86biS4EJJ-jYBtuPyIRBj2XPl6O5F63AZP55R1Ij0RuF6rI3fJBCOs_xNmybOGh4ks0v9nmieUON_EwCzI88rG3CjdiAZLKzUPa5WzOGeJmgP1JDjJDdy-IqFQbCU0lx2XOB4rzYZHl_Ar9IpRpAWn7pZs2" />
-                    <img class="inline-block h-12 w-12 rounded-full ring-2 ring-surface" data-alt="Listener 3"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvozzo4Y-OAMKONrLuusd_bFYE5MfJyQVjYmPgVnRVRSvusUUdk9wG8mHTQueHVJZDwwshl8ZleV63AwznLr6q1-yY339K7DYuvTDyP9qdHwjGCA44xgEfLRxeO0_slsPlDmYP1p6xSSXwNGFoM7v86R0GRHs573GFzfXWS17FQOczG_KXq0uoCIly-dnRvLpECh3g9IpIqOSB8nNjxSX6y2QQFWxEsAhyo6wezs1jiOScdtAMo-sa" />
-                    <div
-                        class="inline-block h-12 w-12 rounded-full ring-2 ring-surface bg-primary text-on-primary flex items-center justify-center text-xs font-bold">
-                        +2k</div>
+                <div class="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary shadow-sm shrink-0">
+                    <span class="material-symbols-outlined text-2xl animate-pulse">radio</span>
                 </div>
                 <div>
-                    <h3 class="font-headline-md text-headline-md font-bold">24.5k Listening Now</h3>
-                    <p class="text-on-surface-variant font-body-md text-[14px]">Active listeners tuned into Radio Ninada
-                        90.4 FM
-                        Live</p>
+                    <h3 id="live-listeners-count-display" class="font-headline-md text-headline-md font-bold text-on-surface">Radio Ninada 90.4 FM Live</h3>
+                    <p id="live-broadcast-status-subtitle" class="text-on-surface-variant font-body-md text-[14px]">Community Radio Broadcasting Live from SDM Campus, Ujire</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-xs">
@@ -971,6 +958,29 @@
                     class="flex-1 bg-primary text-white font-bold py-sm rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-xs">
                     <span class="material-symbols-outlined text-lg">play_circle</span> Listen Live
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Search Modal -->
+    <div id="global-search-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden items-start justify-center pt-20 px-4">
+        <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-2xl shadow-2xl border border-white/20 animate-in fade-in zoom-in duration-200">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2 text-primary font-bold text-lg">
+                    <span class="material-symbols-outlined text-2xl">search</span>
+                    <span>Global Radio Search</span>
+                </div>
+                <button onclick="closeGlobalSearchModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 cursor-pointer">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="relative mb-4">
+                <input type="text" id="global-search-input" onkeyup="performGlobalSearch()" placeholder="Search programs, podcasts, news, events, RJs..."
+                    class="w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl px-5 py-3.5 pl-12 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary transition-all" autofocus />
+                <span class="material-symbols-outlined absolute left-4 top-3.5 text-gray-400">search</span>
+            </div>
+            <div id="global-search-results" class="max-h-96 overflow-y-auto space-y-2 no-scrollbar">
+                <p class="text-xs text-center text-gray-400 py-6">Type keywords above to search live Radio Ninada content...</p>
             </div>
         </div>
     </div>

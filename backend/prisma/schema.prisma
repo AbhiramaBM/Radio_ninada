@@ -280,3 +280,14 @@ model Like {
   targetId   String
   createdAt  DateTime @default(now())
 }
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  type      String   @default("VERIFICATION") // VERIFICATION, FORGOT_PASSWORD, LOGIN
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+

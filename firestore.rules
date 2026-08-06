@@ -9,10 +9,12 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.token.admin == true ||
         request.auth.token.role == 'SUPER_ADMIN' ||
+        request.auth.token.role == 'ADMIN' ||
         request.auth.token.email == 'radioninada@gmail.com'
       );
     }
 
+    // User profiles
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow create: if isSignedIn() && request.auth.uid == userId;
@@ -20,24 +22,28 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    match /programs/{programId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
+    // Public collections (Read by anyone, written by Admin)
+    match /programs/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /podcasts/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /news/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /events/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /gallery/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /rjs/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /schedule/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /banners/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /sponsors/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /live/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /notifications/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /analytics/{docId} { allow read: if true; allow write: if true; }
+    match /settings/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /contests/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /testimonials/{docId} { allow read: if true; allow write: if isAdmin(); }
 
-    match /podcasts/{podcastId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /notifications/{notificationId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
+    // Fallback rule for any other collection
     match /{document=**} {
       allow read: if true;
       allow write: if isAdmin();
     }
   }
 }
+

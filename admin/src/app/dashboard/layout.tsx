@@ -16,15 +16,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('ninada_access_token') : null;
-    const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
-
-    if (!token) {
-      router.push('/login');
-      return;
+    const userJson = typeof window !== 'undefined' ? localStorage.getItem('ninada_user') : null;
+    let currentUser = user;
+    if (!currentUser && userJson) {
+      try { currentUser = JSON.parse(userJson); } catch (_) {}
     }
 
-    if (!user || !isAdmin) {
-      router.replace('/login');
+    if (!token && !currentUser) {
+      router.push('/login');
     }
   }, [router, user]);
 

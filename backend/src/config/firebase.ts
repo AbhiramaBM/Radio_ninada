@@ -18,7 +18,7 @@ export function getFirebaseAdmin(): admin.app.App {
     credential: admin.credential.cert({
       projectId,
       clientEmail,
-      privateKey,
+      privateKey: privateKey.replace(/\\n/g, '\n'),
     }),
   });
 
@@ -36,6 +36,6 @@ export function getFirestore() {
 export function isFirebaseConfigured(): boolean {
   const { projectId, clientEmail, privateKey } = config.firebase;
   if (!projectId || !clientEmail || !privateKey) return false;
-  if (privateKey.includes('YOUR_KEY_HERE') || clientEmail.includes('xxxxx')) return false;
+  if (privateKey.includes('gs://your-project-id.iam.gserviceaccount.com/your-private-key.json') || clientEmail.includes('xxxxx')) return false;
   return true;
 }

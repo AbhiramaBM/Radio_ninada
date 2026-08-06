@@ -96,6 +96,7 @@
 
             const modalHTML = `
             <div id="auth-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+                <div id="firebase-recaptcha-container"></div>
                 <div class="auth-glass-card p-6 md:p-8">
                     <!-- Close Button -->
                     <button class="auth-close-btn" id="auth-close-trigger" aria-label="Close authentication modal">
@@ -633,10 +634,10 @@
         attemptBackendSignup: async function (name, email, password) {
             try {
                 this.clearAuthError();
-                const res = await fetch(`${window.__RADIO_API_BASE__ || 'http://localhost:5000/api'}/auth/login`, {
+                const res = await fetch(`${window.__RADIO_API_BASE__ || 'http://localhost:5000/api'}/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ name, email, password })
                 });
 
                 const data = await res.json();
@@ -644,7 +645,7 @@
                     const userData = {
                         id: data.data.user.id,
                         email: data.data.user.email,
-                        name: name || data.data.user.name,
+                        name: data.data.user.name || name,
                         role: data.data.user.role,
                         avatar: data.data.user.avatar,
                         status: data.data.user.status
@@ -656,11 +657,11 @@
                     this.openModal('success');
                     setTimeout(() => this.completeUserAuthentication(userData), 800);
                 } else {
-                    this.showAuthError(data.message || 'Invalid credentials or user already exists.');
+                    this.showAuthError(data.message || 'Signup failed. Email may already be registered.');
                 }
             } catch (err) {
                 console.warn('[RadioAuth] Backend signup error:', err);
-                this.showAuthError('Invalid credentials. Please check your details and try again.');
+                this.showAuthError('Signup request failed. Please check your network connection.');
             }
         },
 
@@ -891,29 +892,80 @@
         handleForgotStep1: async function (e) {
             e.preventDefault();
             const contact = document.getElementById('forgot-contact').value.trim();
-            if (contact.includes('@') && this.useFirebase()) {
+            if (!contact) {
+                this.showAuthError('Please enter your email or phone number.');
+                return;
+            }
+
+            if (contact.includes('@')) {
                 try {
-                    await window.RadioFirebaseAuth.sendPasswordReset(contact);
-                    if (window.showToast) window.showToast('📧 Password reset email sent!');
-                    this.switchMainTab('signin');
-                    return;
+                    this.clearAuthError();
+                    const apiBase = window.__RADIO_API_BASE__ || 'http://localhost:5000/api';
+                    const res = await fetch(`${apiBase}/auth/send-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: contact, type: 'FORGOT_PASSWORD' })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        this.pendingForgotEmail = contact;
+                        if (data.data?.devOtpCode && window.showToast) {
+                            window.showToast(`📱 Dev OTP Code: ${data.data.devOtpCode}`);
+                        } else if (window.showToast) {
+                            window.showToast(`📩 OTP code sent to ${contact}`);
+                        }
+                        this.forgotStep = 2;
+                        document.getElementById('forgot-step-1').classList.add('hidden');
+                        document.getElementById('forgot-step-2').classList.remove('hidden');
+                        return;
+                    } else {
+                        this.showAuthError(data.message || 'Could not send reset OTP. Check your email address.');
+                        return;
+                    }
                 } catch (err) {
-                    this.showAuthError(err.message || 'Could not send reset email.');
-                    return;
+                    console.warn('[RadioAuth] Send OTP error:', err);
                 }
             }
+
             document.getElementById('otp-destination-display').innerText = contact;
             this.openModal('otp');
         },
 
-        handleForgotStep2: function (e) {
+        handleForgotStep2: async function (e) {
             e.preventDefault();
+            const code = document.getElementById('forgot-otp')?.value || '';
             const p1 = document.getElementById('forgot-new-password').value;
             const p2 = document.getElementById('forgot-confirm-password').value;
+
             if (p1 !== p2) {
-                if (window.showToast) window.showToast("⚠️ Passwords do not match!");
+                this.showAuthError("Passwords do not match!");
                 return;
             }
+
+            if (this.pendingForgotEmail && code.length === 6) {
+                try {
+                    this.clearAuthError();
+                    const apiBase = window.__RADIO_API_BASE__ || 'http://localhost:5000/api';
+                    const res = await fetch(`${apiBase}/auth/reset-password`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: this.pendingForgotEmail, code, newPassword: p1 })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        if (window.showToast) window.showToast('✅ Password reset successful! Please log in.');
+                        this.openModal('success');
+                        setTimeout(() => this.switchMainTab('signin'), 1200);
+                        return;
+                    } else {
+                        this.showAuthError(data.message || 'Password reset failed.');
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('[RadioAuth] Reset password error:', err);
+                }
+            }
+
             this.openModal('success');
             setTimeout(() => {
                 this.completeUserAuthentication({ name: "Radio Listener", contact: "Account Reset" });
@@ -952,6 +1004,27 @@
         },
 
         resendOTP: async function () {
+            if (this.pendingUser?.email) {
+                try {
+                    const apiBase = window.__RADIO_API_BASE__ || 'http://localhost:5000/api';
+                    const res = await fetch(`${apiBase}/auth/send-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: this.pendingUser.email, type: 'VERIFICATION' })
+                    });
+                    const data = await res.json();
+                    this.startOTPTimer();
+                    if (data.data?.devOtpCode && window.showToast) {
+                        window.showToast(`📱 Dev OTP Code: ${data.data.devOtpCode}`);
+                    } else if (window.showToast) {
+                        window.showToast(`📩 New 6-digit OTP code sent to ${this.pendingUser.email}`);
+                    }
+                    return;
+                } catch (err) {
+                    console.warn('[RadioAuth] Resend OTP error:', err);
+                }
+            }
+
             if (this.useFirebase() && this.pendingUser?.phone) {
                 try {
                     await window.RadioFirebaseAuth.resendPhoneOTP(this.pendingUser.phone, 'firebase-recaptcha-container');
@@ -978,6 +1051,30 @@
             if (enteredOTP.length < 6) {
                 this.showAuthError('Please enter complete 6-digit OTP!');
                 return;
+            }
+
+            if (this.pendingUser?.email) {
+                try {
+                    this.clearAuthError();
+                    const apiBase = window.__RADIO_API_BASE__ || 'http://localhost:5000/api';
+                    const res = await fetch(`${apiBase}/auth/verify-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: this.pendingUser.email, code: enteredOTP, type: 'VERIFICATION' })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        const user = this.pendingUser;
+                        this.openModal('success');
+                        setTimeout(() => this.completeUserAuthentication(user), 800);
+                        return;
+                    } else {
+                        this.showAuthError(data.message || 'Invalid or expired OTP code.');
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('[RadioAuth] Verify OTP error:', err);
+                }
             }
 
             // Check if using mock OTP fallback or test code
@@ -1067,8 +1164,35 @@
             }
         },
 
+        isAdminUser: function (user) {
+            if (!user) return false;
+            const role = (user.role || '').toUpperCase();
+            const email = (user.email || user.contact || '').toLowerCase();
+            return role === 'SUPER_ADMIN' || role === 'ADMIN' || email === 'radioninada@gmail.com' || email === 'admin@radioninada.local';
+        },
+
+        canAccessAdminDashboard: function (user) {
+            return this.isAdminUser(user);
+        },
+
+        getAdminDashboardUrl: function () {
+            return 'http://localhost:3000/dashboard';
+        },
+
+        updateRoleBasedUI: function () {
+            const isAdmin = this.isAdminUser(this.currentUser);
+            document.querySelectorAll('[data-role-dashboard]').forEach(el => {
+                if (isAdmin) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+        },
+
         updateNavbarUserUI: function () {
-            this.updateRoleBasedUI();
+            const isAdmin = this.isAdminUser(this.currentUser);
+            const adminBtnClass = isAdmin ? 'hidden sm:inline-flex' : 'hidden';
 
             // Find all Login buttons in headers
             const loginBtns = document.querySelectorAll('header button:has(span), header button');
@@ -1078,7 +1202,7 @@
                     const avatarWrapper = document.createElement('div');
                     avatarWrapper.className = 'relative flex items-center gap-2 id-user-profile-wrapper';
                     avatarWrapper.innerHTML = `
-                        <button type="button" data-role-dashboard onclick="RadioAuth.profileMenuAction('Admin Dashboard')" class="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary" aria-label="Open Admin Dashboard">
+                        <button type="button" data-role-dashboard onclick="RadioAuth.profileMenuAction('Admin Dashboard')" class="${adminBtnClass} items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary" aria-label="Open Admin Dashboard">
                             <span class="material-symbols-outlined text-base">admin_panel_settings</span>
                             <span>Admin Portal</span>
                         </button>
