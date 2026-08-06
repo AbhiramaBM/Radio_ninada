@@ -2,7 +2,7 @@
 const path = require('path');
 
 const nextConfig = {
-  outputFileTracingRoot: path.join(__dirname, '../'),
+  ...(process.env.VERCEL ? {} : { outputFileTracingRoot: path.join(__dirname, '../') }),
   reactStrictMode: true,
   images: {
     remotePatterns: [
