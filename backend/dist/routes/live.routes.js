@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const live_controller_1 = require("../controllers/live.controller");
+const auth_1 = require("../middlewares/auth");
+const audit_1 = require("../middlewares/audit");
+const router = (0, express_1.Router)();
+router.get('/', live_controller_1.getLiveState);
+router.put('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'RJ']), (0, audit_1.auditLog)('UPDATE', 'LiveState'), live_controller_1.updateLiveState);
+router.post('/toggle', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'RJ']), (0, audit_1.auditLog)('TOGGLE', 'LiveState'), live_controller_1.toggleLive);
+exports.default = router;

@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const sponsor_controller_1 = require("../controllers/sponsor.controller");
+const auth_1 = require("../middlewares/auth");
+const upload_1 = require("../middlewares/upload");
+const audit_1 = require("../middlewares/audit");
+const router = (0, express_1.Router)();
+router.get('/', sponsor_controller_1.getSponsors);
+router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), upload_1.upload.single('logo'), (0, audit_1.auditLog)('CREATE', 'Sponsor'), sponsor_controller_1.createSponsor);
+router.post('/:id/click', sponsor_controller_1.trackSponsorClick);
+router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Sponsor'), sponsor_controller_1.deleteSponsor);
+exports.default = router;

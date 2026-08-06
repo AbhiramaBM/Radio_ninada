@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const podcast_controller_1 = require("../controllers/podcast.controller");
+const auth_1 = require("../middlewares/auth");
+const upload_1 = require("../middlewares/upload");
+const audit_1 = require("../middlewares/audit");
+const router = (0, express_1.Router)();
+router.get('/', podcast_controller_1.getPodcasts);
+router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ']), upload_1.upload.fields([{ name: 'audio', maxCount: 1 }, { name: 'cover', maxCount: 1 }]), (0, audit_1.auditLog)('CREATE', 'Podcast'), podcast_controller_1.createPodcast);
+router.put('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ']), (0, audit_1.auditLog)('UPDATE', 'Podcast'), podcast_controller_1.updatePodcast);
+router.post('/:id/download', podcast_controller_1.incrementDownloads);
+router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Podcast'), podcast_controller_1.deletePodcast);
+exports.default = router;

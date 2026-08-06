@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const schedule_controller_1 = require("../controllers/schedule.controller");
+const auth_1 = require("../middlewares/auth");
+const audit_1 = require("../middlewares/audit");
+const router = (0, express_1.Router)();
+router.get('/', schedule_controller_1.getSchedule);
+router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), (0, audit_1.auditLog)('CREATE', 'Schedule'), schedule_controller_1.createScheduleSlot);
+router.post('/batch-update', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), (0, audit_1.auditLog)('BATCH_UPDATE', 'Schedule'), schedule_controller_1.batchUpdateSchedule);
+router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Schedule'), schedule_controller_1.deleteScheduleSlot);
+exports.default = router;

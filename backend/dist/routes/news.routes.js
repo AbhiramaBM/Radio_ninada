@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const news_controller_1 = require("../controllers/news.controller");
+const auth_1 = require("../middlewares/auth");
+const upload_1 = require("../middlewares/upload");
+const audit_1 = require("../middlewares/audit");
+const router = (0, express_1.Router)();
+router.get('/', news_controller_1.getNews);
+router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), upload_1.upload.single('image'), (0, audit_1.auditLog)('CREATE', 'News'), news_controller_1.createNews);
+router.put('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), (0, audit_1.auditLog)('UPDATE', 'News'), news_controller_1.updateNews);
+router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'News'), news_controller_1.deleteNews);
+exports.default = router;

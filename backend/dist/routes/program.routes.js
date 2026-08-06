@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const program_controller_1 = require("../controllers/program.controller");
+const auth_1 = require("../middlewares/auth");
+const audit_1 = require("../middlewares/audit");
+const router = (0, express_1.Router)();
+router.get('/', program_controller_1.getPrograms);
+router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ']), (0, audit_1.auditLog)('CREATE', 'Program'), program_controller_1.createProgram);
+router.put('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ']), (0, audit_1.auditLog)('UPDATE', 'Program'), program_controller_1.updateProgram);
+router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Program'), program_controller_1.deleteProgram);
+router.post('/bulk-delete', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('BULK_DELETE', 'Program'), program_controller_1.bulkDeletePrograms);
+router.post('/bulk-publish', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), (0, audit_1.auditLog)('BULK_PUBLISH', 'Program'), program_controller_1.bulkPublishPrograms);
+exports.default = router;
