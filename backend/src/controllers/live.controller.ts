@@ -13,7 +13,7 @@ const defaultLiveState = {
   bitrate: 320,
   quality: 'Ultra HD 320 kbps',
   status: 'LIVE',
-  liveListeners: 42,
+  liveListeners: 0,
   updatedAt: new Date().toISOString(),
 };
 

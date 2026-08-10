@@ -72,14 +72,14 @@ export default function DashboardHome() {
   const counters = stats?.counters || {};
 
   const kpis = [
-    { label: 'Total Users', value: counters.totalUsers || 0, icon: Users, color: 'from-blue-500 to-indigo-600' },
-    { label: 'Live Listeners', value: liveState?.liveListeners || 42, icon: Radio, color: 'from-emerald-500 to-teal-600' },
-    { label: "Today's Visitors", value: counters.todaysVisitors || 1480, icon: Eye, color: 'from-purple-500 to-pink-600' },
-    { label: 'Podcasts', value: counters.totalPodcasts || 0, icon: Mic, color: 'from-amber-500 to-orange-600' },
-    { label: 'Programs', value: counters.totalPrograms || 0, icon: Music, color: 'from-cyan-500 to-blue-600' },
-    { label: 'Upcoming Events', value: counters.totalEvents || 0, icon: CalendarDays, color: 'from-rose-500 to-red-600' },
-    { label: 'Published News', value: counters.totalNews || 0, icon: Newspaper, color: 'from-violet-500 to-purple-600' },
-    { label: 'Active RJs', value: counters.totalRJs || 0, icon: UserCheck, color: 'from-pink-500 to-rose-600' },
+    { label: 'Total Users', value: counters.totalUsers ?? 0, icon: Users, color: 'from-blue-500 to-indigo-600' },
+    { label: 'Live Listeners', value: liveState?.isLive ? (liveState?.liveListeners ?? 0) : 0, icon: Radio, color: 'from-emerald-500 to-teal-600' },
+    { label: "Today's Visitors", value: counters.todaysVisitors ?? 0, icon: Eye, color: 'from-purple-500 to-pink-600' },
+    { label: 'Podcasts', value: counters.totalPodcasts ?? 0, icon: Mic, color: 'from-amber-500 to-orange-600' },
+    { label: 'Programs', value: counters.totalPrograms ?? 0, icon: Music, color: 'from-cyan-500 to-blue-600' },
+    { label: 'Upcoming Events', value: counters.totalEvents ?? 0, icon: CalendarDays, color: 'from-rose-500 to-red-600' },
+    { label: 'Published News', value: counters.totalNews ?? 0, icon: Newspaper, color: 'from-violet-500 to-purple-600' },
+    { label: 'Active RJs', value: counters.totalRJs ?? 0, icon: UserCheck, color: 'from-pink-500 to-rose-600' },
   ];
 
   return (
@@ -91,7 +91,7 @@ export default function DashboardHome() {
           <p className="text-xs text-slate-400">Welcome to Radio Ninada Master Control Room</p>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-slate-400 font-mono">Storage Used: {counters.storageUsedMB || 482.5} MB / 10 GB</span>
+          <span className="text-xs text-slate-400 font-mono">Storage Used: {counters.storageUsedMB ?? 0} MB / 10 GB</span>
         </div>
       </div>
 

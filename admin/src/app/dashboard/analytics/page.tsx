@@ -76,10 +76,6 @@ export default function AnalyticsDashboard() {
       <div className="bg-surface border border-border rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-white tracking-wide">Weekly Traffic & Listener Trends</h3>
-          <span className="text-xs text-indigo-400 font-semibold flex items-center space-x-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>+18.4% vs last week</span>
-          </span>
         </div>
 
         <div className="h-72 w-full">
@@ -138,16 +134,16 @@ export default function AnalyticsDashboard() {
             <h3 className="text-sm font-bold text-white mb-4">Peak Engagement Hours</h3>
             <div className="space-y-3 text-xs">
               <div className="p-3 rounded-xl bg-slate-900 border border-border flex justify-between">
-                <span className="text-slate-400">Morning Peak:</span>
-                <strong className="text-indigo-400">8:00 AM - 10:00 AM (1,480 listeners)</strong>
+                <span className="text-slate-400">Morning Slot:</span>
+                <strong className="text-indigo-400">07:00 AM - 09:00 AM</strong>
               </div>
               <div className="p-3 rounded-xl bg-slate-900 border border-border flex justify-between">
-                <span className="text-slate-400">Evening Peak:</span>
-                <strong className="text-pink-400">5:30 PM - 7:30 PM (1,950 listeners)</strong>
+                <span className="text-slate-400">Evening Slot:</span>
+                <strong className="text-pink-400">05:00 PM - 06:30 PM</strong>
               </div>
               <div className="p-3 rounded-xl bg-slate-900 border border-border flex justify-between">
-                <span className="text-slate-400">Top Listener Region:</span>
-                <strong className="text-emerald-400">Bengaluru Urban, Karnataka (78%)</strong>
+                <span className="text-slate-400">Primary Region:</span>
+                <strong className="text-emerald-400">Karnataka, India</strong>
               </div>
             </div>
           </div>

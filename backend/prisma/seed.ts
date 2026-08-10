@@ -115,7 +115,7 @@ async function main() {
       bitrate: 320,
       quality: 'Ultra HD 320 kbps',
       status: 'LIVE',
-      liveListeners: 142,
+      liveListeners: 0,
     },
   });
 
