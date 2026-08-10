@@ -2,7 +2,28 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { RadioTower, Bell, Search, ExternalLink, LayoutDashboard, User, LogOut, Check, ArrowRight } from 'lucide-react';
+import {
+  RadioTower,
+  Bell,
+  Search,
+  ExternalLink,
+  LayoutDashboard,
+  User,
+  LogOut,
+  Check,
+  ArrowRight,
+  Plus,
+  ChevronDown,
+  Music,
+  Mic,
+  Newspaper,
+  Calendar,
+  UserCheck,
+  Image as ImageIcon,
+  DollarSign,
+  Flag,
+  Upload,
+} from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -15,9 +36,11 @@ export default function AdminHeader() {
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const createRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function fetchLive() {
@@ -60,6 +83,9 @@ export default function AdminHeader() {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setProfileOpen(false);
       }
+      if (createRef.current && !createRef.current.contains(e.target as Node)) {
+        setCreateOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -67,17 +93,109 @@ export default function AdminHeader() {
 
   return (
     <header className="h-16 bg-surface/80 backdrop-blur-md border-b border-border px-6 flex items-center justify-between sticky top-0 z-40">
-      {/* Global Search & Dashboard Quick Link */}
-      <div className="flex items-center space-x-4">
+      {/* Global Search & Quick Create Menu */}
+      <div className="flex items-center space-x-3">
         <Link
           href="/dashboard"
-          className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/30 text-indigo-300 font-bold text-xs transition-all shadow-sm"
+          className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/30 text-indigo-300 font-bold text-xs transition-all shadow-sm shrink-0"
         >
           <LayoutDashboard className="w-4 h-4 text-indigo-400" />
-          <span>Dashboard</span>
+          <span className="hidden sm:inline">Dashboard</span>
         </Link>
 
-        <div className="relative w-72">
+        {/* Global Quick Create Add Dropdown */}
+        <div className="relative" ref={createRef}>
+          <button
+            onClick={() => setCreateOpen(!createOpen)}
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all shadow-md shadow-indigo-600/20 border border-indigo-400/30 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add / Create</span>
+            <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+          </button>
+
+          {createOpen && (
+            <div className="absolute left-0 mt-2 w-56 bg-surface border border-border rounded-2xl shadow-2xl p-2 space-y-1 z-50 animate-in fade-in slide-in-from-top-2">
+              <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-border/50">
+                Quick Add Actions
+              </p>
+
+              <Link
+                href="/dashboard/programs?action=create"
+                onClick={() => setCreateOpen(false)}
+                className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-white transition-colors"
+              >
+                <Music className="w-4 h-4 text-cyan-400" />
+                <span>Add Radio Program</span>
+              </Link>
+
+              <Link
+                href="/dashboard/podcasts?action=create"
+                onClick={() => setCreateOpen(false)}
+                className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-white transition-colors"
+              >
+                <Mic className="w-4 h-4 text-amber-400" />
+                <span>Upload Podcast</span>
+              </Link>
+
+              <Link
+                href="/dashboard/news?action=create"
+                onClick={() => setCreateOpen(false)}
+                className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-white transition-colors"
+              >
+                <Newspaper className="w-4 h-4 text-purple-400" />
+                <span>Publish News Article</span>
+              </Link>
+
+              <Link
+                href="/dashboard/events?action=create"
+                onClick={() => setCreateOpen(false)}
+                className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-white transition-colors"
+              >
+                <Calendar className="w-4 h-4 text-rose-400" />
+                <span>Create Studio Event</span>
+              </Link>
+
+              <Link
+                href="/dashboard/rjs?action=create"
+                onClick={() => setCreateOpen(false)}
+                className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-white transition-colors"
+              >
+                <UserCheck className="w-4 h-4 text-pink-400" />
+                <span>Add Host RJ Profile</span>
+              </Link>
+
+              <Link
+                href="/dashboard/gallery?action=create"
+                onClick={() => setCreateOpen(false)}
+                className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-white transition-colors"
+              >
+                <ImageIcon className="w-4 h-4 text-emerald-400" />
+                <span>Add Photo / Video Short</span>
+              </Link>
+
+              <Link
+                href="/dashboard/sponsors?action=create"
+                onClick={() => setCreateOpen(false)}
+                className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-white transition-colors"
+              >
+                <DollarSign className="w-4 h-4 text-yellow-400" />
+                <span>Add Sponsor Partner</span>
+              </Link>
+
+              <Link
+                href="/dashboard/banners?action=create"
+                onClick={() => setCreateOpen(false)}
+                className="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-white transition-colors"
+              >
+                <Flag className="w-4 h-4 text-teal-400" />
+                <span>Add Hero Banner</span>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        <div className="relative w-48 lg:w-72 hidden md:block">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"

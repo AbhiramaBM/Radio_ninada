@@ -22,6 +22,9 @@ export default function UserManager() {
 
   useEffect(() => {
     fetchUsers();
+    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
+      setModalOpen(true);
+    }
   }, [search]);
 
   const fetchUsers = async () => {

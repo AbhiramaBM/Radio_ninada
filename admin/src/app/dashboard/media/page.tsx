@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { HardDrive, Upload, Music, Image, FileText, Download, Copy, Check, Server, RefreshCw } from 'lucide-react';
+import { HardDrive, Upload, Music, Image, FileText, Download, Copy, Check, Server, RefreshCw, Plus } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function MediaStorageDumpManager() {
@@ -15,6 +15,7 @@ export default function MediaStorageDumpManager() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
 
   async function fetchDumpData() {
     setLoading(true);
@@ -32,6 +33,9 @@ export default function MediaStorageDumpManager() {
 
   useEffect(() => {
     fetchDumpData();
+    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
+      setModalOpen(true);
+    }
   }, []);
 
   async function handleUpload(e: React.FormEvent) {
@@ -84,13 +88,23 @@ export default function MediaStorageDumpManager() {
           <p className="text-xs text-slate-400">Direct file dump vault for podcasts, recorded sessions, news imagery, and audio files</p>
         </div>
 
-        <button
-          onClick={fetchDumpData}
-          className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition-all cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Refresh Storage Vault</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setModalOpen(true)}
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition-all shadow-md cursor-pointer border border-indigo-400/30"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Upload File to Vault</span>
+          </button>
+
+          <button
+            onClick={fetchDumpData}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition-all cursor-pointer border border-border"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Server Storage Overview Cards */}
@@ -233,6 +247,58 @@ export default function MediaStorageDumpManager() {
           </div>
         )}
       </div>
+
+      {/* Upload File Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
+            <div className="flex justify-between items-center border-b border-border pb-3">
+              <h2 className="text-lg font-bold text-white">Upload File to Server Storage</h2>
+              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white text-xl">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { handleUpload(e); setModalOpen(false); }} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-2">Select Image, Audio, or Video File</label>
+                <input
+                  type="file"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="w-full bg-slate-900 border border-border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                  required
+                />
+              </div>
+
+              {selectedFile && (
+                <div className="p-3 rounded-xl bg-slate-900 border border-border text-xs text-slate-300">
+                  <p className="font-semibold text-indigo-400">Selected File:</p>
+                  <p className="truncate">{selectedFile.name}</p>
+                  <p className="text-[10px] text-slate-500">{formatBytes(selectedFile.size)}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3 pt-3 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploading || !selectedFile}
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 flex items-center space-x-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>{uploading ? 'Uploading...' : 'Upload Now'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

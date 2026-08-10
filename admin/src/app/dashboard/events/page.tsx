@@ -35,6 +35,9 @@ export default function EventManager() {
 
   useEffect(() => {
     fetchEvents();
+    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
+      setModalOpen(true);
+    }
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

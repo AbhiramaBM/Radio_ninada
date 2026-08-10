@@ -31,6 +31,9 @@ export default function SponsorsManager() {
 
   useEffect(() => {
     loadData();
+    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
+      setSponsorModalOpen(true);
+    }
   }, []);
 
   async function handleCreateSponsor(e: React.FormEvent) {

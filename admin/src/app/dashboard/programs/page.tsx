@@ -45,6 +45,9 @@ export default function ProgramManager() {
 
   useEffect(() => {
     fetchPrograms();
+    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
+      openCreateModal();
+    }
   }, []);
 
   function openCreateModal() {

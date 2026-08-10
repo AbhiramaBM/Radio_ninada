@@ -45,6 +45,9 @@ export default function BannersAndSponsorsManager() {
 
   useEffect(() => {
     loadData();
+    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
+      setBannerModalOpen(true);
+    }
   }, []);
 
   async function handleCreateBanner(e: React.FormEvent) {

@@ -37,6 +37,10 @@ export default function NewsManager() {
 
   useEffect(() => {
     fetchNews();
+    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
+      setWarning('');
+      setModalOpen(true);
+    }
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

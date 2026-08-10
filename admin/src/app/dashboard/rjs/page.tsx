@@ -36,6 +36,9 @@ export default function RJManager() {
 
   useEffect(() => {
     fetchRJs();
+    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
+      openCreateModal();
+    }
   }, []);
 
   function openCreateModal() {

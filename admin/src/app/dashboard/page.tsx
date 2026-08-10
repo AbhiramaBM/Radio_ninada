@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Users,
   Radio,
@@ -16,6 +17,7 @@ import {
   TrendingUp,
   Download,
   Clock,
+  Plus,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -114,6 +116,99 @@ export default function DashboardHome() {
             </div>
           );
         })}
+      </div>
+
+      {/* Quick Add Content Actions Bar */}
+      <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-white tracking-wide flex items-center space-x-2">
+            <Plus className="w-4 h-4 text-indigo-400" />
+            <span>Quick Content Add &amp; Publish Shortcuts</span>
+          </h3>
+          <span className="text-[11px] text-slate-400">Click any action to immediately open create form</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <Link
+            href="/dashboard/programs?action=create"
+            className="p-3 rounded-xl bg-slate-900/80 border border-border hover:border-cyan-500/50 flex flex-col items-center justify-center space-y-2 group transition-all"
+          >
+            <div className="w-9 h-9 rounded-lg bg-cyan-500/15 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Music className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-200 group-hover:text-cyan-400 text-center">+ Program</span>
+          </Link>
+
+          <Link
+            href="/dashboard/podcasts?action=create"
+            className="p-3 rounded-xl bg-slate-900/80 border border-border hover:border-amber-500/50 flex flex-col items-center justify-center space-y-2 group transition-all"
+          >
+            <div className="w-9 h-9 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Mic className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-200 group-hover:text-amber-400 text-center">+ Podcast</span>
+          </Link>
+
+          <Link
+            href="/dashboard/news?action=create"
+            className="p-3 rounded-xl bg-slate-900/80 border border-border hover:border-purple-500/50 flex flex-col items-center justify-center space-y-2 group transition-all"
+          >
+            <div className="w-9 h-9 rounded-lg bg-purple-500/15 text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Newspaper className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-200 group-hover:text-purple-400 text-center">+ News</span>
+          </Link>
+
+          <Link
+            href="/dashboard/events?action=create"
+            className="p-3 rounded-xl bg-slate-900/80 border border-border hover:border-rose-500/50 flex flex-col items-center justify-center space-y-2 group transition-all"
+          >
+            <div className="w-9 h-9 rounded-lg bg-rose-500/15 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <CalendarDays className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-200 group-hover:text-rose-400 text-center">+ Event</span>
+          </Link>
+
+          <Link
+            href="/dashboard/rjs?action=create"
+            className="p-3 rounded-xl bg-slate-900/80 border border-border hover:border-pink-500/50 flex flex-col items-center justify-center space-y-2 group transition-all"
+          >
+            <div className="w-9 h-9 rounded-lg bg-pink-500/15 text-pink-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <UserCheck className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-200 group-hover:text-pink-400 text-center">+ RJ Profile</span>
+          </Link>
+
+          <Link
+            href="/dashboard/gallery?action=create"
+            className="p-3 rounded-xl bg-slate-900/80 border border-border hover:border-emerald-500/50 flex flex-col items-center justify-center space-y-2 group transition-all"
+          >
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-200 group-hover:text-emerald-400 text-center">+ Media</span>
+          </Link>
+
+          <Link
+            href="/dashboard/sponsors?action=create"
+            className="p-3 rounded-xl bg-slate-900/80 border border-border hover:border-yellow-500/50 flex flex-col items-center justify-center space-y-2 group transition-all"
+          >
+            <div className="w-9 h-9 rounded-lg bg-yellow-500/15 text-yellow-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Clock className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-200 group-hover:text-yellow-400 text-center">+ Sponsor</span>
+          </Link>
+
+          <Link
+            href="/dashboard/users?action=create"
+            className="p-3 rounded-xl bg-slate-900/80 border border-border hover:border-blue-500/50 flex flex-col items-center justify-center space-y-2 group transition-all"
+          >
+            <div className="w-9 h-9 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Users className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-200 group-hover:text-blue-400 text-center">+ User</span>
+          </Link>
+        </div>
       </div>
 
       {/* Live Controller Widget & Activity Grid */}
