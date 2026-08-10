@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Trash2, Search } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -20,14 +20,7 @@ export default function UserManager() {
     bio: '',
   });
 
-  useEffect(() => {
-    fetchUsers();
-    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
-      setModalOpen(true);
-    }
-  }, [search]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get(`/users?search=${encodeURIComponent(search)}`);
@@ -39,7 +32,14 @@ export default function UserManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search]);
+
+  useEffect(() => {
+    fetchUsers();
+    if (typeof window !== 'undefined' && window.location.search.includes('action=create')) {
+      setModalOpen(true);
+    }
+  }, [fetchUsers]);
 
   async function handleRoleChange(userId: string, newRole: string) {
     setLoading(true);

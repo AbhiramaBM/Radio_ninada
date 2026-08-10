@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { HardDrive, Upload, Music, Image, FileText, Download, Copy, Check, Server, RefreshCw, Plus } from 'lucide-react';
+import { HardDrive, Upload, Music, Image as ImageIcon, FileText, Download, Copy, Check, Server, RefreshCw, Plus } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function MediaStorageDumpManager() {
@@ -200,7 +200,7 @@ export default function MediaStorageDumpManager() {
                       {isAudio ? (
                         <Music className="w-5 h-5 text-indigo-400" />
                       ) : isImage ? (
-                        <Image className="w-5 h-5 text-emerald-400" />
+                        <ImageIcon className="w-5 h-5 text-emerald-400" />
                       ) : (
                         <FileText className="w-5 h-5 text-amber-400" />
                       )}
