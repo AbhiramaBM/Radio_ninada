@@ -287,27 +287,29 @@ export default function AdminHeader() {
         </div>
 
         {/* Profile Avatar & Dropdown */}
-        <div className="relative" ref={profileRef}>
+        <div className="relative" ref={profileRef} suppressHydrationWarning>
           <button
             onClick={() => setProfileOpen(!profileOpen)}
             className="flex items-center space-x-2.5 p-1 rounded-xl hover:bg-slate-800/60 transition-all cursor-pointer"
+            suppressHydrationWarning
           >
             <img
               src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
               alt={user?.name || 'Admin'}
               className="w-8 h-8 rounded-full object-cover border border-indigo-500/40"
+              suppressHydrationWarning
             />
-            <div className="hidden md:block text-left text-xs">
-              <p className="font-semibold text-white leading-tight">{user?.name || 'Radio Admin'}</p>
-              <span className="text-[10px] text-slate-400">{user?.role || 'SUPER_ADMIN'}</span>
+            <div className="hidden md:block text-left text-xs" suppressHydrationWarning>
+              <p className="font-semibold text-white leading-tight" suppressHydrationWarning>{user?.name || 'Radio Admin'}</p>
+              <span className="text-[10px] text-slate-400" suppressHydrationWarning>{user?.role || 'SUPER_ADMIN'}</span>
             </div>
           </button>
 
           {profileOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-surface border border-border rounded-2xl shadow-2xl p-2 space-y-1 z-50 animate-in fade-in slide-in-from-top-2">
-              <div className="p-3 border-b border-border/60">
-                <p className="text-xs font-bold text-white">{user?.name || 'Radio Admin'}</p>
-                <p className="text-[10px] text-slate-400 truncate">{user?.email || 'admin@radioninada.local'}</p>
+              <div className="p-3 border-b border-border/60" suppressHydrationWarning>
+                <p className="text-xs font-bold text-white" suppressHydrationWarning>{user?.name || 'Radio Admin'}</p>
+                <p className="text-[10px] text-slate-400 truncate" suppressHydrationWarning>{user?.email || 'admin@radioninada.local'}</p>
               </div>
 
               <Link

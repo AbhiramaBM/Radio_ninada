@@ -70,7 +70,7 @@ export default function AdminSidebar({ canAccess = {} }: AdminSidebarProps) {
         </Link>
 
         {/* Navigation List */}
-        <nav className="p-3 space-y-1">
+        <nav className="p-3 space-y-1" suppressHydrationWarning>
           {navigationItems.filter((item) => !item.accessKey || canAccess[item.accessKey] !== false).map((item) => {
             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
             const Icon = item.icon;
@@ -101,7 +101,7 @@ export default function AdminSidebar({ canAccess = {} }: AdminSidebarProps) {
       </div>
 
       {/* User Footer Profile */}
-      <div className="p-4 border-t border-border bg-slate-900/40">
+      <div className="p-4 border-t border-border bg-slate-900/40" suppressHydrationWarning>
         <div className="flex items-center justify-between">
           <Link href="/dashboard/profile" className="flex items-center space-x-3 overflow-hidden group">
             <img

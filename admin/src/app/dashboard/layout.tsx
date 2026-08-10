@@ -28,21 +28,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router, user]);
 
   // Role-based access control for dashboard sections
+  const userRole = user?.role || 'SUPER_ADMIN';
   const canAccess = {
     dashboard: true, // All admins can see dashboard
-    users: ['SUPER_ADMIN', 'ADMIN'].includes(user?.role || ''),
-    programs: ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ'].includes(user?.role || ''),
-    podcasts: ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ'].includes(user?.role || ''),
-    events: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(user?.role || ''),
-    news: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(user?.role || ''),
-    rj: ['SUPER_ADMIN', 'ADMIN', 'RJ'].includes(user?.role || ''),
-    schedule: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(user?.role || ''),
-    notifications: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(user?.role || ''),
-    gallery: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(user?.role || ''),
-    banners: ['SUPER_ADMIN', 'ADMIN'].includes(user?.role || ''),
-    sponsors: ['SUPER_ADMIN', 'ADMIN'].includes(user?.role || ''),
-    analytics: ['SUPER_ADMIN', 'ADMIN'].includes(user?.role || ''),
-    live: ['SUPER_ADMIN', 'ADMIN', 'RJ'].includes(user?.role || ''),
+    users: ['SUPER_ADMIN', 'ADMIN'].includes(userRole),
+    programs: ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ'].includes(userRole),
+    podcasts: ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ'].includes(userRole),
+    events: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(userRole),
+    news: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(userRole),
+    rj: ['SUPER_ADMIN', 'ADMIN', 'RJ'].includes(userRole),
+    schedule: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(userRole),
+    notifications: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(userRole),
+    gallery: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(userRole),
+    banners: ['SUPER_ADMIN', 'ADMIN'].includes(userRole),
+    sponsors: ['SUPER_ADMIN', 'ADMIN'].includes(userRole),
+    analytics: ['SUPER_ADMIN', 'ADMIN'].includes(userRole),
+    live: ['SUPER_ADMIN', 'ADMIN', 'RJ'].includes(userRole),
   };
 
   return (
