@@ -207,7 +207,7 @@ export default function UserManager() {
                       <option value="BANNED">BANNED</option>
                     </select>
                   </td>
-                  <td className="p-4 text-slate-400">{new Date(u.createdAt).toLocaleDateString()}</td>
+                  <td className="p-4 text-slate-400" suppressHydrationWarning>{new Date(u.createdAt).toLocaleDateString()}</td>
                   <td className="p-4 text-right">
                     <button
                       onClick={() => handleDelete(u.id)}

@@ -103,7 +103,7 @@ export default function EventManager() {
                   className="w-24 h-24 rounded-lg object-cover shrink-0"
                 />
                 <div className="flex-1 overflow-hidden">
-                  <span className="text-[10px] font-bold text-indigo-400 font-mono">
+                  <span className="text-[10px] font-bold text-indigo-400 font-mono" suppressHydrationWarning>
                     {new Date(evt.eventDate).toLocaleDateString()} @ {new Date(evt.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                   <h3 className="font-bold text-white text-sm truncate mt-0.5">{evt.title}</h3>

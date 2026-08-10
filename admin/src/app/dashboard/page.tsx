@@ -212,7 +212,9 @@ export default function DashboardHome() {
               <div key={act.id} className="p-3 rounded-xl bg-slate-900/50 border border-border text-xs space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-indigo-400 uppercase tracking-wider text-[10px]">{act.action}</span>
-                  <span className="text-[10px] text-slate-500">{new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-[10px] text-slate-500" suppressHydrationWarning>
+                    {new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
                 <p className="text-slate-300 text-xs truncate">Target: {act.targetResource}</p>
                 <p className="text-[10px] text-slate-500 truncate">By: {act.userEmail}</p>

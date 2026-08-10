@@ -119,7 +119,7 @@ export default function NewsManager() {
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-slate-500" suppressHydrationWarning>
                     {new Date(item.createdAt).toLocaleDateString()}
                   </span>
                   <button
