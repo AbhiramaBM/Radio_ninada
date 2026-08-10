@@ -186,15 +186,33 @@
     <!-- Global Navigation -->
     <header class="fixed top-0 w-full z-50 glass-nav border-b border-white/30 shadow-sm transition-all duration-300">
         <nav class="flex justify-between items-center px-md lg:px-xl py-base max-w-container-max mx-auto">
-            <!-- Brand Logo -->
-            <a href="#home"
-                class="inline-flex items-center transition-transform duration-200 ease-in-out hover:scale-[1.03] cursor-pointer"
-                aria-label="Radio Ninada 90.4 FM - Home">
-                <img src="images/radio_ninada_logo.png"
-                    onerror="if (this.src.indexOf('../images/') === -1) this.src='../images/radio_ninada_logo.png';"
-                    alt="Radio Ninada 90.4 FM Logo"
-                    class="h-[44px] sm:h-[48px] md:h-[56px] w-auto object-contain transition-transform duration-200 ease-in-out" />
-            </a>
+            <!-- Brand Logos & Institutional Partnership -->
+            <div class="flex items-center gap-4 sm:gap-5">
+                <!-- Radio Ninada Logo -->
+                <a href="#home"
+                    class="inline-flex items-center transition-transform duration-200 ease-in-out hover:scale-[1.03] cursor-pointer"
+                    aria-label="Radio Ninada 90.4 FM - Home">
+                    <img src="images/radio_ninada_logo.png"
+                        onerror="if (this.src.indexOf('../images/') === -1) this.src='../images/radio_ninada_logo.png';"
+                        alt="Radio Ninada 90.4 FM Logo"
+                        class="h-[40px] sm:h-[48px] md:h-[56px] w-auto object-contain transition-transform duration-200 ease-in-out" />
+                </a>
+
+                <!-- Thin Vertical Divider -->
+                <div class="h-6 sm:h-7 md:h-8 w-[1px] bg-primary/25 rounded-full" aria-hidden="true"></div>
+
+                <!-- SDM College Logo -->
+                <a href="https://sdmcujire.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center transition-transform duration-200 ease-in-out hover:scale-[1.03] cursor-pointer"
+                    aria-label="SDM College Ujire">
+                    <img src="images/sdm_college_logo.png"
+                        onerror="if (this.src.indexOf('../images/') === -1) this.src='../images/sdm_college_logo.png';"
+                        alt="SDM College Logo"
+                        class="h-[32px] sm:h-[38px] md:h-[44px] w-auto object-contain transition-transform duration-200 ease-in-out" />
+                </a>
+            </div>
             <!-- Navigation Links -->
             <div class="hidden xl:flex items-center gap-md">
                 <a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm"
