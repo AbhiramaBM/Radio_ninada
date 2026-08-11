@@ -176,6 +176,39 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+
+        /* Hero Entrance Animations */
+        @keyframes heroSlideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes heroSlideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-hero-left {
+            animation: heroSlideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .animate-hero-right {
+            animation: heroSlideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
     </style>
     <link rel="stylesheet" href="css/auth-modal.css" />
 </head>
@@ -202,9 +235,7 @@
                 <div class="h-6 sm:h-7 md:h-8 w-[1px] bg-primary/25 rounded-full" aria-hidden="true"></div>
 
                 <!-- SDM College Logo -->
-                <a href="https://sdmcujire.in"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <a href="https://sdmcujire.in" target="_blank" rel="noopener noreferrer"
                     class="inline-flex items-center transition-transform duration-200 ease-in-out hover:scale-[1.03] cursor-pointer"
                     aria-label="SDM College Ujire">
                     <img src="images/sdm_college_logo.png"
@@ -233,7 +264,8 @@
             <!-- Actions -->
             <div class="flex items-center gap-sm">
                 <button onclick="openGlobalSearchModal()"
-                    class="material-symbols-outlined p-base text-on-surface-variant hover:bg-primary/10 rounded-full transition-all cursor-pointer" title="Search programs, podcasts, news, events, RJs">search</button>
+                    class="material-symbols-outlined p-base text-on-surface-variant hover:bg-primary/10 rounded-full transition-all cursor-pointer"
+                    title="Search programs, podcasts, news, events, RJs">search</button>
                 <button onclick="RadioAuth.openModal('signin')"
                     class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-sm text-label-sm hover:scale-105 active:scale-95 transition-transform shadow-md shadow-primary/20 cursor-pointer">
                     Login
@@ -243,7 +275,8 @@
     </header>
 
     <!-- 1. Hero Section (#home) -->
-    <main id="home" class="relative min-h-screen pt-24 flex flex-col justify-center items-center overflow-hidden">
+    <main id="home"
+        class="relative min-h-fit lg:min-h-screen pt-20 sm:pt-24 lg:pt-24 flex flex-col justify-center items-center overflow-hidden">
         <!-- Animated WebGL Waveform Background -->
         <div class="absolute inset-0 z-0">
             <div class="absolute inset-0 w-full h-full opacity-35" style="display:block;">
@@ -338,109 +371,163 @@
 
         <!-- Hero Content -->
         <section
-            class="relative z-10 w-full max-w-container-max mx-auto px-md lg:px-xl grid grid-cols-1 lg:grid-cols-12 gap-xl items-center py-xl">
-            <!-- Left Column -->
-            <div class="lg:col-span-7 flex flex-col items-start gap-md">
+            class="relative z-10 w-full max-w-container-max mx-auto px-3.5 sm:px-md lg:px-xl grid grid-cols-12 gap-x-2.5 sm:gap-x-md lg:gap-xl gap-y-3.5 sm:gap-y-md items-center pt-4 pb-3 sm:py-xl">
+            <!-- Left Column (Text area: ~58-62% on mobile & desktop) -->
+            <div class="col-span-7 lg:col-span-7 flex flex-col items-start gap-2.5 sm:gap-md animate-hero-left">
                 <div
-                    class="flex items-center gap-sm bg-white/70 backdrop-blur-md px-md py-xs rounded-full border border-white/50 shadow-sm">
-                    <span class="relative flex h-3 w-3">
+                    class="flex items-center gap-1.5 sm:gap-sm bg-white/80 backdrop-blur-md px-3 sm:px-md py-1 sm:py-xs rounded-full border border-white/60 shadow-sm">
+                    <span class="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                         <span
                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-primary"></span>
                     </span>
-                    <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest">Live Now</span>
+                    <span
+                        class="font-label-sm text-xs sm:text-label-sm text-primary uppercase tracking-widest font-semibold">Live
+                        Now</span>
                 </div>
-                <h1 class="font-display-lg text-display-lg text-on-background leading-tight">
+                <h1
+                    class="font-display-lg text-[clamp(1.5rem,6vw,4rem)] text-on-background leading-[1.15] sm:leading-tight">
                     Your Music.<br />
                     Your Voice.<br />
                     <span class="text-primary italic">Your Radio.</span>
                 </h1>
-                <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                <p
+                    class="font-body-lg text-[clamp(0.8125rem,3vw,1.125rem)] text-on-surface-variant max-w-xl leading-relaxed">
                     Listen live to Radio Ninada 90.4 FM — SDM Ujire Community Radio Station. Stream 24/7 online or
                     download our official Android App on Google Play Store.
                 </p>
-                <div class="flex flex-wrap items-center gap-md mt-md">
-                    <button onclick="RadioPlayer.togglePlay()" id="hero-play-btn"
-                        class="group relative flex items-center justify-center h-20 w-20 rounded-full bg-primary text-on-primary shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all duration-300">
-                        <span id="hero-play-icon" class="material-symbols-outlined text-[40px]"
-                            style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        <div class="absolute -inset-2 border-2 border-primary/20 rounded-full animate-pulse"></div>
-                    </button>
-                    <div class="flex flex-col cursor-pointer" onclick="RadioPlayer.togglePlay()">
-                        <span data-live-title
-                            class="font-headline-md text-headline-md text-on-background leading-none">Radio Ninada 90.4
-                            FM</span>
-                        <span data-live-description
-                            class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Official 90.4 FM Stream
-                            (SDM Ujire)</span>
-                    </div>
-
-                    <!-- Play Store Link Badge -->
-                    <a href="https://play.google.com/store/search?q=Radio+Ninada+90.4+FM&c=apps" target="_blank"
-                        rel="noopener"
-                        class="ml-2 flex items-center gap-2 bg-on-background text-background px-4 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-md">
-                        <span class="material-symbols-outlined text-lg text-primary">shop</span>
-                        <span>Play Store App</span>
-                    </a>
-                </div>
             </div>
 
-            <!-- Right Column: Visuals -->
-            <div class="lg:col-span-5 relative flex justify-center items-center">
-                <div class="relative w-full aspect-square max-w-md flex justify-center items-center">
+            <!-- Right Column: Visuals (Vinyl circle: ~38-42% on mobile & desktop) -->
+            <div class="col-span-5 lg:col-span-5 relative flex justify-center items-center animate-hero-right">
+                <div
+                    class="relative w-full aspect-square max-w-[150px] sm:max-w-[220px] md:max-w-[280px] lg:max-w-md flex justify-center items-center">
                     <div
-                        class="relative w-80 h-80 rounded-full shadow-2xl shadow-on-background/20 vinyl-spin overflow-hidden border-8 border-on-background/10">
+                        class="relative w-full h-full rounded-full shadow-xl lg:shadow-2xl shadow-on-background/20 vinyl-spin overflow-hidden border-4 lg:border-8 border-on-background/10">
                         <div class="w-full h-full bg-on-background"
                             style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAzStQ5mjQMCOxozpi7Mnp8fwRWLlXz5l-etm5EE_aRrn-NST9Hl4q02D1kszYpWOPrh0u5rLdJ9N9a1sGDVidoZriz3GYxt9lDVSfjqxVyS6aAC5tNt9jcBDbv90RKBLG4d_YYm2-d1h6uUEhy6GEIcZBV59RMCyjaVctns39qzuLHWN3neXvUlahZv3rACDgzEkXQiRU4gq-I9pfj59d9Z3UeRMVpV16-a32fzErsp6Z7m8iRuHJk'); background-size: cover;">
                         </div>
                     </div>
-                    <div class="absolute -top-6 -right-2 animate-float delay-150">
-                        <span class="material-symbols-outlined text-[72px] text-primary/40"
+                    <div
+                        class="absolute -top-2.5 -right-1 sm:-top-6 sm:-right-2 animate-float delay-150 pointer-events-none">
+                        <span
+                            class="material-symbols-outlined text-[32px] sm:text-[48px] lg:text-[72px] text-primary/40"
                             style="font-variation-settings: 'FILL' 1;">music_note</span>
                     </div>
-                    <div class="absolute bottom-6 -left-6 animate-float">
-                        <span class="material-symbols-outlined text-[56px] text-tertiary/30"
+                    <div class="absolute bottom-1 -left-2 sm:bottom-6 sm:-left-6 animate-float pointer-events-none">
+                        <span
+                            class="material-symbols-outlined text-[24px] sm:text-[36px] lg:text-[56px] text-tertiary/30"
                             style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
                     </div>
                 </div>
+            </div>
+
+            <!-- Radio Player Controls (Positions below hero description) -->
+            <div
+                class="col-span-12 lg:col-span-7 flex flex-wrap items-center gap-3 sm:gap-md mt-1.5 sm:mt-md animate-hero-left">
+                <button onclick="RadioPlayer.togglePlay()" id="hero-play-btn"
+                    class="group relative flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 rounded-full bg-primary text-on-primary shadow-xl lg:shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all duration-300 shrink-0 cursor-pointer">
+                    <span id="hero-play-icon"
+                        class="material-symbols-outlined text-[28px] sm:text-[32px] lg:text-[40px]"
+                        style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    <div class="absolute -inset-1.5 sm:-inset-2 border-2 border-primary/20 rounded-full animate-pulse">
+                    </div>
+                </button>
+                <div class="flex flex-col cursor-pointer min-w-0 flex-1" onclick="RadioPlayer.togglePlay()">
+                    <span data-live-title
+                        class="font-headline-md text-base sm:text-headline-md text-on-background leading-none font-bold truncate">Radio
+                        Ninada 90.4
+                        FM</span>
+                    <span data-live-description
+                        class="font-label-sm text-xs sm:text-label-sm text-on-surface-variant mt-1 truncate">Official
+                        90.4 FM Stream
+                        (SDM Ujire)</span>
+                </div>
+
+                <!-- Modern Google Play Get App Button -->
+                <a href="https://play.google.com/store/search?q=Radio+Ninada+90.4+FM&c=apps" target="_blank"
+                    rel="noopener noreferrer" aria-label="Get Official Radio Ninada Android App on Google Play Store"
+                    class="ml-auto sm:ml-4 flex items-center gap-1.5 sm:gap-2 bg-white/95 hover:bg-white text-primary border border-primary/35 hover:border-primary px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0 cursor-pointer">
+                    <svg class="w-4 h-4 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path
+                            d="M3.609 1.814L13.793 12 3.61 22.186a1.44 1.44 0 01-.61-.986V2.8a1.44 1.44 0 01.609-.986z"
+                            fill="#00E5FF" />
+                        <path d="M17.18 8.613l-3.387 3.387 3.387 3.387 3.844-2.184c.83-.47.83-1.23 0-1.701L17.18 8.613z"
+                            fill="#FFC107" />
+                        <path
+                            d="M13.793 12L3.609 1.814A1.69 1.69 0 014.88 1.44c.48 0 .96.14 1.37.37l10.93 6.803L13.793 12z"
+                            fill="#FF3D00" />
+                        <path
+                            d="M13.793 12l3.387 3.387-10.93 6.803a2.12 2.12 0 01-1.37.37 1.69 1.69 0 01-1.271-.374L13.793 12z"
+                            fill="#4CAF50" />
+                    </svg>
+                    <span class="font-label-sm leading-none">Get App</span>
+                </a>
             </div>
         </section>
 
         <!-- Scroll Indicator -->
         <a href="#schedule"
-            class="my-8 flex flex-col items-center gap-sm opacity-70 hover:opacity-100 transition-opacity cursor-pointer group z-10">
+            class="mt-3 mb-4 sm:my-8 flex flex-col items-center gap-1 sm:gap-sm opacity-70 hover:opacity-100 transition-opacity cursor-pointer group z-10">
             <span
-                class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest group-hover:text-primary transition-colors">Scroll
+                class="font-label-sm text-xs sm:text-label-sm text-on-surface-variant uppercase tracking-widest group-hover:text-primary transition-colors">Scroll
                 to Explore</span>
-            <div class="w-[1px] h-10 bg-gradient-to-b from-primary to-transparent animate-pulse"></div>
+            <div class="w-[1px] h-6 sm:h-10 bg-gradient-to-b from-primary to-transparent animate-pulse"></div>
         </a>
     </main>
 
     <!-- 2. Today's Broadcast Schedule Section (#schedule) -->
     <section id="schedule"
-        class="relative z-10 w-full max-w-container-max mx-auto px-md lg:px-xl py-xl border-t border-outline-variant/20">
+        class="relative z-10 w-full max-w-container-max mx-auto px-3.5 sm:px-md lg:px-xl pt-5 pb-8 sm:py-xl border-t border-outline-variant/20">
         <div
-            class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-md mb-xl bg-surface-container-low p-md lg:p-lg rounded-2xl border border-outline-variant/30">
+            class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-md mb-xl bg-surface-container-low p-4 sm:p-md lg:p-lg rounded-2xl border border-outline-variant/30">
             <div class="flex items-center gap-md">
-                <div class="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary shadow-sm shrink-0">
+                <div
+                    class="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary shadow-sm shrink-0">
                     <span class="material-symbols-outlined text-2xl animate-pulse">radio</span>
                 </div>
                 <div>
-                    <h3 id="live-listeners-count-display" class="font-headline-md text-headline-md font-bold text-on-surface">Radio Ninada 90.4 FM Live</h3>
-                    <p id="live-broadcast-status-subtitle" class="text-on-surface-variant font-body-md text-[14px]">Community Radio Broadcasting Live from SDM Campus, Ujire</p>
+                    <h3 id="live-listeners-count-display"
+                        class="font-headline-md text-lg sm:text-headline-md font-bold text-on-surface">Radio Ninada 90.4
+                        FM Live</h3>
+                    <p id="live-broadcast-status-subtitle"
+                        class="text-on-surface-variant font-body-md text-xs sm:text-[14px]">Community Radio Broadcasting
+                        Live from SDM Campus, Ujire</p>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-xs">
-                <span
-                    class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mr-xs">Trending:</span>
-                <span
-                    class="bg-white px-md py-xs rounded-full border border-outline-variant text-[12px] font-semibold text-on-surface-variant">#LoFi</span>
-                <span
-                    class="bg-white px-md py-xs rounded-full border border-outline-variant text-[12px] font-semibold text-on-surface-variant">#CityVibes</span>
-                <span
-                    class="bg-white px-md py-xs rounded-full border border-outline-variant text-[12px] font-semibold text-on-surface-variant">#JazzRadio</span>
-                <span
-                    class="bg-white px-md py-xs rounded-full border border-outline-variant text-[12px] font-semibold text-on-surface-variant">#ModernFM</span>
+            <!-- Trending Now Section -->
+            <div
+                class="w-full lg:w-auto bg-white/80 backdrop-blur-sm p-2.5 sm:p-3 rounded-2xl border border-primary/20 shadow-xs max-w-full">
+                <div class="flex items-center justify-between gap-4 mb-2">
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-primary text-base">trending_up</span>
+                        <h4 class="font-bold text-xs sm:text-sm text-on-surface tracking-wide">Trending Now</h4>
+                    </div>
+                    <button type="button"
+                        onclick="if(document.getElementById('global-search-modal')) document.getElementById('global-search-modal').classList.remove('hidden')"
+                        class="text-[11px] sm:text-[12px] font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-0.5 cursor-pointer">
+                        View all <span class="material-symbols-outlined text-[13px] sm:text-[14px]">chevron_right</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-2.5 overflow-x-auto no-scrollbar flex-nowrap py-0.5 max-w-full">
+                    <button type="button"
+                        class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white border border-primary/25 text-xs font-semibold text-on-surface shadow-2xs hover:bg-primary/5 hover:border-primary/40 hover:shadow-xs hover:-translate-y-0.5 active:scale-95 active:bg-primary/10 transition-all duration-200 cursor-pointer shrink-0">
+                        <span class="text-primary font-bold mr-0.5">#</span>LoFi
+                    </button>
+                    <button type="button"
+                        class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white border border-primary/25 text-xs font-semibold text-on-surface shadow-2xs hover:bg-primary/5 hover:border-primary/40 hover:shadow-xs hover:-translate-y-0.5 active:scale-95 active:bg-primary/10 transition-all duration-200 cursor-pointer shrink-0">
+                        <span class="text-primary font-bold mr-0.5">#</span>CityVibes
+                    </button>
+                    <button type="button"
+                        class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white border border-primary/25 text-xs font-semibold text-on-surface shadow-2xs hover:bg-primary/5 hover:border-primary/40 hover:shadow-xs hover:-translate-y-0.5 active:scale-95 active:bg-primary/10 transition-all duration-200 cursor-pointer shrink-0">
+                        <span class="text-primary font-bold mr-0.5">#</span>JazzRadio
+                    </button>
+                    <button type="button"
+                        class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white border border-primary/25 text-xs font-semibold text-on-surface shadow-2xs hover:bg-primary/5 hover:border-primary/40 hover:shadow-xs hover:-translate-y-0.5 active:scale-95 active:bg-primary/10 transition-all duration-200 cursor-pointer shrink-0">
+                        <span class="text-primary font-bold mr-0.5">#</span>ModernFM
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -587,7 +674,8 @@
 
         <!-- Podcast Cards Grid -->
         <div id="podcast-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
-            <div class="col-span-full py-12 text-center text-on-surface-variant/60 italic font-body-md flex flex-col items-center justify-center gap-sm">
+            <div
+                class="col-span-full py-12 text-center text-on-surface-variant/60 italic font-body-md flex flex-col items-center justify-center gap-sm">
                 <span class="material-symbols-outlined text-3xl animate-spin text-primary">sync</span>
                 <span>Loading latest podcast episodes...</span>
             </div>
@@ -793,7 +881,8 @@
 
         <!-- Gallery Grid (Dynamically Populated from Backend API) -->
         <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
-            <div class="col-span-full py-12 text-center text-on-surface-variant/60 italic font-body-md flex flex-col items-center justify-center gap-sm">
+            <div
+                class="col-span-full py-12 text-center text-on-surface-variant/60 italic font-body-md flex flex-col items-center justify-center gap-sm">
                 <span class="material-symbols-outlined text-3xl animate-spin text-primary">sync</span>
                 <span>Loading Behind The Mic media items...</span>
             </div>
@@ -801,18 +890,24 @@
     </section>
 
     <!-- Media Preview Lightbox Modal -->
-    <div id="media-lightbox-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 transition-all">
-        <div class="relative bg-slate-900 border border-white/20 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div id="media-lightbox-modal"
+        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 transition-all">
+        <div
+            class="relative bg-slate-900 border border-white/20 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex items-center justify-between px-md py-sm border-b border-white/10 bg-slate-950/60">
                 <div class="flex items-center gap-xs">
-                    <span id="media-lightbox-icon" class="material-symbols-outlined text-primary text-xl">play_circle</span>
-                    <h3 id="media-lightbox-title" class="font-bold text-white text-base truncate max-w-md">Media Preview</h3>
+                    <span id="media-lightbox-icon"
+                        class="material-symbols-outlined text-primary text-xl">play_circle</span>
+                    <h3 id="media-lightbox-title" class="font-bold text-white text-base truncate max-w-md">Media Preview
+                    </h3>
                 </div>
-                <button onclick="closeMediaLightbox()" class="text-slate-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
+                <button onclick="closeMediaLightbox()"
+                    class="text-slate-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
                     <span class="material-symbols-outlined text-2xl">close</span>
                 </button>
             </div>
-            <div id="media-lightbox-content" class="relative w-full aspect-video bg-black flex items-center justify-center overflow-hidden">
+            <div id="media-lightbox-content"
+                class="relative w-full aspect-video bg-black flex items-center justify-center overflow-hidden">
                 <!-- Video or Image injected dynamically -->
             </div>
             <div id="media-lightbox-footer" class="p-md bg-slate-950/80 border-t border-white/10">
@@ -841,23 +936,30 @@
                     <div class="flex items-center gap-1.5 mb-0.5">
                         <span id="global-player-badge"
                             class="bg-primary/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">LIVE</span>
-                        <h4 id="global-player-title" class="font-bold text-sm text-on-background truncate">Radio Ninada 90.4 FM Live</h4>
+                        <h4 id="global-player-title" class="font-bold text-sm text-on-background truncate">Radio Ninada
+                            90.4 FM Live</h4>
                     </div>
-                    <p id="global-player-artist" class="text-xs text-on-surface-variant truncate">RJ Ananya • Ninada Morning Buzz</p>
+                    <p id="global-player-artist" class="text-xs text-on-surface-variant truncate">RJ Ananya • Ninada
+                        Morning Buzz</p>
                 </div>
             </div>
 
             <!-- Main Playback Controls & Progress Bar -->
             <div class="flex flex-col items-center gap-1 w-2/4 max-w-md">
                 <div class="flex items-center gap-4">
-                    <button onclick="RadioPlayer.seekRelative(-10)" class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" title="Rewind 10s">
+                    <button onclick="RadioPlayer.seekRelative(-10)"
+                        class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+                        title="Rewind 10s">
                         <span class="material-symbols-outlined text-xl">replay_10</span>
                     </button>
                     <button onclick="RadioPlayer.togglePlay()" aria-label="Toggle Playback"
                         class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer">
-                        <span id="global-player-play-icon" class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        <span id="global-player-play-icon" class="material-symbols-outlined text-2xl"
+                            style="font-variation-settings: 'FILL' 1;">play_arrow</span>
                     </button>
-                    <button onclick="RadioPlayer.seekRelative(10)" class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" title="Forward 10s">
+                    <button onclick="RadioPlayer.seekRelative(10)"
+                        class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+                        title="Forward 10s">
                         <span class="material-symbols-outlined text-xl">forward_10</span>
                     </button>
                 </div>
@@ -876,7 +978,9 @@
                 <input id="global-player-vol-slider" type="range" min="0" max="1" step="0.05" value="0.8"
                     oninput="RadioPlayer.setVolume(this.value)"
                     class="w-20 h-1 bg-outline-variant/40 rounded-lg appearance-none cursor-pointer accent-primary" />
-                <a href="#home" class="hidden sm:flex items-center text-primary hover:text-primary/80 transition-colors p-1" title="Back to top">
+                <a href="#home"
+                    class="hidden sm:flex items-center text-primary hover:text-primary/80 transition-colors p-1"
+                    title="Back to top">
                     <span class="material-symbols-outlined text-xl">vertical_align_top</span>
                 </a>
             </div>
@@ -981,24 +1085,30 @@
     </div>
 
     <!-- Global Search Modal -->
-    <div id="global-search-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden items-start justify-center pt-20 px-4">
-        <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-2xl shadow-2xl border border-white/20 animate-in fade-in zoom-in duration-200">
+    <div id="global-search-modal"
+        class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden items-start justify-center pt-20 px-4">
+        <div
+            class="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-2xl shadow-2xl border border-white/20 animate-in fade-in zoom-in duration-200">
             <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2 text-primary font-bold text-lg">
                     <span class="material-symbols-outlined text-2xl">search</span>
                     <span>Global Radio Search</span>
                 </div>
-                <button onclick="closeGlobalSearchModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 cursor-pointer">
+                <button onclick="closeGlobalSearchModal()"
+                    class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 cursor-pointer">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <div class="relative mb-4">
-                <input type="text" id="global-search-input" onkeyup="performGlobalSearch()" placeholder="Search programs, podcasts, news, events, RJs..."
-                    class="w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl px-5 py-3.5 pl-12 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary transition-all" autofocus />
+                <input type="text" id="global-search-input" onkeyup="performGlobalSearch()"
+                    placeholder="Search programs, podcasts, news, events, RJs..."
+                    class="w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl px-5 py-3.5 pl-12 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    autofocus />
                 <span class="material-symbols-outlined absolute left-4 top-3.5 text-gray-400">search</span>
             </div>
             <div id="global-search-results" class="max-h-96 overflow-y-auto space-y-2 no-scrollbar">
-                <p class="text-xs text-center text-gray-400 py-6">Type keywords above to search live Radio Ninada content...</p>
+                <p class="text-xs text-center text-gray-400 py-6">Type keywords above to search live Radio Ninada
+                    content...</p>
             </div>
         </div>
     </div>
