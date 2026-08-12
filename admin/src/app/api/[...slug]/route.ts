@@ -2,11 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 
 let appHandler: any = null;
 
+function safeRequire(mod: string) {
+  try {
+    return eval('require')(mod);
+  } catch (_) {
+    return null;
+  }
+}
+
 function getApp() {
   if (!appHandler) {
     try {
-      const backendApp = require('../../../../../backend/dist/app');
-      appHandler = backendApp.default || backendApp;
+      const backendApp = safeRequire('../../../../../backend/dist/app');
+      if (backendApp) {
+        appHandler = backendApp.default || backendApp;
+      }
     } catch (e) {
       console.warn('[NextAPI] Backend app import fallback:', (e as Error).message);
     }
@@ -45,9 +55,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     try {
       const app = getApp();
       if (app) {
-        const { prisma } = require('../../../../../backend/dist/config/prisma');
-        const state = await prisma.liveRadioState.findUnique({ where: { id: 'live-config' } });
-        if (state) return NextResponse.json({ success: true, data: state });
+        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
+        const prisma = prismaModule?.prisma;
+        if (prisma) {
+          const state = await prisma.liveRadioState.findUnique({ where: { id: 'live-config' } });
+          if (state) return NextResponse.json({ success: true, data: state });
+        }
       }
     } catch (_) {}
     return NextResponse.json({ success: true, data: defaultLiveState });
@@ -57,9 +70,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     try {
       const app = getApp();
       if (app) {
-        const { prisma } = require('../../../../../backend/dist/config/prisma');
-        const programs = await prisma.program.findMany({ where: { deletedAt: null } });
-        if (programs && programs.length > 0) return NextResponse.json({ success: true, data: programs, total: programs.length });
+        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
+        const prisma = prismaModule?.prisma;
+        if (prisma) {
+          const programs = await prisma.program.findMany({ where: { deletedAt: null } });
+          if (programs && programs.length > 0) return NextResponse.json({ success: true, data: programs, total: programs.length });
+        }
       }
     } catch (_) {}
     return NextResponse.json({
@@ -87,9 +103,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     try {
       const app = getApp();
       if (app) {
-        const { prisma } = require('../../../../../backend/dist/config/prisma');
-        const podcasts = await prisma.podcast.findMany({ where: { deletedAt: null } });
-        if (podcasts && podcasts.length > 0) return NextResponse.json({ success: true, data: podcasts, total: podcasts.length });
+        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
+        const prisma = prismaModule?.prisma;
+        if (prisma) {
+          const podcasts = await prisma.podcast.findMany({ where: { deletedAt: null } });
+          if (podcasts && podcasts.length > 0) return NextResponse.json({ success: true, data: podcasts, total: podcasts.length });
+        }
       }
     } catch (_) {}
     return NextResponse.json({
@@ -115,9 +134,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     try {
       const app = getApp();
       if (app) {
-        const { prisma } = require('../../../../../backend/dist/config/prisma');
-        const news = await prisma.news.findMany({ where: { deletedAt: null } });
-        if (news && news.length > 0) return NextResponse.json({ success: true, data: news, total: news.length });
+        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
+        const prisma = prismaModule?.prisma;
+        if (prisma) {
+          const news = await prisma.news.findMany({ where: { deletedAt: null } });
+          if (news && news.length > 0) return NextResponse.json({ success: true, data: news, total: news.length });
+        }
       }
     } catch (_) {}
     return NextResponse.json({
@@ -140,9 +162,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     try {
       const app = getApp();
       if (app) {
-        const { prisma } = require('../../../../../backend/dist/config/prisma');
-        const rjs = await prisma.rJProfile.findMany({ where: { deletedAt: null } });
-        if (rjs && rjs.length > 0) return NextResponse.json({ success: true, data: rjs, total: rjs.length });
+        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
+        const prisma = prismaModule?.prisma;
+        if (prisma) {
+          const rjs = await prisma.rJProfile.findMany({ where: { deletedAt: null } });
+          if (rjs && rjs.length > 0) return NextResponse.json({ success: true, data: rjs, total: rjs.length });
+        }
       }
     } catch (_) {}
     return NextResponse.json({

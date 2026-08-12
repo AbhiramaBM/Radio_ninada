@@ -50,13 +50,23 @@ async function getUsers(req, res, next) {
 async function createUser(req, res, next) {
     try {
         const data = index_1.userCreateSchema.parse(req.body);
-        const existing = await prisma_1.prisma.user.findUnique({ where: { email: data.email } });
+        const normalizedEmail = data.email.trim().toLowerCase();
+        const existing = await prisma_1.prisma.user.findFirst({
+            where: {
+                email: normalizedEmail,
+                deletedAt: null,
+            },
+        });
         if (existing) {
-            return res.status(400).json({ success: false, message: 'User with this email already exists' });
+            return res.status(400).json({ success: false, message: 'User with this email address already exists' });
         }
         const hashedPassword = await bcryptjs_1.default.hash(data.password, 10);
         const user = await prisma_1.prisma.user.create({
-            data: { ...data, password: hashedPassword },
+            data: {
+                ...data,
+                email: normalizedEmail,
+                password: hashedPassword,
+            },
             select: { id: true, email: true, name: true, role: true, avatar: true, bio: true, status: true, createdAt: true },
         });
         return res.status(201).json({ success: true, message: 'User created successfully', data: user });
@@ -69,7 +79,7 @@ async function updateUserRole(req, res, next) {
     try {
         const id = req.params.id;
         const { role } = req.body;
-        if (!['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'MODERATOR'].includes(role)) {
+        if (!['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'MODERATOR', 'LISTENER'].includes(role)) {
             return res.status(400).json({ success: false, message: 'Invalid role' });
         }
         const user = await prisma_1.prisma.user.update({

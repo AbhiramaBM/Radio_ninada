@@ -2,10 +2,22 @@ const serverless = require('serverless-http');
 
 let handler;
 
+function safeRequire(mod) {
+  try {
+    return eval('require')(mod);
+  } catch (_) {
+    return null;
+  }
+}
+
 try {
-  const appModule = require('../../backend/dist/app');
-  const app = appModule.default || appModule;
-  handler = serverless(app);
+  const appModule = safeRequire('../../backend/dist/app');
+  if (appModule) {
+    const app = appModule.default || appModule;
+    handler = serverless(app);
+  } else {
+    throw new Error('Backend app module not available in Vercel environment');
+  }
 } catch (err) {
   console.error('[Vercel API Init Error]:', err);
   handler = async (req, res) => {

@@ -37,10 +37,12 @@ api.interceptors.response.use(
           error.config.headers.Authorization = `Bearer ${newToken}`;
           return api(error.config);
         } catch (refreshErr) {
-          localStorage.removeItem('ninada_access_token');
-          localStorage.removeItem('ninada_refresh_token');
-          window.location.href = '/login';
+          const { useAuthStore } = await import('@/store/useAuthStore');
+          useAuthStore.getState().logout();
         }
+      } else {
+        const { useAuthStore } = await import('@/store/useAuthStore');
+        useAuthStore.getState().logout();
       }
     }
     return Promise.reject(error);

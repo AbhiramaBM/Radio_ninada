@@ -24,15 +24,15 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, setAuth } = useAuthStore();
 
-  const [email, setEmail] = useState(ADMIN_EMAIL);
-  const [password, setPassword] = useState('Admin@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function completeLogin(user: any, accessToken: string, refreshToken: string) {
-    const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
-    if (!isAdmin) {
-      setError('Access denied. Only administrators can use the admin portal.');
+    const isStaffRole = ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'MODERATOR'].includes(user?.role);
+    if (!isStaffRole) {
+      setError('Access denied. Only authorized staff members can access the admin portal.');
       return;
     }
     setAuth(user, accessToken, refreshToken);

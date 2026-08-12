@@ -34,10 +34,10 @@ exports.resetPasswordSchema = zod_1.z.object({
     newPassword: zod_1.z.string().min(6, 'New password must be at least 6 characters'),
 });
 exports.userCreateSchema = zod_1.z.object({
-    email: zod_1.z.string().email(),
-    password: zod_1.z.string().min(6),
-    name: zod_1.z.string().min(2),
-    role: zod_1.z.enum(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'MODERATOR']),
+    email: zod_1.z.string().email('Invalid email address'),
+    password: zod_1.z.string().min(6, 'Password must be at least 6 characters'),
+    name: zod_1.z.string().min(2, 'Name must be at least 2 characters'),
+    role: zod_1.z.enum(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'MODERATOR', 'LISTENER']).default('EDITOR'),
     avatar: zod_1.z.string().optional(),
     bio: zod_1.z.string().optional(),
 });

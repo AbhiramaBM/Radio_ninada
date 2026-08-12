@@ -20,15 +20,16 @@ const mailer_1 = require("../utils/mailer");
 async function login(req, res, next) {
     try {
         const { email, password } = index_1.loginSchema.parse(req.body);
-        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await prisma_1.prisma.user.findUnique({ where: { email: normalizedEmail } });
         if (!user || user.deletedAt) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
         if (user.status !== 'ACTIVE') {
             return res.status(403).json({ success: false, message: `Account is ${user.status.toLowerCase()}. Please contact system admin.` });
         }
         if (!user.password) {
-            if (email === 'radioninada@gmail.com') {
+            if (normalizedEmail === 'radioninada@gmail.com') {
                 const defaultHash = await bcryptjs_1.default.hash('Admin@123', 10);
                 await prisma_1.prisma.user.update({ where: { id: user.id }, data: { password: defaultHash } });
                 user.password = defaultHash;

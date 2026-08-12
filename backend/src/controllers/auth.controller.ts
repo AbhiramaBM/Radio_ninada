@@ -9,10 +9,11 @@ import { AuthenticatedRequest } from '../middlewares/auth';
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password } = loginSchema.parse(req.body);
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user || user.deletedAt) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     if (user.status !== 'ACTIVE') {
@@ -20,7 +21,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     }
 
     if (!user.password) {
-      if (email === 'radioninada@gmail.com') {
+      if (normalizedEmail === 'radioninada@gmail.com') {
         const defaultHash = await bcrypt.hash('Admin@123', 10);
         await prisma.user.update({ where: { id: user.id }, data: { password: defaultHash } });
         user.password = defaultHash;

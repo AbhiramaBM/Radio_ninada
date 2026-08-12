@@ -44,14 +44,25 @@ export async function getUsers(req: AuthenticatedRequest, res: Response, next: N
 export async function createUser(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const data = userCreateSchema.parse(req.body);
-    const existing = await prisma.user.findUnique({ where: { email: data.email } });
+    const normalizedEmail = data.email.trim().toLowerCase();
+
+    const existing = await prisma.user.findFirst({
+      where: {
+        email: normalizedEmail,
+        deletedAt: null,
+      },
+    });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'User with this email already exists' });
+      return res.status(400).json({ success: false, message: 'User with this email address already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await prisma.user.create({
-      data: { ...data, password: hashedPassword },
+      data: {
+        ...data,
+        email: normalizedEmail,
+        password: hashedPassword,
+      },
       select: { id: true, email: true, name: true, role: true, avatar: true, bio: true, status: true, createdAt: true },
     });
 
@@ -65,7 +76,7 @@ export async function updateUserRole(req: AuthenticatedRequest, res: Response, n
   try {
     const id = req.params.id as string;
     const { role } = req.body;
-    if (!['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'MODERATOR'].includes(role)) {
+    if (!['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'MODERATOR', 'LISTENER'].includes(role)) {
       return res.status(400).json({ success: false, message: 'Invalid role' });
     }
 

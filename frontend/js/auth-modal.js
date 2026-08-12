@@ -49,7 +49,7 @@
 
         canAccessAdminDashboard: function (userData) {
             const role = this.getUserRole(userData);
-            return role === 'SUPER_ADMIN' || role === 'ADMIN';
+            return role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'EDITOR' || role === 'RJ' || role === 'MODERATOR';
         },
 
         useFirebase: function () {
