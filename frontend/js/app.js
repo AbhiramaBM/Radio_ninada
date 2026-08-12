@@ -324,55 +324,99 @@ function filterPodcasts(category, btn) {
     });
 }
 
-// News Data & Category Switching
+// News Data & Category Switching (Strictly fetched from Admin API)
 const newsData = {
-    college: [
-        { title: "Campus Cultural Fest Registrations Open Next Week", date: "Today", desc: "Students can register for music battles, drama, and radio anchoring events starting Monday.", tag: "College" },
-        { title: "Engineering Department Wins National Radio Tech Expo", date: "Yesterday", desc: "Our student engineering team secured 1st place for designing a low-power FM transmitter.", tag: "Campus Tech" },
-        { title: "Student Council Announces Annual Inter-College Sports Meet", date: "2 days ago", desc: "Over 20 colleges across Karnataka will participate in football, basketball, and athletics.", tag: "Sports" }
-    ],
-    local: [
-        { title: "City Metro Phase 3 Line Opening This Friday", date: "Today", desc: "New metro connectivity directly reaches college campus gate 2, reducing commute times.", tag: "Transit" },
-        { title: "Weekend Flea Market & Live Music Festival in City Park", date: "Yesterday", desc: "Enjoy organic food stalls, local handicrafts, and live performances by acoustic artists.", tag: "City Life" },
-        { title: "New Green Corridor Initiated by City Municipal Corporation", date: "3 days ago", desc: "Plantation drive along major avenues aiming to plant 50,000 saplings this monsoon.", tag: "Environment" }
-    ],
-    karnataka: [
-        { title: "Bengaluru Tech Summit 2026 Dates Announced", date: "Today", desc: "Asia's largest technology event will showcase innovations in AI, space tech, and green energy.", tag: "Karnataka Tech" },
-        { title: "Coastal Karnataka Monsoon Tourism Festival Begins", date: "Yesterday", desc: "Special monsoon trails, waterfall treks, and traditional coastal culinary events unveiled.", tag: "Tourism" },
-        { title: "State Education Board Introduces Digital Audio Learning Labs", date: "2 days ago", desc: "Schools across Karnataka to adopt podcast-based audio modules for interactive science classes.", tag: "Education" }
-    ],
-    india: [
-        { title: "ISRO Successfully Launches Student-Built Research Satellite", date: "Today", desc: "Sriharikota rocket launches satellite payload designed by university students from 5 states.", tag: "Space" },
-        { title: "National Youth Music Awards 2026 Nominations Open", date: "Yesterday", desc: "Recognizing independent indie vocalists, instrumentalists, and digital audio creators.", tag: "Music Industry" },
-        { title: "India Achieves New Milestone in Renewable Energy Production", date: "3 days ago", desc: "Solar and wind energy contribution crosses 45% of total grid power generation.", tag: "National" }
-    ],
-    international: [
-        { title: "Global Podcasting & Audio Conference Held in Geneva", date: "Today", desc: "Broadcasters from 80 countries gather to discuss future trends in digital radio and AI streaming.", tag: "Global Radio" },
-        { title: "International Indie Artist Summit Announces World Tour", date: "Yesterday", desc: "Featured independent musicians to tour 15 cities worldwide including New Delhi and Tokyo.", tag: "World Music" },
-        { title: "UNESCO Highlights Community Radio as Key Driver for Digital Literacy", date: "2 days ago", desc: "Report praises community radio initiatives empowering youth voices in developing nations.", tag: "UNESCO" }
-    ]
+    college: [],
+    local: [],
+    karnataka: [],
+    india: [],
+    international: []
 };
+
+function normalizeNewsCategory(catStr) {
+    if (!catStr) return 'local';
+    const lower = catStr.toLowerCase().trim();
+    if (lower.includes('college') || lower.includes('campus')) return 'college';
+    if (lower.includes('local') || lower.includes('city')) return 'local';
+    if (lower.includes('karnataka') || lower.includes('state')) return 'karnataka';
+    if (lower.includes('national') || lower.includes('india')) return 'india';
+    if (lower.includes('international') || lower.includes('global') || lower.includes('world')) return 'international';
+    return 'local';
+}
 
 function renderNews(category) {
     const container = document.getElementById('news-container');
     if (!container) return;
     const items = newsData[category] || [];
-    container.innerHTML = items.map(item => `
-        <div class="bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all flex flex-col justify-between group">
-            <div>
-                <div class="flex justify-between items-center mb-xs">
-                    <span class="bg-surface-container text-primary font-bold text-[10px] px-sm py-0.5 rounded-full uppercase">${item.tag}</span>
-                    <span class="text-xs text-on-surface-variant">${item.date}</span>
+    if (items.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md border border-dashed border-outline-variant/40 rounded-2xl">
+                No news bulletins published in this category yet. Check back soon for updates from our newsroom!
+            </div>
+        `;
+        return;
+    }
+    container.innerHTML = items.map(item => {
+        const safeTitle = (item.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeTag = (item.tag || 'News').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeDate = (item.date || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeDesc = (item.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeImage = (item.image || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+        return `
+            <div class="bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all flex flex-col justify-between group">
+                <div>
+                    <div class="flex justify-between items-center mb-xs">
+                        <span class="bg-surface-container text-primary font-bold text-[10px] px-sm py-0.5 rounded-full uppercase">${item.tag}</span>
+                        <span class="text-xs text-on-surface-variant">${item.date}</span>
+                    </div>
+                    <h3 class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">${item.title}</h3>
+                    <p class="text-on-surface-variant text-sm line-clamp-3">${item.desc}</p>
                 </div>
-                <h3 class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">${item.title}</h3>
-                <p class="text-on-surface-variant text-sm line-clamp-3">${item.desc}</p>
+                <div onclick="openNewsArticleModal('${safeTitle}', '${safeTag}', '${safeDate}', '${safeDesc}', '${safeImage}')"
+                    class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-primary font-bold cursor-pointer group-hover:translate-x-1 transition-transform">
+                    <span>Read Full Bulletin</span>
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </div>
             </div>
-            <div class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-primary font-bold cursor-pointer group-hover:translate-x-1 transition-transform">
-                <span>Read Full Bulletin</span>
-                <span class="material-symbols-outlined text-sm">arrow_forward</span>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
+}
+
+function openNewsArticleModal(title, category, date, content, image) {
+    const modal = document.getElementById('news-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('news-modal-title');
+    const tagEl = document.getElementById('news-modal-tag');
+    const dateEl = document.getElementById('news-modal-date');
+    const contentEl = document.getElementById('news-modal-content');
+    const imgEl = document.getElementById('news-modal-img');
+
+    if (titleEl) titleEl.innerText = title;
+    if (tagEl) tagEl.innerText = category;
+    if (dateEl) dateEl.innerText = date;
+    if (contentEl) contentEl.innerText = content;
+
+    if (imgEl) {
+        if (image) {
+            imgEl.src = image;
+            imgEl.classList.remove('hidden');
+        } else {
+            imgEl.classList.add('hidden');
+        }
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeNewsModal() {
+    const modal = document.getElementById('news-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
 }
 
 function switchNewsTab(cat, btn) {
@@ -651,33 +695,65 @@ function renderPodcastsUI(podList) {
     }).join('');
 }
 
+function addToCalendar(title, description, location, dateStr) {
+    try {
+        const startDate = dateStr ? new Date(dateStr) : new Date();
+        const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+
+        const formatICSDate = (date) => {
+            return date.toISOString().replace(/-|:|\.\d+/g, '');
+        };
+
+        const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+            `&text=${encodeURIComponent(title)}` +
+            `&details=${encodeURIComponent(description || '')}` +
+            `&location=${encodeURIComponent(location || '')}` +
+            `&dates=${formatICSDate(startDate)}/${formatICSDate(endDate)}`;
+
+        window.open(googleUrl, '_blank', 'noopener,noreferrer');
+        if (window.showToast) {
+            window.showToast(`📅 Adding "${title}" to Calendar...`);
+        }
+    } catch (err) {
+        console.error('[addToCalendar] Error:', err);
+        if (window.showToast) window.showToast('Unable to open calendar.');
+    }
+}
+
 function renderEventsUI(evtList) {
-    const eventsContainer = document.querySelector('#events .grid');
+    const eventsContainer = document.getElementById('events-grid') || document.querySelector('#events .grid');
     if (!eventsContainer) return;
-    if (evtList.length === 0) {
-        eventsContainer.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No upcoming events scheduled.</div>`;
+    if (!Array.isArray(evtList) || evtList.length === 0) {
+        eventsContainer.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No upcoming events scheduled at this time. Check back soon!</div>`;
         return;
     }
     eventsContainer.innerHTML = evtList.map(evt => {
         const bannerUrl = resolveServerUrl(evt.banner) || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80';
-        const dateStr = evt.eventDate ? new Date(evt.eventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'UPCOMING';
+        const dateObj = evt.eventDate ? new Date(evt.eventDate) : null;
+        const dateStr = dateObj ? dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'UPCOMING';
+        const rawDate = evt.eventDate || new Date().toISOString();
 
         return `
-            <div class="bg-white rounded-2xl overflow-hidden border border-outline-variant/30 hover:shadow-2xl transition-all duration-300 group">
-                <div class="relative h-48 overflow-hidden">
-                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${bannerUrl}" alt="${evt.title}" />
-                    <div class="absolute top-3 right-3 bg-primary text-white font-bold text-xs px-md py-xs rounded-full shadow-md">${dateStr}</div>
-                </div>
-                <div class="p-md">
-                    <div class="flex items-center gap-xs text-xs text-primary font-semibold uppercase mb-xs">
-                        <span class="material-symbols-outlined text-sm">location_on</span>
-                        <span>${evt.location || 'Radio Ninada Studio'}</span>
+            <div class="bg-white rounded-2xl overflow-hidden border border-outline-variant/30 hover:shadow-2xl transition-all duration-300 group flex flex-col justify-between">
+                <div>
+                    <div class="relative h-48 overflow-hidden">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${bannerUrl}" alt="${evt.title}" />
+                        <div class="absolute top-3 right-3 bg-primary text-white font-bold text-xs px-md py-xs rounded-full shadow-md">${dateStr}</div>
                     </div>
-                    <h3 class="font-headline-md text-[20px] font-bold mb-xs group-hover:text-primary transition-colors">${evt.title}</h3>
-                    <p class="text-on-surface-variant text-sm mb-md line-clamp-2">${evt.description || ''}</p>
-                    <button onclick="rsvpToast('${evt.title.replace(/'/g, "\\'")}')"
-                        class="w-full bg-surface-container-low text-primary font-bold py-sm rounded-xl hover:bg-primary hover:text-white transition-all text-sm cursor-pointer">
-                        RSVP / Get Free Pass
+                    <div class="p-md">
+                        <div class="flex items-center gap-xs text-xs text-primary font-semibold uppercase mb-xs">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            <span>${evt.location || 'Radio Ninada Studio'}</span>
+                        </div>
+                        <h3 class="font-headline-md text-[20px] font-bold mb-xs group-hover:text-primary transition-colors">${evt.title}</h3>
+                        <p class="text-on-surface-variant text-sm mb-md line-clamp-2">${evt.description || ''}</p>
+                    </div>
+                </div>
+                <div class="p-md pt-0">
+                    <button onclick="addToCalendar('${evt.title.replace(/'/g, "\\'")}', '${(evt.description || '').replace(/'/g, "\\'")}', '${(evt.location || 'Radio Ninada Studio').replace(/'/g, "\\'")}', '${rawDate}')"
+                        class="w-full bg-surface-container-low text-primary font-bold py-sm rounded-xl hover:bg-primary hover:text-white transition-all text-sm cursor-pointer flex items-center justify-center gap-2 shadow-xs">
+                        <span class="material-symbols-outlined text-lg">calendar_add_on</span>
+                        <span>Add to Calendar</span>
                     </button>
                 </div>
             </div>
@@ -720,25 +796,111 @@ function renderGalleryUI(galList) {
 }
 
 function renderNewsUI(newsItems) {
-    newsItems.forEach(item => {
-        const cat = (item.category || 'Local').toLowerCase();
-        const targetCat = newsData[cat] ? cat : 'local';
-        const formattedItem = {
-            title: item.title,
-            date: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today',
-            desc: item.content || item.description || '',
-            tag: item.category || 'News'
-        };
-        if (!newsData[targetCat].some(n => n.title === item.title)) {
-            newsData[targetCat].unshift(formattedItem);
+    newsData.college = [];
+    newsData.local = [];
+    newsData.karnataka = [];
+    newsData.india = [];
+    newsData.international = [];
+
+    if (Array.isArray(newsItems)) {
+        newsItems.forEach(item => {
+            const catKey = normalizeNewsCategory(item.category);
+            const coverImage = resolveServerUrl(item.featuredImage) || '';
+            const formattedItem = {
+                title: item.title,
+                date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
+                desc: item.content || item.description || '',
+                tag: item.category || 'News',
+                image: coverImage,
+            };
+            newsData[catKey].push(formattedItem);
+        });
+    }
+
+    // Default tab to active or college
+    const activeTabBtn = document.querySelector('#news .tab-btn.active');
+    const activeCategory = activeTabBtn ? activeTabBtn.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || 'college' : 'college';
+    renderNews(activeCategory);
+}
+
+function renderScheduleUI(scheduleList) {
+    const scheduleContainer = document.getElementById('schedule-grid') || document.querySelector('#schedule .grid');
+    if (!scheduleContainer) return;
+
+    if (!Array.isArray(scheduleList) || scheduleList.length === 0) {
+        scheduleContainer.innerHTML = `
+            <div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md border border-dashed border-outline-variant/40 rounded-2xl">
+                No broadcast schedule configured in admin dashboard yet. 24/7 Live Stream active!
+            </div>
+        `;
+        return;
+    }
+
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    let todaySlots = scheduleList.filter(s => s.dayOfWeek === currentDay);
+    if (todaySlots.length === 0) {
+        todaySlots = scheduleList;
+    }
+
+    scheduleContainer.innerHTML = todaySlots.map(slot => {
+        const title = slot.program?.name || 'Radio Show';
+        const host = slot.program?.hostName || 'RJ Host';
+        const category = slot.program?.category || 'Music';
+        const startTime = slot.startTime || '00:00';
+        const endTime = slot.endTime || '00:00';
+        const imgUrl = resolveServerUrl(slot.program?.thumbnail) || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=400&q=80';
+
+        const isLiveNow = (slot.dayOfWeek === currentDay) && (currentTimeStr >= startTime && currentTimeStr <= endTime);
+
+        if (isLiveNow) {
+            return `
+                <div class="bg-white rounded-2xl p-md active-glow flex gap-md relative scale-105 z-10 shadow-lg">
+                    <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
+                        <img class="w-full h-full object-cover" src="${imgUrl}" alt="${title}" />
+                        <div class="absolute inset-0 bg-primary/20 animate-pulse"></div>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <div class="flex justify-between items-start">
+                            <span class="text-primary font-bold font-label-sm text-[12px] block mb-xs">${startTime} - ${endTime}</span>
+                            <span class="material-symbols-outlined text-primary text-[18px] animate-bounce">graphic_eq</span>
+                        </div>
+                        <h3 class="font-headline-md text-headline-md !text-[18px] leading-tight mb-xs truncate">${title}</h3>
+                        <p class="text-on-surface-variant font-body-md text-[14px] truncate">${host}</p>
+                        <span class="mt-base inline-block bg-primary text-on-primary px-sm py-1 rounded-full text-[10px] font-bold uppercase">${category}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all flex gap-md relative">
+                    <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden">
+                        <img class="w-full h-full object-cover" src="${imgUrl}" alt="${title}" />
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-on-secondary-container font-label-sm text-[12px] block mb-xs">${startTime} - ${endTime}</span>
+                        <h3 class="font-headline-md text-headline-md !text-[18px] leading-tight mb-xs truncate">${title}</h3>
+                        <p class="text-on-surface-variant font-body-md text-[14px] truncate">${host}</p>
+                        <span class="mt-base inline-block bg-secondary-container text-on-secondary-container px-sm py-1 rounded-full text-[10px] font-bold uppercase">${category}</span>
+                    </div>
+                </div>
+            `;
         }
-    });
-    renderNews('college');
+    }).join('');
 }
 
 // Global Dynamic Data Synchronizer
 async function loadDynamicData() {
     if (!window.RadioNinadaAPI) return;
+
+    try {
+        const schedRes = await window.RadioNinadaAPI.getSchedule();
+        if (schedRes && schedRes.success && Array.isArray(schedRes.data)) {
+            renderScheduleUI(schedRes.data);
+        }
+    } catch (e) { console.warn('[loadDynamicData] Schedule fetch fallback:', e); }
 
     try {
         const rjRes = await window.RadioNinadaAPI.getRJs();
@@ -810,6 +972,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const playlistModal = document.getElementById('playlist-modal');
         if (e.target === playlistModal) {
             closePlaylistModal();
+        }
+        const newsModal = document.getElementById('news-modal');
+        if (e.target === newsModal) {
+            closeNewsModal();
         }
         const notifPanel = document.getElementById('notification-panel');
         const notifBtn = document.getElementById('notification-btn');
