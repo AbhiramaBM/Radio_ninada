@@ -1191,86 +1191,10 @@
         },
 
         updateNavbarUserUI: function () {
-            const isAdmin = this.isAdminUser(this.currentUser);
-            const adminBtnClass = isAdmin ? 'hidden sm:inline-flex' : 'hidden';
-
-            // Find all Login buttons in headers
-            const loginBtns = document.querySelectorAll('header button:has(span), header button');
-            loginBtns.forEach(btn => {
-                if (btn.innerText.trim() === 'Login' || btn.innerText.trim() === 'Sign In') {
-                    // Replace Login button with User Avatar & Profile Dropdown
-                    const avatarWrapper = document.createElement('div');
-                    avatarWrapper.className = 'relative flex items-center gap-2 id-user-profile-wrapper';
-                    avatarWrapper.innerHTML = `
-                        <button type="button" data-role-dashboard onclick="RadioAuth.profileMenuAction('Admin Dashboard')" class="${adminBtnClass} items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary" aria-label="Open Admin Dashboard">
-                            <span class="material-symbols-outlined text-base">admin_panel_settings</span>
-                            <span>Admin Portal</span>
-                        </button>
-                        <div onclick="RadioAuth.toggleProfileDropdown(event)" class="flex items-center gap-2 cursor-pointer group">
-                            <div class="relative w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-0.5 shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
-                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="User Avatar" class="w-full h-full rounded-full object-cover" />
-                                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
-                            </div>
-                            <span class="hidden md:inline font-semibold text-xs text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors">
-                                ${this.currentUser.name.split(' ')[0]}
-                            </span>
-                            <span class="material-symbols-outlined text-sm text-gray-400 group-hover:text-primary transition-colors">expand_more</span>
-                        </div>
-
-                        <!-- Glass Profile Dropdown -->
-                        <div id="user-profile-menu">
-                            <div class="p-3 border-b border-gray-200 dark:border-gray-800 mb-1 flex items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" class="w-10 h-10 rounded-full object-cover border border-primary/40" />
-                                <div>
-                                    <h4 class="font-bold text-sm text-gray-900 dark:text-white leading-tight">${this.currentUser.name}</h4>
-                                    <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate max-w-[150px]">${this.currentUser.contact}</p>
-                                    <p data-user-role-label class="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">${this.getRoleLabel(this.currentUser)}</p>
-                                </div>
-                            </div>
-                            <button onclick="RadioAuth.profileMenuAction('Profile')" class="profile-menu-item">
-                                <span class="material-symbols-outlined text-primary text-base">person</span>
-                                <span>Profile</span>
-                            </button>
-                            <button onclick="RadioAuth.profileMenuAction('Listening History')" class="profile-menu-item">
-                                <span class="material-symbols-outlined text-base">history</span>
-                                <span>Listening History</span>
-                            </button>
-                            <button onclick="RadioAuth.profileMenuAction('Favorites')" class="profile-menu-item">
-                                <span class="material-symbols-outlined text-red-500 text-base">favorite</span>
-                                <span>Favorites</span>
-                            </button>
-                            <button onclick="RadioAuth.profileMenuAction('Playlists')" class="profile-menu-item">
-                                <span class="material-symbols-outlined text-base">queue_music</span>
-                                <span>Playlists</span>
-                            </button>
-                            <button onclick="RadioAuth.profileMenuAction('Notifications')" class="profile-menu-item justify-between">
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-base">notifications</span>
-                                    <span>Notifications</span>
-                                </div>
-                                <span class="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
-                            </button>
-                            <button onclick="RadioAuth.profileMenuAction('Settings')" class="profile-menu-item">
-                                <span class="material-symbols-outlined text-base">settings</span>
-                                <span>Settings</span>
-                            </button>
-                            <button data-role-dashboard onclick="RadioAuth.profileMenuAction('Admin Dashboard')" class="profile-menu-item hidden">
-                                <span class="material-symbols-outlined text-base text-primary">dashboard</span>
-                                <span>Admin Dashboard</span>
-                            </button>
-                            <div class="h-px bg-gray-200 dark:bg-gray-800 my-1"></div>
-                            <button onclick="RadioAuth.logout()" class="profile-menu-item logout">
-                                <span class="material-symbols-outlined text-base">logout</span>
-                                <span>Logout</span>
-                            </button>
-                        </div>
-                    `;
-
-                    btn.parentNode.replaceChild(avatarWrapper, btn);
-                    this.updateRoleBasedUI();
-                }
-            });
+            // Public dashboard does not require login or user profile UI
+            return;
         },
+
 
         toggleProfileDropdown: function (e) {
             e.stopPropagation();

@@ -19,6 +19,7 @@ import rjRoutes from './routes/rj.routes';
 import eventRoutes from './routes/event.routes';
 import galleryRoutes from './routes/gallery.routes';
 import notificationRoutes from './routes/notification.routes';
+import playlistRoutes from './routes/playlist.routes';
 import bannerRoutes from './routes/banner.routes';
 import sponsorRoutes from './routes/sponsor.routes';
 import analyticsRoutes from './routes/analytics.routes';
@@ -72,7 +73,9 @@ app.use('/api/rj', rjRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/playlists', playlistRoutes);
 app.use('/api/banners', bannerRoutes);
+
 app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ai', aiRoutes);

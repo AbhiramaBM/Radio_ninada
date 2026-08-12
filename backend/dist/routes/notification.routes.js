@@ -6,6 +6,8 @@ const auth_1 = require("../middlewares/auth");
 const audit_1 = require("../middlewares/audit");
 const router = (0, express_1.Router)();
 router.get('/', notification_controller_1.getNotifications);
+router.patch('/read-all', notification_controller_1.markAllAsRead);
+router.patch('/:id/read', notification_controller_1.markAsRead);
 router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), (0, audit_1.auditLog)('CREATE', 'Notification'), notification_controller_1.createNotification);
 router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Notification'), notification_controller_1.deleteNotification);
 exports.default = router;

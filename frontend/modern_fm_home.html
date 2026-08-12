@@ -210,6 +210,7 @@
             animation: heroSlideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
+    <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/auth-modal.css" />
 </head>
 
@@ -262,15 +263,32 @@
                     href="#gallery">Gallery &amp; BTS</a>
             </div>
             <!-- Actions -->
-            <div class="flex items-center gap-sm">
+            <div class="flex items-center gap-2 sm:gap-3 relative">
+                <!-- Search Button -->
                 <button onclick="openGlobalSearchModal()"
-                    class="material-symbols-outlined p-base text-on-surface-variant hover:bg-primary/10 rounded-full transition-all cursor-pointer"
+                    class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-primary/10 rounded-full transition-all cursor-pointer"
                     title="Search programs, podcasts, news, events, RJs">search</button>
-                <button onclick="RadioAuth.openModal('signin')"
-                    class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-sm text-label-sm hover:scale-105 active:scale-95 transition-transform shadow-md shadow-primary/20 cursor-pointer">
-                    Login
+                
+                <!-- Notification Bell Button -->
+                <div class="relative">
+                    <button onclick="toggleNotificationPanel()" id="notification-btn"
+                        class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-primary/10 rounded-full transition-all cursor-pointer relative"
+                        title="Station Notifications">
+                        notifications
+                        <span id="unread-notification-badge"
+                            class="absolute top-0 right-0 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+                </div>
+
+                <!-- Playlist Button -->
+                <button onclick="openPlaylistModal()"
+                    class="flex items-center gap-1.5 bg-primary/10 text-primary border border-primary/30 px-3 py-1.5 rounded-full font-label-sm text-xs font-semibold hover:bg-primary hover:text-white transition-all cursor-pointer shadow-sm"
+                    title="My Playlists">
+                    <span class="material-symbols-outlined text-base">queue_music</span>
+                    <span class="hidden sm:inline">Playlists</span>
                 </button>
             </div>
+
         </nav>
     </header>
 
@@ -1113,12 +1131,104 @@
         </div>
     </div>
 
+    <!-- Station Notification Panel -->
+    <div id="notification-panel"
+        class="fixed top-20 right-4 sm:right-10 z-50 w-full max-w-sm sm:max-w-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 hidden">
+        <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-surface-container-low/50">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">notifications</span>
+                <h3 class="font-bold text-base text-gray-900 dark:text-white">Station Notifications</h3>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="markAllNotificationsAsRead()"
+                    class="text-xs font-semibold text-primary hover:underline cursor-pointer">Mark all read</button>
+                <button onclick="closeNotificationPanel()"
+                    class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 cursor-pointer">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+            </div>
+        </div>
+        <div id="notification-list" class="max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800 no-scrollbar p-2">
+            <div class="p-8 text-center text-gray-400 text-xs">
+                <div class="inline-block w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
+                <p>Loading notifications...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Playlist Management Drawer / Modal -->
+    <div id="playlist-modal"
+        class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden items-center justify-center p-4">
+        <div
+            class="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl border border-white/20 animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <!-- Header -->
+            <div class="p-5 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-surface-container-low/30">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl">queue_music</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-900 dark:text-white">Radio Playlists</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Curated shows & episode collections</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openCreatePlaylistPrompt()"
+                        class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 hover:bg-primary/90 transition-all cursor-pointer shadow-xs">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        <span>New Playlist</span>
+                    </button>
+                    <button onclick="closePlaylistModal()"
+                        class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 cursor-pointer">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body Content -->
+            <div class="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
+                <!-- Playlist Selector Pills -->
+                <div id="playlist-selector-container" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                    <!-- Dynamic playlist tabs -->
+                </div>
+
+                <!-- Active Playlist Header -->
+                <div id="active-playlist-info" class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <div>
+                        <h4 id="active-playlist-name" class="font-bold text-base text-gray-900 dark:text-white">Select a playlist</h4>
+                        <p id="active-playlist-desc" class="text-xs text-gray-500 truncate max-w-xs sm:max-w-md"></p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="play-all-playlist-btn" onclick="playActivePlaylist()"
+                            class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 transition-all cursor-pointer shadow-sm">
+                            <span class="material-symbols-outlined text-sm">play_arrow</span> Play All
+                        </button>
+                        <button onclick="openRenamePlaylistPrompt()"
+                            class="p-1.5 text-gray-500 hover:text-primary transition-colors cursor-pointer" title="Rename Playlist">
+                            <span class="material-symbols-outlined text-base">edit</span>
+                        </button>
+                        <button onclick="deleteActivePlaylist()"
+                            class="p-1.5 text-gray-500 hover:text-red-500 transition-colors cursor-pointer" title="Delete Playlist">
+                            <span class="material-symbols-outlined text-base">delete</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Playlist Tracks List -->
+                <div id="playlist-items-container" class="space-y-2">
+                    <div class="p-8 text-center text-gray-400 text-xs">Loading playlist content...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Interactive Toast Alert -->
     <div id="toast-alert"
         class="fixed top-20 right-6 z-50 bg-on-background text-white px-lg py-md rounded-2xl shadow-2xl flex items-center gap-md transition-all duration-300 transform translate-x-full opacity-0">
         <span class="material-symbols-outlined text-primary text-2xl">check_circle</span>
         <span id="toast-msg" class="text-sm font-semibold"></span>
     </div>
+
 
     <!-- JavaScript Logic -->
     <script src="js/firebase-config.js"></script>

@@ -119,6 +119,120 @@
         return { success: false, error: e.message };
       }
     },
+
+    // Notifications API
+    async getNotifications() {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/notifications`);
+        return await res.json();
+      } catch (e) {
+        console.warn('[RadioNinadaAPI] Notifications API warning:', e.message);
+        return { success: false, error: e.message };
+      }
+    },
+
+    async markNotificationRead(id) {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/notifications/${id}/read`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        return await res.json();
+      } catch (e) {
+        console.warn('[RadioNinadaAPI] Mark notification read warning:', e.message);
+        return { success: false, error: e.message };
+      }
+    },
+
+    async markAllNotificationsRead() {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/notifications/read-all`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        return await res.json();
+      } catch (e) {
+        console.warn('[RadioNinadaAPI] Mark all notifications read warning:', e.message);
+        return { success: false, error: e.message };
+      }
+    },
+
+    // Playlists API
+    async getPlaylists() {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists`);
+        return await res.json();
+      } catch (e) {
+        console.warn('[RadioNinadaAPI] Playlists API warning:', e.message);
+        return { success: false, error: e.message };
+      }
+    },
+
+    async createPlaylist(name, description = '') {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description }),
+        });
+        return await res.json();
+      } catch (e) {
+        console.warn('[RadioNinadaAPI] Create playlist warning:', e.message);
+        return { success: false, error: e.message };
+      }
+    },
+
+    async updatePlaylist(id, name, description = '') {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description }),
+        });
+        return await res.json();
+      } catch (e) {
+        console.warn('[RadioNinadaAPI] Update playlist warning:', e.message);
+        return { success: false, error: e.message };
+      }
+    },
+
+    async deletePlaylist(id) {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists/${id}`, {
+          method: 'DELETE',
+        });
+        return await res.json();
+      } catch (e) {
+        console.warn('[RadioNinadaAPI] Delete playlist warning:', e.message);
+        return { success: false, error: e.message };
+      }
+    },
+
+    async addPlaylistItem(id, item) {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists/${id}/items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item),
+        });
+        return await res.json();
+      } catch (e) {
+        console.warn('[RadioNinadaAPI] Add playlist item warning:', e.message);
+        return { success: false, error: e.message };
+      }
+    },
+
+    async removePlaylistItem(id, itemId) {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists/${id}/items/${itemId}`, {
+          method: 'DELETE',
+        });
+        return await res.json();
+      } catch (e) {
+        console.warn('[RadioNinadaAPI] Remove playlist item warning:', e.message);
+        return { success: false, error: e.message };
+      }
+    },
   };
 
   console.log('📡 Radio Ninada API Connector Initialized ->', API_BASE_URL);

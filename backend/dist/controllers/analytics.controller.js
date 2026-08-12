@@ -1,12 +1,39 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getDashboardStats = getDashboardStats;
 exports.exportAnalyticsReport = exportAnalyticsReport;
 const prisma_1 = require("../config/prisma");
 const export_1 = require("../utils/export");
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+function getUploadsFolderSizeMB() {
+    try {
+        const uploadsPath = path_1.default.join(__dirname, '../../uploads');
+        if (!fs_1.default.existsSync(uploadsPath))
+            return 0;
+        let totalSize = 0;
+        const files = fs_1.default.readdirSync(uploadsPath);
+        for (const file of files) {
+            const stats = fs_1.default.statSync(path_1.default.join(uploadsPath, file));
+            totalSize += stats.size;
+        }
+        return Math.round((totalSize / (1024 * 1024)) * 100) / 100;
+    }
+    catch {
+        return 0;
+    }
+}
 async function getDashboardStats(req, res, next) {
     try {
-        const [totalUsers, totalPodcasts, totalPrograms, totalEvents, totalNews, totalRJs, liveRadio, analyticsCount, recentAuditLogs,] = await Promise.all([
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+        const [totalUsers, totalPodcasts, totalPrograms, totalEvents, totalNews, totalRJs, liveRadio, todaysVisitors, recentAuditLogs, recentEvents, deviceGroup,] = await Promise.all([
             prisma_1.prisma.user.count({ where: { deletedAt: null } }),
             prisma_1.prisma.podcast.count({ where: { deletedAt: null } }),
             prisma_1.prisma.program.count({ where: { deletedAt: null } }),
@@ -14,42 +41,70 @@ async function getDashboardStats(req, res, next) {
             prisma_1.prisma.news.count({ where: { deletedAt: null } }),
             prisma_1.prisma.rJProfile.count({ where: { deletedAt: null } }),
             prisma_1.prisma.liveRadioState.findUnique({ where: { id: 'live-config' } }),
-            prisma_1.prisma.analyticsEvent.count(),
+            prisma_1.prisma.analyticsEvent.count({ where: { timestamp: { gte: startOfToday } } }),
             prisma_1.prisma.auditLog.findMany({ take: 5, orderBy: { createdAt: 'desc' } }),
+            prisma_1.prisma.analyticsEvent.findMany({ where: { timestamp: { gte: sevenDaysAgo } } }),
+            prisma_1.prisma.analyticsEvent.groupBy({ by: ['device'], _count: { device: true } }),
         ]);
-        // Synthetic traffic charts generator for admin preview
-        const weeklyTraffic = [
-            { day: 'Mon', visitors: 1240, listeners: 890, downloads: 340 },
-            { day: 'Tue', visitors: 1450, listeners: 980, downloads: 410 },
-            { day: 'Wed', visitors: 1680, listeners: 1120, downloads: 520 },
-            { day: 'Thu', visitors: 1520, listeners: 1050, downloads: 480 },
-            { day: 'Fri', visitors: 2100, listeners: 1480, downloads: 690 },
-            { day: 'Sat', visitors: 2890, listeners: 1950, downloads: 850 },
-            { day: 'Sun', visitors: 2450, listeners: 1720, downloads: 780 },
-        ];
+        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (6 - i));
+            return {
+                day: daysOfWeek[d.getDay()],
+                dateStr: d.toISOString().split('T')[0],
+                visitors: 0,
+                listeners: 0,
+                downloads: 0,
+            };
+        });
+        recentEvents.forEach((evt) => {
+            const dateStr = evt.timestamp.toISOString().split('T')[0];
+            const dayObj = last7Days.find((d) => d.dateStr === dateStr);
+            if (dayObj) {
+                if (evt.eventType === 'PAGE_VIEW')
+                    dayObj.visitors += 1;
+                if (evt.eventType === 'LIVE_LISTEN')
+                    dayObj.listeners += 1;
+                if (evt.eventType === 'PODCAST_LISTEN')
+                    dayObj.downloads += 1;
+            }
+        });
+        const weeklyTraffic = last7Days.map(({ day, visitors, listeners, downloads }) => ({
+            day,
+            visitors,
+            listeners,
+            downloads,
+        }));
+        const totalDeviceEvents = deviceGroup.reduce((acc, curr) => acc + curr._count.device, 0);
+        const deviceBreakdown = totalDeviceEvents > 0
+            ? deviceGroup.map((item) => ({
+                name: item.device || 'Unknown',
+                value: Math.round((item._count.device / totalDeviceEvents) * 100),
+            }))
+            : [
+                { name: 'Mobile', value: 0 },
+                { name: 'Desktop', value: 0 },
+                { name: 'Tablet', value: 0 },
+            ];
         const popularPodcasts = await prisma_1.prisma.podcast.findMany({
             take: 5,
             orderBy: { downloads: 'desc' },
             select: { id: true, title: true, downloads: true, category: true, coverUrl: true },
         });
-        const deviceBreakdown = [
-            { name: 'Mobile', value: 65 },
-            { name: 'Desktop', value: 28 },
-            { name: 'Tablet', value: 7 },
-        ];
         return res.json({
             success: true,
             data: {
                 counters: {
                     totalUsers,
-                    liveListeners: liveRadio?.liveListeners || 42,
-                    todaysVisitors: 1480 + analyticsCount,
+                    liveListeners: liveRadio?.isLive ? (liveRadio?.liveListeners || 0) : 0,
+                    todaysVisitors,
                     totalPodcasts,
                     totalPrograms,
                     totalEvents,
                     totalNews,
                     totalRJs,
-                    storageUsedMB: 482.5,
+                    storageUsedMB: getUploadsFolderSizeMB(),
                 },
                 liveRadio,
                 weeklyTraffic,

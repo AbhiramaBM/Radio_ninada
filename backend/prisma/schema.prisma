@@ -189,11 +189,13 @@ model Notification {
   title       String
   message     String
   audience    String    @default("ALL") // ALL, SUBSCRIBERS, RJS
+  isRead      Boolean   @default(false)
   scheduledAt DateTime?
   sentAt      DateTime?
   status      String    @default("DRAFT") // DRAFT, SCHEDULED, SENT
   createdAt   DateTime  @default(now())
 }
+
 
 model Banner {
   id         String    @id @default(uuid())
@@ -290,4 +292,28 @@ model OtpCode {
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+model Playlist {
+  id          String         @id @default(uuid())
+  sessionId   String?        @default("default-session")
+  name        String
+  description String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  items       PlaylistItem[]
+}
+
+model PlaylistItem {
+  id         String   @id @default(uuid())
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  title      String
+  artist     String?
+  audioUrl   String
+  coverUrl   String?
+  duration   String?
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
 
