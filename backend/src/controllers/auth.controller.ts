@@ -61,20 +61,25 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       },
     });
 
+    const userObj = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatar: user.avatar,
+      status: user.status,
+    };
+
     return res.json({
       success: true,
       message: 'Login successful',
+      user: userObj,
+      accessToken,
+      refreshToken,
       data: {
         accessToken,
         refreshToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          avatar: user.avatar,
-          status: user.status,
-        },
+        user: userObj,
       },
     });
   } catch (error) {
@@ -126,7 +131,10 @@ export async function getMe(req: AuthenticatedRequest, res: Response, next: Next
       where: { id: req.user?.userId },
       select: { id: true, email: true, name: true, role: true, avatar: true, bio: true, status: true, createdAt: true },
     });
-    return res.json({ success: true, data: user });
+    if (!user || user.status !== 'ACTIVE') {
+      return res.status(401).json({ success: false, message: 'User profile not found or account inactive.' });
+    }
+    return res.json({ success: true, user, data: user });
   } catch (error) {
     next(error);
   }

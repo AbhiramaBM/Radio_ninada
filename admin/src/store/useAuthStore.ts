@@ -55,6 +55,19 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
           const user = JSON.parse(storedUser);
           set({ user, accessToken: storedToken, isInitialized: true });
+
+          // Re-verify session & fetch updated profile from backend
+          api.get('/auth/me')
+            .then((res) => {
+              const freshUser = res.data?.user || res.data?.data?.user || res.data?.data;
+              if (freshUser && freshUser.id) {
+                localStorage.setItem('ninada_user', JSON.stringify(freshUser));
+                set({ user: freshUser, accessToken: storedToken, isInitialized: true });
+              }
+            })
+            .catch(() => {
+              // Interceptor will handle 401 logout if token is expired
+            });
           return;
         } catch (e) {
           localStorage.removeItem('ninada_user');
