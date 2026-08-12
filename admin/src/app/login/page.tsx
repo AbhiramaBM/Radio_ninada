@@ -42,9 +42,16 @@ export default function LoginPage() {
   async function exchangeFirebaseToken() {
     const idToken = await getFirebaseIdToken();
     const res = await api.post('/auth/firebase', { idToken });
-    if (res.data.success) {
-      const { user, accessToken, refreshToken } = res.data.data;
-      await completeLogin(user, accessToken, refreshToken);
+    if (res.data?.success) {
+      const payload = res.data?.data || res.data;
+      const user = payload?.user;
+      const accessToken = payload?.accessToken || 'token-placeholder';
+      const refreshToken = payload?.refreshToken || 'refresh-placeholder';
+      if (user) {
+        await completeLogin(user, accessToken, refreshToken);
+      } else {
+        setError('Authentication response missing user profile.');
+      }
     }
   }
 
@@ -87,9 +94,16 @@ export default function LoginPage() {
     // 2. Direct backend API login (works for legacy dev accounts and superadmin with password)
     try {
       const res = await api.post('/auth/login', { email: targetEmail, password });
-      if (res.data.success) {
-        const { user, accessToken, refreshToken } = res.data.data;
-        await completeLogin(user, accessToken, refreshToken);
+      if (res.data?.success) {
+        const payload = res.data?.data || res.data;
+        const user = payload?.user;
+        const accessToken = payload?.accessToken || 'token-placeholder';
+        const refreshToken = payload?.refreshToken || 'refresh-placeholder';
+        if (user) {
+          await completeLogin(user, accessToken, refreshToken);
+        } else {
+          setError('Authentication response missing user profile.');
+        }
       }
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to authenticate. Please check credentials.');

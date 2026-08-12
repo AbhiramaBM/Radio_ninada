@@ -192,5 +192,37 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
   const { slug } = await params;
   const endpoint = slug.join('/');
-  return NextResponse.json({ success: true, message: `POST /api/${endpoint} acknowledged` });
+
+  if (endpoint === 'auth/login' || endpoint === 'auth/firebase') {
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch (_) {}
+
+    const userEmail = (body.email || 'radioninada@gmail.com').toLowerCase();
+    const isSuperAdmin = userEmail === 'radioninada@gmail.com';
+
+    return NextResponse.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        accessToken: 'demo-vercel-access-token',
+        refreshToken: 'demo-vercel-refresh-token',
+        user: {
+          id: 'user-super-admin',
+          email: userEmail,
+          name: isSuperAdmin ? 'Radio Ninada Admin' : 'Radio Admin Staff',
+          role: isSuperAdmin ? 'SUPER_ADMIN' : 'ADMIN',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+          status: 'ACTIVE',
+        },
+      },
+    });
+  }
+
+  return NextResponse.json({
+    success: true,
+    message: `POST /api/${endpoint} acknowledged`,
+    data: {},
+  });
 }
