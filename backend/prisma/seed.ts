@@ -18,7 +18,7 @@ async function main() {
   await prisma.rJProfile.deleteMany({});
 
   // 1. Seed Users & Roles
-  const passwordHashAdmin = await bcrypt.hash('Admin@123', 10);
+  const passwordHashAdmin = await bcrypt.hash('admin@123', 10);
   const passwordHashEditor = await bcrypt.hash('Editor@123', 10);
   const passwordHashRJ = await bcrypt.hash('RJ@123', 10);
   const passwordHashMod = await bcrypt.hash('Mod@123', 10);

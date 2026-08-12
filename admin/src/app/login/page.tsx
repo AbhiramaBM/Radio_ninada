@@ -14,7 +14,7 @@ import {
 } from '@/lib/firebase';
 
 const devAccounts = [
-  { role: 'Super Admin', email: 'radioninada@gmail.com', pass: 'Admin@123', bg: 'from-purple-600 to-indigo-600', firebase: true },
+  { role: 'Super Admin', email: 'radioninada@gmail.com', pass: 'admin@123', bg: 'from-purple-600 to-indigo-600', firebase: true },
   { role: 'Dev Admin', email: 'admin@radioninada.local', pass: 'Admin@123', bg: 'from-indigo-600 to-violet-600' },
   { role: 'Editor', email: 'editor@radioninada.local', pass: 'Editor@123', bg: 'from-blue-600 to-cyan-600' },
   { role: 'RJ Host', email: 'rj@radioninada.local', pass: 'RJ@123', bg: 'from-emerald-600 to-teal-600' },
