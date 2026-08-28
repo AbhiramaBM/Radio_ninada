@@ -144,21 +144,25 @@ async function firebaseLogin(req, res, next) {
         await prisma_1.prisma.refreshToken.create({
             data: { token: refreshToken, userId: user.id, expiresAt },
         });
+        const userObj = {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            avatar: user.avatar,
+            status: user.status,
+            phone: user.phone,
+        };
         return res.json({
             success: true,
             message: 'Firebase authentication successful',
+            user: userObj,
+            accessToken,
+            refreshToken,
             data: {
                 accessToken,
                 refreshToken,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role,
-                    avatar: user.avatar,
-                    status: user.status,
-                    phone: user.phone,
-                },
+                user: userObj,
             },
         });
     }

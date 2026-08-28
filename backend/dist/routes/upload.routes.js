@@ -16,18 +16,24 @@ router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'A
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
-        const fileUrl = `/uploads/${req.file.filename}`;
-        const absoluteUrl = `${req.protocol}://${req.get('host')}${fileUrl}`;
+        const fileUrl = req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))
+            ? req.file.path
+            : `/uploads/${req.file.filename}`;
+        const absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${req.protocol}://${req.get('host')}${fileUrl}`;
+        const publicId = req.file.public_id || (fileUrl.startsWith('http') ? req.file.filename : null);
         return res.status(201).json({
             success: true,
-            message: 'Media file uploaded successfully to server storage',
+            message: 'Media file uploaded successfully',
             data: {
                 filename: req.file.filename,
                 originalName: req.file.originalname,
                 size: req.file.size,
                 mimetype: req.file.mimetype,
                 url: fileUrl,
+                secureUrl: fileUrl,
                 absoluteUrl,
+                publicId,
+                cloudinaryPublicId: publicId,
             },
         });
     }

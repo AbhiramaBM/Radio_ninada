@@ -3,6 +3,7 @@ import { prisma } from '../config/prisma';
 import { generateSlug } from '../utils/slug';
 import { checkDuplicateNews } from '../utils/duplicate';
 import { newsSchema } from '../validation/index';
+import { deleteFileFromCloudinary, extractPublicIdFromUrl } from '../services/cloudinary.service';
 
 export async function getNews(req: Request, res: Response, next: NextFunction) {
   try {
@@ -43,8 +44,15 @@ export async function getNews(req: Request, res: Response, next: NextFunction) {
 export async function createNews(req: Request, res: Response, next: NextFunction) {
   try {
     let imageUrl = req.body.imageUrl;
+    let publicId = req.body.publicId || req.body.cloudinaryPublicId || null;
+
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      imageUrl = req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://')) ? req.file.path : `/uploads/${req.file.filename}`;
+      publicId = (req.file as any).public_id || extractPublicIdFromUrl(imageUrl);
+    }
+
+    if (!publicId && imageUrl) {
+      publicId = extractPublicIdFromUrl(imageUrl);
     }
 
     const rawData = {
@@ -72,6 +80,7 @@ export async function createNews(req: Request, res: Response, next: NextFunction
       data: {
         ...data,
         slug,
+        publicId,
         publishedAt: data.publishedAt ? new Date(data.publishedAt) : new Date(),
       },
     });
@@ -97,10 +106,16 @@ export async function updateNews(req: Request, res: Response, next: NextFunction
       }
     }
 
+    let publicId = data.publicId || data.cloudinaryPublicId;
+    if (!publicId && data.featuredImage) {
+      publicId = extractPublicIdFromUrl(data.featuredImage);
+    }
+
     const updated = await prisma.news.update({
       where: { id },
       data: {
         ...data,
+        ...(publicId && { publicId }),
         ...(data.publishedAt && { publishedAt: new Date(data.publishedAt) }),
       },
     });
@@ -114,6 +129,15 @@ export async function updateNews(req: Request, res: Response, next: NextFunction
 export async function deleteNews(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string;
+    const news = await prisma.news.findUnique({ where: { id } });
+
+    if (news) {
+      const pid = news.publicId || (news.featuredImage ? extractPublicIdFromUrl(news.featuredImage) : null);
+      if (pid) {
+        await deleteFileFromCloudinary(pid, 'image');
+      }
+    }
+
     await prisma.news.update({
       where: { id },
       data: { deletedAt: new Date() },
@@ -123,3 +147,4 @@ export async function deleteNews(req: Request, res: Response, next: NextFunction
     next(error);
   }
 }
+

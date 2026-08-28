@@ -3,6 +3,7 @@ import { prisma } from '../config/prisma';
 import { generateSlug } from '../utils/slug';
 import { checkDuplicatePodcast } from '../utils/duplicate';
 import { podcastSchema } from '../validation/index';
+import { deleteFileFromCloudinary, extractPublicIdFromUrl } from '../services/cloudinary.service';
 
 export async function getPodcasts(req: Request, res: Response, next: NextFunction) {
   try {
@@ -18,25 +19,41 @@ export async function getPodcasts(req: Request, res: Response, next: NextFunctio
       where.OR = [
         { title: { contains: search as string } },
         { description: { contains: search as string } },
-        { category: { contains: search as string } },
       ];
     }
 
-    const [podcasts, total] = await Promise.all([
-      prisma.podcast.findMany({
-        where,
-        skip: (pageNum - 1) * limitNum,
-        take: limitNum,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.podcast.count({ where }),
-    ]);
+    const total = await prisma.podcast.count({ where });
+    const podcasts = await prisma.podcast.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
+    });
 
     return res.json({
       success: true,
       data: podcasts,
-      pagination: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) },
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPodcastBySlug(req: Request, res: Response, next: NextFunction) {
+  try {
+    const podcast = await prisma.podcast.findFirst({
+      where: { slug: req.params.slug as string, deletedAt: null },
+    });
+    if (!podcast) {
+      return res.status(404).json({ success: false, message: 'Podcast not found' });
+    }
+    return res.json({ success: true, data: podcast });
   } catch (error) {
     next(error);
   }
@@ -47,12 +64,25 @@ export async function createPodcast(req: Request, res: Response, next: NextFunct
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
     let audioUrl = req.body.audioUrl;
     let coverUrl = req.body.coverUrl;
+    let audioPublicId = req.body.audioPublicId || req.body.audioCloudinaryPublicId || null;
+    let coverPublicId = req.body.coverPublicId || req.body.coverCloudinaryPublicId || null;
 
     if (files?.audio?.[0]) {
-      audioUrl = `/uploads/${files.audio[0].filename}`;
+      const f = files.audio[0];
+      audioUrl = f.path && (f.path.startsWith('http://') || f.path.startsWith('https://')) ? f.path : `/uploads/${f.filename}`;
+      audioPublicId = (f as any).public_id || extractPublicIdFromUrl(audioUrl);
     }
     if (files?.cover?.[0]) {
-      coverUrl = `/uploads/${files.cover[0].filename}`;
+      const f = files.cover[0];
+      coverUrl = f.path && (f.path.startsWith('http://') || f.path.startsWith('https://')) ? f.path : `/uploads/${f.filename}`;
+      coverPublicId = (f as any).public_id || extractPublicIdFromUrl(coverUrl);
+    }
+
+    if (!audioPublicId && audioUrl) {
+      audioPublicId = extractPublicIdFromUrl(audioUrl);
+    }
+    if (!coverPublicId && coverUrl) {
+      coverPublicId = extractPublicIdFromUrl(coverUrl);
     }
 
     const rawData = {
@@ -80,7 +110,12 @@ export async function createPodcast(req: Request, res: Response, next: NextFunct
     }
 
     const podcast = await prisma.podcast.create({
-      data: { ...data, slug },
+      data: {
+        ...data,
+        slug,
+        audioPublicId,
+        coverPublicId,
+      },
     });
 
     return res.status(201).json({ success: true, message: 'Podcast published successfully', data: podcast });
@@ -110,12 +145,24 @@ export async function updatePodcast(req: Request, res: Response, next: NextFunct
       }
     }
 
+    let audioPublicId = data.audioPublicId || data.audioCloudinaryPublicId;
+    let coverPublicId = data.coverPublicId || data.coverCloudinaryPublicId;
+
+    if (!audioPublicId && data.audioUrl) {
+      audioPublicId = extractPublicIdFromUrl(data.audioUrl);
+    }
+    if (!coverPublicId && data.coverUrl) {
+      coverPublicId = extractPublicIdFromUrl(data.coverUrl);
+    }
+
     const updated = await prisma.podcast.update({
       where: { id },
       data: {
         ...data,
         ...(data.episodeNumber && { episodeNumber: parseInt(data.episodeNumber, 10) }),
         ...(data.season && { season: parseInt(data.season, 10) }),
+        ...(audioPublicId && { audioPublicId }),
+        ...(coverPublicId && { coverPublicId }),
       },
     });
 
@@ -141,6 +188,22 @@ export async function incrementDownloads(req: Request, res: Response, next: Next
 export async function deletePodcast(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string;
+    const podcast = await prisma.podcast.findUnique({ where: { id } });
+
+    if (podcast) {
+      const audioPid = podcast.audioPublicId || extractPublicIdFromUrl(podcast.audioUrl);
+      if (audioPid) {
+        await deleteFileFromCloudinary(audioPid, 'video'); // Audio is stored under resource_type 'video'
+      }
+
+      if (podcast.coverUrl) {
+        const coverPid = podcast.coverPublicId || extractPublicIdFromUrl(podcast.coverUrl);
+        if (coverPid) {
+          await deleteFileFromCloudinary(coverPid, 'image');
+        }
+      }
+    }
+
     await prisma.podcast.update({
       where: { id },
       data: { deletedAt: new Date() },

@@ -83,7 +83,7 @@ app.use('/api/upload', uploadRoutes);
 
 // Root route serves the Public Website
 app.get('/', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'modern_fm_home.html'));
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // Error Handler

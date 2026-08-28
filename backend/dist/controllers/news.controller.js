@@ -8,6 +8,7 @@ const prisma_1 = require("../config/prisma");
 const slug_1 = require("../utils/slug");
 const duplicate_1 = require("../utils/duplicate");
 const index_1 = require("../validation/index");
+const cloudinary_service_1 = require("../services/cloudinary.service");
 async function getNews(req, res, next) {
     try {
         const { search, category, status, page = '1', limit = '10' } = req.query;
@@ -46,8 +47,13 @@ async function getNews(req, res, next) {
 async function createNews(req, res, next) {
     try {
         let imageUrl = req.body.imageUrl;
+        let publicId = req.body.publicId || req.body.cloudinaryPublicId || null;
         if (req.file) {
-            imageUrl = `/uploads/${req.file.filename}`;
+            imageUrl = req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://')) ? req.file.path : `/uploads/${req.file.filename}`;
+            publicId = req.file.public_id || (0, cloudinary_service_1.extractPublicIdFromUrl)(imageUrl);
+        }
+        if (!publicId && imageUrl) {
+            publicId = (0, cloudinary_service_1.extractPublicIdFromUrl)(imageUrl);
         }
         const rawData = {
             ...req.body,
@@ -70,6 +76,7 @@ async function createNews(req, res, next) {
             data: {
                 ...data,
                 slug,
+                publicId,
                 publishedAt: data.publishedAt ? new Date(data.publishedAt) : new Date(),
             },
         });
@@ -92,10 +99,15 @@ async function updateNews(req, res, next) {
                 });
             }
         }
+        let publicId = data.publicId || data.cloudinaryPublicId;
+        if (!publicId && data.featuredImage) {
+            publicId = (0, cloudinary_service_1.extractPublicIdFromUrl)(data.featuredImage);
+        }
         const updated = await prisma_1.prisma.news.update({
             where: { id },
             data: {
                 ...data,
+                ...(publicId && { publicId }),
                 ...(data.publishedAt && { publishedAt: new Date(data.publishedAt) }),
             },
         });
@@ -108,6 +120,13 @@ async function updateNews(req, res, next) {
 async function deleteNews(req, res, next) {
     try {
         const id = req.params.id;
+        const news = await prisma_1.prisma.news.findUnique({ where: { id } });
+        if (news) {
+            const pid = news.publicId || (news.featuredImage ? (0, cloudinary_service_1.extractPublicIdFromUrl)(news.featuredImage) : null);
+            if (pid) {
+                await (0, cloudinary_service_1.deleteFileFromCloudinary)(pid, 'image');
+            }
+        }
         await prisma_1.prisma.news.update({
             where: { id },
             data: { deletedAt: new Date() },

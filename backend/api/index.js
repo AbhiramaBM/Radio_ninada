@@ -1,9 +1,24 @@
 const serverless = require('serverless-http');
 
 let handler;
+
+function getApp() {
+  try {
+    const appModule = require('../dist/app');
+    return appModule.default || appModule;
+  } catch (e1) {
+    try {
+      require('ts-node').register({ transpileOnly: true });
+      const appModule = require('../src/app');
+      return appModule.default || appModule;
+    } catch (e2) {
+      throw new Error(`Failed to load app from dist/app or src/app: ${e1.message} | ${e2.message}`);
+    }
+  }
+}
+
 try {
-  const appModule = require('../dist/app');
-  const app = appModule.default || appModule;
+  const app = getApp();
   handler = serverless(app);
 } catch (err) {
   console.error('[Backend Vercel Init Error]:', err);

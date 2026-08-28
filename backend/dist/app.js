@@ -76,7 +76,7 @@ app.use('/api/ai', ai_routes_1.default);
 app.use('/api/upload', upload_routes_1.default);
 // Root route serves the Public Website
 app.get('/', (req, res) => {
-    res.sendFile(path_1.default.join(frontendPath, 'modern_fm_home.html'));
+    res.sendFile(path_1.default.join(frontendPath, 'index.html'));
 });
 // Error Handler
 app.use(error_1.errorHandler);

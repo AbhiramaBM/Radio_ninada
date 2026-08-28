@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPodcasts = getPodcasts;
+exports.getPodcastBySlug = getPodcastBySlug;
 exports.createPodcast = createPodcast;
 exports.updatePodcast = updatePodcast;
 exports.incrementDownloads = incrementDownloads;
@@ -9,6 +10,7 @@ const prisma_1 = require("../config/prisma");
 const slug_1 = require("../utils/slug");
 const duplicate_1 = require("../utils/duplicate");
 const index_1 = require("../validation/index");
+const cloudinary_service_1 = require("../services/cloudinary.service");
 async function getPodcasts(req, res, next) {
     try {
         const { search, category, visibility, featured, page = '1', limit = '10' } = req.query;
@@ -25,23 +27,39 @@ async function getPodcasts(req, res, next) {
             where.OR = [
                 { title: { contains: search } },
                 { description: { contains: search } },
-                { category: { contains: search } },
             ];
         }
-        const [podcasts, total] = await Promise.all([
-            prisma_1.prisma.podcast.findMany({
-                where,
-                skip: (pageNum - 1) * limitNum,
-                take: limitNum,
-                orderBy: { createdAt: 'desc' },
-            }),
-            prisma_1.prisma.podcast.count({ where }),
-        ]);
+        const total = await prisma_1.prisma.podcast.count({ where });
+        const podcasts = await prisma_1.prisma.podcast.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            skip: (pageNum - 1) * limitNum,
+            take: limitNum,
+        });
         return res.json({
             success: true,
             data: podcasts,
-            pagination: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) },
+            pagination: {
+                total,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(total / limitNum),
+            },
         });
+    }
+    catch (error) {
+        next(error);
+    }
+}
+async function getPodcastBySlug(req, res, next) {
+    try {
+        const podcast = await prisma_1.prisma.podcast.findFirst({
+            where: { slug: req.params.slug, deletedAt: null },
+        });
+        if (!podcast) {
+            return res.status(404).json({ success: false, message: 'Podcast not found' });
+        }
+        return res.json({ success: true, data: podcast });
     }
     catch (error) {
         next(error);
@@ -52,11 +70,23 @@ async function createPodcast(req, res, next) {
         const files = req.files;
         let audioUrl = req.body.audioUrl;
         let coverUrl = req.body.coverUrl;
+        let audioPublicId = req.body.audioPublicId || req.body.audioCloudinaryPublicId || null;
+        let coverPublicId = req.body.coverPublicId || req.body.coverCloudinaryPublicId || null;
         if (files?.audio?.[0]) {
-            audioUrl = `/uploads/${files.audio[0].filename}`;
+            const f = files.audio[0];
+            audioUrl = f.path && (f.path.startsWith('http://') || f.path.startsWith('https://')) ? f.path : `/uploads/${f.filename}`;
+            audioPublicId = f.public_id || (0, cloudinary_service_1.extractPublicIdFromUrl)(audioUrl);
         }
         if (files?.cover?.[0]) {
-            coverUrl = `/uploads/${files.cover[0].filename}`;
+            const f = files.cover[0];
+            coverUrl = f.path && (f.path.startsWith('http://') || f.path.startsWith('https://')) ? f.path : `/uploads/${f.filename}`;
+            coverPublicId = f.public_id || (0, cloudinary_service_1.extractPublicIdFromUrl)(coverUrl);
+        }
+        if (!audioPublicId && audioUrl) {
+            audioPublicId = (0, cloudinary_service_1.extractPublicIdFromUrl)(audioUrl);
+        }
+        if (!coverPublicId && coverUrl) {
+            coverPublicId = (0, cloudinary_service_1.extractPublicIdFromUrl)(coverUrl);
         }
         const rawData = {
             ...req.body,
@@ -79,7 +109,12 @@ async function createPodcast(req, res, next) {
             slug = `${slug}-s${data.season}e${data.episodeNumber}`;
         }
         const podcast = await prisma_1.prisma.podcast.create({
-            data: { ...data, slug },
+            data: {
+                ...data,
+                slug,
+                audioPublicId,
+                coverPublicId,
+            },
         });
         return res.status(201).json({ success: true, message: 'Podcast published successfully', data: podcast });
     }
@@ -106,12 +141,22 @@ async function updatePodcast(req, res, next) {
                 }
             }
         }
+        let audioPublicId = data.audioPublicId || data.audioCloudinaryPublicId;
+        let coverPublicId = data.coverPublicId || data.coverCloudinaryPublicId;
+        if (!audioPublicId && data.audioUrl) {
+            audioPublicId = (0, cloudinary_service_1.extractPublicIdFromUrl)(data.audioUrl);
+        }
+        if (!coverPublicId && data.coverUrl) {
+            coverPublicId = (0, cloudinary_service_1.extractPublicIdFromUrl)(data.coverUrl);
+        }
         const updated = await prisma_1.prisma.podcast.update({
             where: { id },
             data: {
                 ...data,
                 ...(data.episodeNumber && { episodeNumber: parseInt(data.episodeNumber, 10) }),
                 ...(data.season && { season: parseInt(data.season, 10) }),
+                ...(audioPublicId && { audioPublicId }),
+                ...(coverPublicId && { coverPublicId }),
             },
         });
         return res.json({ success: true, message: 'Podcast updated successfully', data: updated });
@@ -136,6 +181,19 @@ async function incrementDownloads(req, res, next) {
 async function deletePodcast(req, res, next) {
     try {
         const id = req.params.id;
+        const podcast = await prisma_1.prisma.podcast.findUnique({ where: { id } });
+        if (podcast) {
+            const audioPid = podcast.audioPublicId || (0, cloudinary_service_1.extractPublicIdFromUrl)(podcast.audioUrl);
+            if (audioPid) {
+                await (0, cloudinary_service_1.deleteFileFromCloudinary)(audioPid, 'video'); // Audio is stored under resource_type 'video'
+            }
+            if (podcast.coverUrl) {
+                const coverPid = podcast.coverPublicId || (0, cloudinary_service_1.extractPublicIdFromUrl)(podcast.coverUrl);
+                if (coverPid) {
+                    await (0, cloudinary_service_1.deleteFileFromCloudinary)(coverPid, 'image');
+                }
+            }
+        }
         await prisma_1.prisma.podcast.update({
             where: { id },
             data: { deletedAt: new Date() },

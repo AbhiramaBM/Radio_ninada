@@ -52,25 +52,27 @@ model LiveRadioState {
 }
 
 model Program {
-  id          String     @id @default(uuid())
-  slug        String     @unique
-  name        String
-  description String
-  hostId      String?
-  hostName    String     @default("Radio Ninada RJ")
-  category    String     @default("Music")
-  thumbnail   String?
-  banner      String?
-  duration    String     @default("60 min")
-  language    String     @default("Kannada")
-  tags        String     @default("entertainment,music")
-  schedule    String     @default("Mon - Fri @ 8:00 AM")
-  featured    Boolean    @default(false)
-  status      String     @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  deletedAt   DateTime?
-  schedules   Schedule[]
+  id                String     @id @default(uuid())
+  slug              String     @unique
+  name              String
+  description       String
+  hostId            String?
+  hostName          String     @default("Radio Ninada RJ")
+  category          String     @default("Music")
+  thumbnail         String?
+  thumbnailPublicId String?
+  banner            String?
+  bannerPublicId    String?
+  duration          String     @default("60 min")
+  language          String     @default("Kannada")
+  tags              String     @default("entertainment,music")
+  schedule          String     @default("Mon - Fri @ 8:00 AM")
+  featured          Boolean    @default(false)
+  status            String     @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+  schedules         Schedule[]
 }
 
 model Podcast {
@@ -78,7 +80,9 @@ model Podcast {
   slug          String    @unique
   title         String
   audioUrl      String
+  audioPublicId String?
   coverUrl      String?
+  coverPublicId String?
   category      String    @default("Talk Show")
   episodeNumber Int       @default(1)
   season        Int       @default(1)
@@ -114,6 +118,7 @@ model News {
   content       String
   category      String    @default("Local") // College, Local, State, National, International
   featuredImage String?
+  publicId      String?
   gallery       String?   // JSON array of strings
   status        String    @default("PUBLISHED") // DRAFT, PUBLISHED, SCHEDULED
   publishedAt   DateTime?
@@ -127,6 +132,7 @@ model RJProfile {
   userId       String?
   name         String
   photo        String?
+  publicId     String?
   designation  String    @default("Senior RJ")
   bio          String
   socialMedia  String?   // JSON string of social handles
@@ -170,18 +176,20 @@ model EventParticipant {
 }
 
 model GalleryItem {
-  id          String    @id @default(uuid())
-  title       String
-  description String?
-  type        String    @default("PHOTO") // PHOTO, VIDEO
-  mediaUrl    String
-  thumbnail   String?
-  duration    String?   // e.g. "0:45", "1:15"
-  album       String    @default("General")
-  category    String    @default("Events") // "BTS Shorts", "Studio Bloopers", "Behind The Mic", "Photos", "Events"
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  id                String    @id @default(uuid())
+  title             String
+  description       String?
+  type              String    @default("PHOTO") // PHOTO, VIDEO
+  mediaUrl          String
+  publicId          String?
+  thumbnail         String?
+  thumbnailPublicId String?
+  duration          String?   // e.g. "0:45", "1:15"
+  album             String    @default("General")
+  category          String    @default("Events") // "BTS Shorts", "Studio Bloopers", "Behind The Mic", "Photos", "Events"
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
 }
 
 model Notification {
@@ -201,6 +209,7 @@ model Banner {
   id         String    @id @default(uuid())
   title      String
   imageUrl   String
+  publicId   String?
   targetUrl  String?
   type       String    @default("HOMEPAGE") // HOMEPAGE, EVENT, SPONSOR, POPUP
   priority   Int       @default(1)
@@ -213,6 +222,7 @@ model Sponsor {
   id         String    @id @default(uuid())
   name       String
   logoUrl    String
+  publicId   String?
   website    String?
   campaign   String    @default("Brand Awareness")
   clicks     Int       @default(0)

@@ -346,7 +346,7 @@ export default function AdminHeader() {
 
         {/* Public Site Link */}
         <a
-          href="http://localhost:5500/modern_fm_home.html"
+          href="http://localhost:5500/"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center space-x-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"

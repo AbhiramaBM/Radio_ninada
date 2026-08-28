@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Radio Ninada 2.0 Enterprise Test Suite', () => {
 
   test('1. Public Homepage & Audio Player Initialization', async ({ page }) => {
-    await page.goto('http://localhost:5500/modern_fm_home.html');
+    await page.goto('http://localhost:5500/');
     await expect(page).toHaveTitle(/Radio Ninada/);
 
     // Verify brand logo is visible
@@ -21,7 +21,7 @@ test.describe('Radio Ninada 2.0 Enterprise Test Suite', () => {
   });
 
   test('2. Global Radio Search Modal', async ({ page }) => {
-    await page.goto('http://localhost:5500/modern_fm_home.html');
+    await page.goto('http://localhost:5500/');
 
     // Click search icon button in header nav
     const searchBtn = page.locator('button[title*="Search"]');

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/prisma';
+import { deleteFileFromCloudinary, extractPublicIdFromUrl } from '../services/cloudinary.service';
 
 export async function getBanners(req: Request, res: Response, next: NextFunction) {
   try {
@@ -22,8 +23,15 @@ export async function createBanner(req: Request, res: Response, next: NextFuncti
   try {
     const file = req.file;
     let imageUrl = req.body.imageUrl;
+    let publicId = req.body.publicId || req.body.cloudinaryPublicId || null;
+
     if (file) {
-      imageUrl = `/uploads/${file.filename}`;
+      imageUrl = file.path && (file.path.startsWith('http://') || file.path.startsWith('https://')) ? file.path : `/uploads/${file.filename}`;
+      publicId = (file as any).public_id || extractPublicIdFromUrl(imageUrl);
+    }
+
+    if (!publicId && imageUrl) {
+      publicId = extractPublicIdFromUrl(imageUrl);
     }
 
     const { title, targetUrl, type, priority, expiryDate, status } = req.body;
@@ -32,6 +40,7 @@ export async function createBanner(req: Request, res: Response, next: NextFuncti
       data: {
         title,
         imageUrl: imageUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80',
+        publicId,
         targetUrl,
         type: type || 'HOMEPAGE',
         priority: priority ? parseInt(priority, 10) : 1,
@@ -49,9 +58,19 @@ export async function createBanner(req: Request, res: Response, next: NextFuncti
 export async function deleteBanner(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string;
+    const banner = await prisma.banner.findUnique({ where: { id } });
+
+    if (banner) {
+      const pid = banner.publicId || extractPublicIdFromUrl(banner.imageUrl);
+      if (pid) {
+        await deleteFileFromCloudinary(pid, 'image');
+      }
+    }
+
     await prisma.banner.delete({ where: { id } });
     return res.json({ success: true, message: 'Banner deleted' });
   } catch (error) {
     next(error);
   }
 }
+
