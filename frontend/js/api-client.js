@@ -7,7 +7,7 @@
   const API_BASE_URL = window.__RADIO_API_BASE__ ||
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:5000/api'
-      : '/api');
+      : 'https://backend-five-pearl-12.vercel.app/api');
   const DEFAULT_TIMEOUT_MS = 8000;
 
   async function fetchWithTimeout(resource, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {

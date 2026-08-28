@@ -1,228 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-let appHandler: any = null;
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://backend-five-pearl-12.vercel.app/api';
 
-function safeRequire(mod: string) {
+async function proxyRequest(request: NextRequest, endpoint: string, method: string) {
   try {
-    return eval('require')(mod);
-  } catch (_) {
-    return null;
-  }
-}
+    const targetUrl = `${BACKEND_API_URL.replace(/\/$/, '')}/${endpoint}`;
+    const headers: Record<string, string> = {};
+    const authHeader = request.headers.get('authorization');
+    if (authHeader) headers['authorization'] = authHeader;
+    const contentType = request.headers.get('content-type');
+    if (contentType) headers['content-type'] = contentType;
 
-function getApp() {
-  if (!appHandler) {
-    try {
-      const backendApp = safeRequire('../../../../../backend/dist/app');
-      if (backendApp) {
-        appHandler = backendApp.default || backendApp;
-      }
-    } catch (e) {
-      console.warn('[NextAPI] Backend app import fallback:', (e as Error).message);
+    let body: string | undefined = undefined;
+    if (method !== 'GET' && method !== 'HEAD') {
+      try {
+        body = await request.text();
+      } catch (_) {}
     }
-  }
-  return appHandler;
-}
 
-const defaultLiveState = {
-  id: 'live-config',
-  isLive: true,
-  streamUrl: 'https://stream.zeno.fm/f3wvbbqmdg8uv',
-  title: 'Radio Ninada 90.4 FM Live',
-  currentProgram: 'Ninada Morning Buzz (SDM Ujire)',
-  currentRJ: 'RJ Ananya',
-  currentSong: 'Community Melodies - Live Broadcast',
-  bitrate: 320,
-  quality: 'Ultra HD 320 kbps',
-  status: 'LIVE',
-  liveListeners: 42,
-  updatedAt: new Date().toISOString(),
-};
+    const res = await fetch(targetUrl, {
+      method,
+      headers,
+      body: body || undefined,
+      cache: 'no-store',
+    });
+
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch (error: any) {
+    console.error(`[Admin API Proxy Error ${method} /api/${endpoint}]:`, error?.message || error);
+    return NextResponse.json({ success: false, message: error?.message || 'API Proxy Error' }, { status: 500 });
+  }
+}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
   const { slug } = await params;
-  const endpoint = slug.join('/');
-
-  if (endpoint === 'health') {
-    return NextResponse.json({
-      status: 'UP',
-      service: 'Radio Ninada REST API Server',
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  if (endpoint === 'live') {
-    try {
-      const app = getApp();
-      if (app) {
-        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
-        const prisma = prismaModule?.prisma;
-        if (prisma) {
-          const state = await prisma.liveRadioState.findUnique({ where: { id: 'live-config' } });
-          if (state) return NextResponse.json({ success: true, data: state });
-        }
-      }
-    } catch (_) {}
-    return NextResponse.json({ success: true, data: defaultLiveState });
-  }
-
-  if (endpoint === 'programs') {
-    try {
-      const app = getApp();
-      if (app) {
-        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
-        const prisma = prismaModule?.prisma;
-        if (prisma) {
-          const programs = await prisma.program.findMany({ where: { deletedAt: null } });
-          if (programs && programs.length > 0) return NextResponse.json({ success: true, data: programs, total: programs.length });
-        }
-      }
-    } catch (_) {}
-    return NextResponse.json({
-      success: true,
-      data: [
-        {
-          id: 'prog-1',
-          name: 'Ninada Morning Buzz',
-          slug: 'ninada-morning-buzz',
-          description: 'Start your day with SDM campus news, spiritual songs, and vibrant RJ banter.',
-          category: 'Morning Show',
-          hostName: 'RJ Ananya',
-          duration: '60 min',
-          language: 'Kannada',
-          schedule: 'Mon - Fri @ 8:00 AM',
-          featured: true,
-          status: 'PUBLISHED',
-        },
-      ],
-      total: 1,
-    });
-  }
-
-  if (endpoint === 'podcasts') {
-    try {
-      const app = getApp();
-      if (app) {
-        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
-        const prisma = prismaModule?.prisma;
-        if (prisma) {
-          const podcasts = await prisma.podcast.findMany({ where: { deletedAt: null } });
-          if (podcasts && podcasts.length > 0) return NextResponse.json({ success: true, data: podcasts, total: podcasts.length });
-        }
-      }
-    } catch (_) {}
-    return NextResponse.json({
-      success: true,
-      data: [
-        {
-          id: 'pod-1',
-          title: 'SDM College Golden Jubilee Special',
-          slug: 'sdm-college-golden-jubilee',
-          audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-          category: 'Special Broadcast',
-          description: 'A look into 50 years of excellence at SDM College Ujire.',
-          duration: '32:15',
-          downloads: 1280,
-          featured: true,
-        },
-      ],
-      total: 1,
-    });
-  }
-
-  if (endpoint === 'news') {
-    try {
-      const app = getApp();
-      if (app) {
-        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
-        const prisma = prismaModule?.prisma;
-        if (prisma) {
-          const news = await prisma.news.findMany({ where: { deletedAt: null } });
-          if (news && news.length > 0) return NextResponse.json({ success: true, data: news, total: news.length });
-        }
-      }
-    } catch (_) {}
-    return NextResponse.json({
-      success: true,
-      data: [
-        {
-          id: 'news-1',
-          title: 'Radio Ninada 90.4 FM Wins Best Community Radio Award',
-          slug: 'community-radio-award-2026',
-          content: 'Radio Ninada has been honored for outstanding community outreach and educational broadcasting.',
-          category: 'College',
-          publishedAt: new Date().toISOString(),
-        },
-      ],
-      total: 1,
-    });
-  }
-
-  if (endpoint === 'rj') {
-    try {
-      const app = getApp();
-      if (app) {
-        const prismaModule = safeRequire('../../../../../backend/dist/config/prisma');
-        const prisma = prismaModule?.prisma;
-        if (prisma) {
-          const rjs = await prisma.rJProfile.findMany({ where: { deletedAt: null } });
-          if (rjs && rjs.length > 0) return NextResponse.json({ success: true, data: rjs, total: rjs.length });
-        }
-      }
-    } catch (_) {}
-    return NextResponse.json({
-      success: true,
-      data: [
-        {
-          id: 'rj-1',
-          name: 'RJ Ananya',
-          designation: 'Senior RJ & Producer',
-          bio: 'Bringing warmth, music, and SDM stories every morning.',
-          followers: 4200,
-          status: 'ACTIVE',
-        },
-      ],
-      total: 1,
-    });
-  }
-
-  return NextResponse.json({ success: true, message: `Radio Ninada API Endpoint: /api/${endpoint}` });
+  return proxyRequest(request, slug.join('/'), 'GET');
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
   const { slug } = await params;
-  const endpoint = slug.join('/');
+  return proxyRequest(request, slug.join('/'), 'POST');
+}
 
-  if (endpoint === 'auth/login' || endpoint === 'auth/firebase') {
-    let body: any = {};
-    try {
-      body = await request.json();
-    } catch (_) {}
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug } = await params;
+  return proxyRequest(request, slug.join('/'), 'PUT');
+}
 
-    const userEmail = (body.email || 'radioninada@gmail.com').toLowerCase();
-    const isSuperAdmin = userEmail === 'radioninada@gmail.com';
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug } = await params;
+  return proxyRequest(request, slug.join('/'), 'PATCH');
+}
 
-    return NextResponse.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        accessToken: 'demo-vercel-access-token',
-        refreshToken: 'demo-vercel-refresh-token',
-        user: {
-          id: 'user-super-admin',
-          email: userEmail,
-          name: isSuperAdmin ? 'Radio Ninada Admin' : 'Radio Admin Staff',
-          role: isSuperAdmin ? 'SUPER_ADMIN' : 'ADMIN',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-          status: 'ACTIVE',
-        },
-      },
-    });
-  }
-
-  return NextResponse.json({
-    success: true,
-    message: `POST /api/${endpoint} acknowledged`,
-    data: {},
-  });
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug } = await params;
+  return proxyRequest(request, slug.join('/'), 'DELETE');
 }

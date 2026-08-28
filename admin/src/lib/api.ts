@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const defaultApiBase = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api';
+const defaultApiBase = process.env.NODE_ENV === 'production' ? 'https://backend-five-pearl-12.vercel.app/api' : 'http://localhost:5000/api';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || defaultApiBase;
 
 export const api = axios.create({

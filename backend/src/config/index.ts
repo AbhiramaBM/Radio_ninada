@@ -3,11 +3,31 @@ import path from 'path';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+import fs from 'fs';
+
 const defaultDbPath = path.resolve(__dirname, '../../prisma/dev.db').replace(/\\/g, '/');
 const rawDbUrl = process.env.DATABASE_URL || `file:${defaultDbPath}`;
-const databaseUrl = rawDbUrl.startsWith('file:') && !path.isAbsolute(rawDbUrl.replace('file:', ''))
-  ? `file:${path.resolve(__dirname, '../../prisma', rawDbUrl.replace('file:', '')).replace(/\\/g, '/')}`
-  : rawDbUrl;
+
+let databaseUrl = rawDbUrl;
+if (process.env.VERCEL && rawDbUrl.startsWith('file:')) {
+  const tmpDbPath = '/tmp/dev.db';
+  const bundleDbPath = path.resolve(__dirname, '../../prisma/dev.db');
+  if (!fs.existsSync(tmpDbPath)) {
+    try {
+      if (fs.existsSync(bundleDbPath)) {
+        fs.copyFileSync(bundleDbPath, tmpDbPath);
+        console.log('[Vercel DB Init] Copied bundled dev.db to /tmp/dev.db');
+      } else {
+        console.warn('[Vercel DB Warning] Bundled dev.db not found at', bundleDbPath);
+      }
+    } catch (e: any) {
+      console.error('[Vercel DB Copy Error]:', e.message);
+    }
+  }
+  databaseUrl = `file:${tmpDbPath}`;
+} else if (rawDbUrl.startsWith('file:') && !path.isAbsolute(rawDbUrl.replace('file:', ''))) {
+  databaseUrl = `file:${path.resolve(__dirname, '../../prisma', rawDbUrl.replace('file:', '')).replace(/\\/g, '/')}`;
+}
 
 export const config = {
   port: process.env.PORT || 5000,
