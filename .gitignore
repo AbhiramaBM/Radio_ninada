@@ -14,3 +14,6 @@ uploads/*
 backend/uploads/*
 !backend/uploads/.gitkeep
 .neon
+
+.vercel
+.env*
