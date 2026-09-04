@@ -46,8 +46,8 @@ app.use('/api', limiter);
 
 // Logging & Parsing
 app.use(morgan('dev'));
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // Static uploads serving (temporary local directory)
 app.use('/uploads', express.static(config.uploadDir));

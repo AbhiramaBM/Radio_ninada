@@ -117,14 +117,35 @@ export async function createPodcast(req: Request, res: Response, next: NextFunct
         description: data.description,
         coverUrl: data.coverUrl,
         coverPublicId: data.coverPublicId,
+        audioUrl: data.audioUrl,
+        audioPublicId: data.audioPublicId,
+        duration: data.duration || '30:00',
         categoryId: data.categoryId,
         hostId: data.hostId,
         featured: data.featured,
         status: data.status,
+        ...(data.audioUrl
+          ? {
+              episodes: {
+                create: {
+                  title: data.title,
+                  description: data.description,
+                  audioUrl: data.audioUrl,
+                  audioPublicId: data.audioPublicId,
+                  coverUrl: data.coverUrl,
+                  coverPublicId: data.coverPublicId,
+                  duration: data.duration || '30:00',
+                  episodeNumber: 1,
+                  season: 1,
+                },
+              },
+            }
+          : {}),
       },
       include: {
         category: true,
         host: true,
+        episodes: true,
       },
     });
 

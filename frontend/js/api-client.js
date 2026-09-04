@@ -27,8 +27,12 @@
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Don't set Content-Type for FormData
-    if (options.body instanceof FormData) {
+    // Don't set Content-Type for FormData, File, or Blob
+    if (
+      options.body instanceof FormData ||
+      (typeof File !== 'undefined' && options.body instanceof File) ||
+      (typeof Blob !== 'undefined' && options.body instanceof Blob)
+    ) {
       delete headers['Content-Type'];
     }
 
@@ -151,17 +155,92 @@
       return await fetchApi(`/media${query ? '?' + query : ''}`);
     },
 
-    async uploadMedia(formData) {
+    async uploadMedia(fileOrFormData, folder = 'radio-ninada/media') {
+      let body;
+      if (fileOrFormData instanceof FormData) {
+        body = fileOrFormData;
+      } else {
+        body = new FormData();
+        body.append('file', fileOrFormData);
+        body.append('folder', folder);
+      }
       return await fetchApi('/media/upload', {
         method: 'POST',
-        body: formData,
-      });
+        body,
+      }, 120000);
     },
 
     async deleteMedia(id) {
       return await fetchApi(`/media/${id}`, {
         method: 'DELETE',
       });
+    },
+
+    // Admin CRUD Operations
+    async createPodcast(data) {
+      return await fetchApi('/podcasts', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async deletePodcast(id) {
+      return await fetchApi(`/podcasts/${id}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async createProgram(data) {
+      return await fetchApi('/programs', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async deleteProgram(id) {
+      return await fetchApi(`/programs/${id}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async createHost(data) {
+      return await fetchApi('/hosts', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async deleteHost(id) {
+      return await fetchApi(`/hosts/${id}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async createBanner(formData) {
+      return await fetchApi('/banners', {
+        method: 'POST',
+        body: formData,
+      });
+    },
+
+    async deleteBanner(id) {
+      return await fetchApi(`/banners/${id}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async getBanners() {
+      return await fetchApi('/banners');
+    },
+
+    async toggleLiveBroadcast() {
+      return await fetchApi('/live/toggle', {
+        method: 'POST',
+      });
+    },
+
+    async getCurrentStaff() {
+      return await fetchApi('/auth/me');
     },
   };
 
