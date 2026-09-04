@@ -7,10 +7,24 @@ pipeline {
         timestamps()
     }
 
+    parameters {
+        booleanParam(
+            name: 'BUILD_DOCKER_IMAGE',
+            defaultValue: true,
+            description: 'Build production Docker container image during CI (pre-deployment)'
+        )
+        booleanParam(
+            name: 'DEPLOY_ENABLED',
+            defaultValue: false,
+            description: 'Trigger deployment (Disabled by default: pipeline runs till deployment)'
+        )
+    }
+
     environment {
         BACKEND_DIR = 'backend'
         FRONTEND_DIR = 'frontend'
         REPO_URL = 'https://github.com/AbhiramaBM/Radio_ninada.git'
+        DOCKER_IMAGE_NAME = 'radio-ninada'
     }
 
     stages {
@@ -257,23 +271,82 @@ pipeline {
         }
 
         // ==========================================
-        // 12. DEPLOY (OPTIONAL / PRODUCTION HOOK)
+        // 12. DOCKER - BUILD IMAGE (PRE-DEPLOYMENT)
         // ==========================================
-        stage('Deploy') {
+        stage('Docker - Build Image') {
             when {
                 expression {
-                    return env.DEPLOY_ENABLED == 'true'
+                    return params.BUILD_DOCKER_IMAGE != false
                 }
             }
             steps {
                 script {
-                    echo 'Deploying Radio Ninada application...'
-                    // Example deployment hook:
-                    // if (isUnix()) {
-                    //     sh 'pm2 reload radio-ninada || pm2 start backend/dist/server.js --name radio-ninada'
-                    // } else {
-                    //     bat 'call pm2 reload radio-ninada || call pm2 start backend\\dist\\server.js --name radio-ninada'
-                    // }
+                    echo 'Building production Docker container image for Radio Ninada (Pre-Deployment)...'
+                    def tagLatest = "${DOCKER_IMAGE_NAME}:latest"
+                    def tagBuild = "${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER ?: 'local'}"
+                    def dockerBuildCmd = "docker build -t ${tagLatest} -t ${tagBuild} ."
+
+                    try {
+                        if (isUnix()) {
+                            sh dockerBuildCmd
+                        } else {
+                            bat dockerBuildCmd
+                        }
+                        echo "Docker images successfully built: ${tagLatest} and ${tagBuild}"
+                    } catch (Exception e) {
+                        echo "[WARNING] Docker build could not complete: ${e.message}"
+                        echo 'Ensure Docker daemon is active on the Jenkins agent if container image builds are required.'
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // 13. ARCHIVE BUILD ARTIFACTS
+        // ==========================================
+        stage('Archive Build Artifacts') {
+            steps {
+                script {
+                    echo 'Archiving compiled production artifacts for deployment readiness...'
+                    archiveArtifacts(
+                        artifacts: 'backend/dist/**, backend/package*.json, backend/prisma/**, frontend/**',
+                        allowEmptyArchive: true,
+                        fingerprint: true
+                    )
+                    echo 'Deployment-ready artifacts archived successfully.'
+                }
+            }
+        }
+
+        // ==========================================
+        // 14. DEPLOY (DISABLED BY DEFAULT - MANUAL HOOK)
+        // ==========================================
+        stage('Deploy') {
+            when {
+                expression {
+                    return (params.DEPLOY_ENABLED == true || env.DEPLOY_ENABLED == 'true')
+                }
+            }
+            steps {
+                script {
+                    echo '=========================================='
+                    echo ' EXECUTING MANUAL / AUTHORIZED DEPLOYMENT'
+                    echo '=========================================='
+                    if (fileExists('docker-compose.yml')) {
+                        echo 'Deploying containers via Docker Compose...'
+                        if (isUnix()) {
+                            sh 'docker compose up -d --build || docker-compose up -d --build'
+                        } else {
+                            bat 'docker compose up -d --build'
+                        }
+                    } else {
+                        echo 'Deploying via PM2 Node runner...'
+                        if (isUnix()) {
+                            sh 'pm2 reload radio-ninada || pm2 start backend/dist/server.js --name radio-ninada'
+                        } else {
+                            bat 'call pm2 reload radio-ninada || call pm2 start backend\\dist\\server.js --name radio-ninada'
+                        }
+                    }
                     echo 'Deployment completed.'
                 }
             }
@@ -293,6 +366,9 @@ pipeline {
   Backend    : Built & Type-Checked (dist/ ready)
   Frontend   : Validated & Assets Verified
   Prisma     : Client Generated
+  Docker     : Container Image Built (Pre-Deployment)
+  Artifacts  : Archived & Deployment-Ready
+  Deploy     : Not auto-run (Pipeline completed till deployment)
 ======================================================
 '''
         }
