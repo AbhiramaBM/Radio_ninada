@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Ninada 90.4 FM - Studio Admin Panel</title>
+    <title>Radio Ninada 90.4 FM - Studio Admin Center</title>
     <link rel="icon" type="image/png" href="images/radio_ninada_logo.png">
     
     <!-- Google Fonts -->
@@ -26,7 +26,6 @@
                         'primary-light': '#fdf2f2',
                         secondary: '#e06d53',
                         surface: '#ffffff',
-                        'surface-subtle': '#f8fafc',
                         border: '#e2e8f0',
                         'text-main': '#0f172a',
                         'text-muted': '#64748b',
@@ -51,12 +50,9 @@
             background-color: #cbd5e1;
             border-radius: 9999px;
         }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
     </style>
 </head>
-<body class="bg-[#f1f5f9] text-text-main font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-[#f8fafc] text-text-main font-sans antialiased min-h-screen flex flex-col">
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none"></div>
@@ -124,55 +120,89 @@
                     <img src="images/radio_ninada_logo.png" alt="Radio Ninada Logo" class="h-10 w-auto object-contain" />
                     <div>
                         <h2 class="font-display font-bold text-sm text-text-main leading-tight">Radio Ninada</h2>
-                        <span class="text-[10px] font-bold text-primary tracking-widest uppercase bg-primary-light px-2 py-0.5 rounded-full inline-block mt-0.5">Admin Studio</span>
+                        <span class="text-[10px] font-bold text-primary tracking-widest uppercase bg-primary-light px-2 py-0.5 rounded-full inline-block mt-0.5">Studio Admin</span>
                     </div>
                 </div>
             </div>
 
             <!-- Navigation Links -->
-            <nav class="p-4 space-y-1.5 flex-1 custom-scroll overflow-y-auto">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 py-1">Management</p>
+            <nav class="p-4 space-y-1 flex-1 custom-scroll overflow-y-auto">
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 py-1">Broadcast Studio</p>
 
                 <button onclick="switchTab('overview')" id="nav-btn-overview"
                     class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-primary bg-primary-light cursor-pointer">
-                    <span class="material-symbols-outlined text-xl">dashboard</span>
-                    <span>Overview &amp; Control</span>
+                    <span class="material-symbols-outlined text-xl">tune</span>
+                    <span>Studio &amp; Live Stream</span>
                 </button>
 
                 <button onclick="switchTab('podcasts')" id="nav-btn-podcasts"
                     class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
                     <span class="material-symbols-outlined text-xl">podcasts</span>
-                    <span>Upload Podcasts</span>
+                    <span>Podcasts &amp; Audio</span>
                 </button>
 
                 <button onclick="switchTab('programs')" id="nav-btn-programs"
                     class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
                     <span class="material-symbols-outlined text-xl">calendar_month</span>
-                    <span>Upload Programs</span>
+                    <span>Shows &amp; Timetable</span>
                 </button>
+
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 pt-3 pb-1">Content &amp; Campus</p>
+
+                <button onclick="switchTab('news')" id="nav-btn-news"
+                    class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
+                    <span class="material-symbols-outlined text-xl">newspaper</span>
+                    <span>News &amp; Bulletins</span>
+                </button>
+
+                <button onclick="switchTab('events')" id="nav-btn-events"
+                    class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
+                    <span class="material-symbols-outlined text-xl">celebration</span>
+                    <span>Station Events</span>
+                </button>
+
+                <button onclick="switchTab('gallery')" id="nav-btn-gallery"
+                    class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
+                    <span class="material-symbols-outlined text-xl">photo_camera</span>
+                    <span>Gallery &amp; BTS</span>
+                </button>
+
+                <button onclick="switchTab('announcements')" id="nav-btn-announcements"
+                    class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
+                    <span class="material-symbols-outlined text-xl">campaign</span>
+                    <span>Ticker Alerts</span>
+                </button>
+
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 pt-3 pb-1">Presenters &amp; Banners</p>
 
                 <button onclick="switchTab('hosts')" id="nav-btn-hosts"
                     class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
                     <span class="material-symbols-outlined text-xl">record_voice_over</span>
-                    <span>RJ Team &amp; Hosts</span>
+                    <span>RJ Presenters</span>
                 </button>
 
                 <button onclick="switchTab('banners')" id="nav-btn-banners"
                     class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
                     <span class="material-symbols-outlined text-xl">ad_units</span>
-                    <span>Station Banners</span>
+                    <span>Slider Banners</span>
                 </button>
 
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 pt-4 pb-1">Storage &amp; CDN</p>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 pt-3 pb-1">Media &amp; Inbox</p>
 
                 <button onclick="switchTab('media')" id="nav-btn-media"
                     class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
                     <span class="material-symbols-outlined text-xl">cloud</span>
                     <span>Cloudinary Explorer</span>
                 </button>
+
+                <button onclick="switchTab('contact')" id="nav-btn-contact"
+                    class="nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:bg-slate-100 hover:text-text-main cursor-pointer">
+                    <span class="material-symbols-outlined text-xl">inbox</span>
+                    <span>Listener Inquiries</span>
+                </button>
             </nav>
 
-            <!-- Current User & Logout Section -->
+            <!-- User Footer -->
             <div class="p-4 border-t border-border bg-slate-50/70">
                 <div class="flex items-center gap-3 mb-3 px-2">
                     <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
@@ -199,147 +229,118 @@
             </div>
         </aside>
 
-        <!-- Main Content Viewport -->
+        <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto custom-scroll p-6 md:p-8 lg:p-10 space-y-8">
             
             <!-- ============================================================== -->
-            <!-- TAB 1: OVERVIEW & BROADCAST CONTROL -->
+            <!-- TAB 1: STUDIO CONTROL ROOM -->
             <!-- ============================================================== -->
             <section id="tab-overview" class="space-y-6">
-                <!-- Banner: Broadcast Control -->
                 <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                     <div>
                         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold mb-3">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                            <span>Station Control Room</span>
+                            <span>Live Control Desk</span>
                         </div>
-                        <h1 class="text-2xl md:text-3xl font-bold font-display text-text-main">Live Radio &amp; Studio Status</h1>
-                        <p class="text-sm text-text-muted mt-1">Manage realtime stream state, cloud assets, and catalog items.</p>
+                        <h1 class="text-2xl md:text-3xl font-bold font-display text-text-main">Live Broadcast Control</h1>
+                        <p class="text-sm text-text-muted mt-1">Real-time status broadcasted to listener stream over WebSockets.</p>
                     </div>
 
-                    <!-- Live Stream Switch -->
                     <div class="flex items-center gap-4 bg-slate-50 border border-border p-4 rounded-2xl">
                         <div class="flex items-center gap-2.5">
                             <span id="live-dot" class="w-3.5 h-3.5 rounded-full bg-emerald-500"></span>
                             <div>
                                 <p class="text-xs font-extrabold uppercase tracking-wider text-text-main" id="live-text">STREAM ONLINE</p>
-                                <p class="text-[11px] text-text-muted">90.4 FM Digital Audio</p>
+                                <p class="text-[11px] text-text-muted">90.4 FM Web Audio</p>
                             </div>
                         </div>
                         <button onclick="toggleLiveStatus()" id="live-btn"
                             class="py-2 px-4 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-dark transition-all cursor-pointer shadow-sm">
-                            Toggle Stream
+                            Toggle Status
                         </button>
                     </div>
                 </div>
 
-                <!-- Stats Counters -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white p-5 rounded-2xl border border-border shadow-2xs flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-primary-light text-primary flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-2xl">podcasts</span>
+                <!-- Live Broadcast Metadata Editor -->
+                <div class="bg-white p-6 rounded-3xl border border-border shadow-xs">
+                    <h3 class="font-display font-bold text-sm text-text-main mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-lg">settings_voice</span>
+                        Update Now Playing Stream Details
+                    </h3>
+                    <form onsubmit="handleUpdateLiveStream(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Current Show Title</label>
+                            <input type="text" id="live-program-input" placeholder="Ninada Morning Buzz"
+                                class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-text-muted">Total Podcasts</p>
-                            <h3 class="text-2xl font-bold font-display text-text-main" id="stat-podcasts">-</h3>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-border shadow-2xs flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-2xl">event</span>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Current RJ / Host</label>
+                            <input type="text" id="live-host-input" placeholder="RJ Ananya"
+                                class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-text-muted">Broadcast Programs</p>
-                            <h3 class="text-2xl font-bold font-display text-text-main" id="stat-programs">-</h3>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Song / Melodic Segment</label>
+                            <input type="text" id="live-song-input" placeholder="Coastal Melodies Special"
+                                class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                         </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-border shadow-2xs flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-2xl">record_voice_over</span>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Audio Stream URL (Icecast / Zeno / Shoutcast)</label>
+                            <input type="url" id="live-url-input" placeholder="https://stream.zeno.fm/f3wvbbqmdg8uv"
+                                class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                         </div>
-                        <div>
-                            <p class="text-xs font-semibold text-text-muted">RJ Presenters</p>
-                            <h3 class="text-2xl font-bold font-display text-text-main" id="stat-hosts">-</h3>
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full py-2 px-4 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all cursor-pointer shadow-sm">
+                                Broadcast Update
+                            </button>
                         </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-border shadow-2xs flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-2xl">cloud_sync</span>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-text-muted">Cloudinary Assets</p>
-                            <h3 class="text-2xl font-bold font-display text-text-main" id="stat-media">-</h3>
-                        </div>
-                    </div>
+                    </form>
                 </div>
 
-                <!-- Quick Action Shortcuts -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white p-6 rounded-3xl border border-border shadow-xs hover:border-primary/40 transition-all">
-                        <span class="material-symbols-outlined text-primary text-3xl mb-3">upload_file</span>
-                        <h4 class="font-bold text-sm text-text-main mb-1">New Podcast Episode</h4>
-                        <p class="text-xs text-text-muted mb-4 leading-relaxed">Upload audio MP3 and cover artwork straight to Cloudinary.</p>
-                        <button onclick="switchTab('podcasts')" class="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer">
-                            <span>Open Podcast Uploader</span>
-                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                        </button>
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-border shadow-2xs">
+                        <span class="text-xs text-text-muted font-semibold">Podcasts</span>
+                        <h3 class="text-2xl font-bold font-display text-text-main mt-1" id="stat-podcasts">-</h3>
                     </div>
-
-                    <div class="bg-white p-6 rounded-3xl border border-border shadow-xs hover:border-primary/40 transition-all">
-                        <span class="material-symbols-outlined text-emerald-600 text-3xl mb-3">add_circle</span>
-                        <h4 class="font-bold text-sm text-text-main mb-1">Add Weekly Show</h4>
-                        <p class="text-xs text-text-muted mb-4 leading-relaxed">Schedule a program with time slots, RJ assignment, and banner.</p>
-                        <button onclick="switchTab('programs')" class="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1 cursor-pointer">
-                            <span>Open Program Scheduler</span>
-                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                        </button>
+                    <div class="bg-white p-5 rounded-2xl border border-border shadow-2xs">
+                        <span class="text-xs text-text-muted font-semibold">Scheduled Shows</span>
+                        <h3 class="text-2xl font-bold font-display text-text-main mt-1" id="stat-programs">-</h3>
                     </div>
-
-                    <div class="bg-white p-6 rounded-3xl border border-border shadow-xs hover:border-primary/40 transition-all">
-                        <span class="material-symbols-outlined text-sky-600 text-3xl mb-3">photo_library</span>
-                        <h4 class="font-bold text-sm text-text-main mb-1">Cloudinary Explorer</h4>
-                        <p class="text-xs text-text-muted mb-4 leading-relaxed">Browse all assets, copy direct CDN links, or delete old recordings.</p>
-                        <button onclick="switchTab('media')" class="text-xs font-bold text-sky-600 hover:underline flex items-center gap-1 cursor-pointer">
-                            <span>Explore Storage CDN</span>
-                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                        </button>
+                    <div class="bg-white p-5 rounded-2xl border border-border shadow-2xs">
+                        <span class="text-xs text-text-muted font-semibold">RJ Presenters</span>
+                        <h3 class="text-2xl font-bold font-display text-text-main mt-1" id="stat-hosts">-</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-border shadow-2xs">
+                        <span class="text-xs text-text-muted font-semibold">Cloudinary Media</span>
+                        <h3 class="text-2xl font-bold font-display text-text-main mt-1" id="stat-media">-</h3>
                     </div>
                 </div>
             </section>
 
             <!-- ============================================================== -->
-            <!-- TAB 2: UPLOAD & MANAGE PODCASTS -->
+            <!-- TAB 2: PODCASTS UPLOADER -->
             <!-- ============================================================== -->
             <section id="tab-podcasts" class="hidden space-y-6">
-                <!-- Header -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                        <h1 class="text-2xl font-bold font-display text-text-main">Podcast &amp; Episode Manager</h1>
-                        <p class="text-xs text-text-muted mt-0.5">Upload audio recordings and cover images directly to Cloudinary &amp; PostgreSQL.</p>
-                    </div>
+                <div>
+                    <h1 class="text-2xl font-bold font-display text-text-main">Podcasts &amp; Audio Broadcasts</h1>
+                    <p class="text-xs text-text-muted mt-0.5">Upload audio recordings and cover images directly to Cloudinary &amp; PostgreSQL.</p>
                 </div>
 
-                <!-- Create Podcast Form Card -->
+                <!-- Upload Form -->
                 <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-xs">
-                    <div class="flex items-center gap-2.5 pb-4 mb-6 border-b border-border">
-                        <span class="material-symbols-outlined text-primary text-2xl">add_circle</span>
-                        <h3 class="text-base font-bold font-display text-text-main">Publish New Podcast Episode</h3>
-                    </div>
-
-                    <form id="podcast-form" class="space-y-6" onsubmit="handleCreatePodcast(event)">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <h3 class="font-display font-bold text-sm text-text-main mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">add_circle</span> Publish New Podcast Episode
+                    </h3>
+                    <form id="podcast-form" onsubmit="handleCreatePodcast(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Podcast Title *</label>
-                                <input type="text" id="pod-title" required placeholder="e.g., Coastal Rhythms - Episode 12"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Title *</label>
+                                <input type="text" id="pod-title" required placeholder="e.g. Coastal Conversations #1"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                             </div>
-
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Category *</label>
-                                <select id="pod-category" class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Category *</label>
+                                <select id="pod-category" class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                                     <option value="Music">🎵 Music &amp; Melody</option>
                                     <option value="Culture">🏛️ Culture &amp; Heritage</option>
                                     <option value="Interviews">🎙️ Talk Show &amp; Interviews</option>
@@ -350,302 +351,455 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Description &amp; Episode Notes *</label>
-                            <textarea id="pod-desc" required rows="3" placeholder="Summary of this broadcast episode..."
-                                class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all"></textarea>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Description *</label>
+                            <textarea id="pod-desc" required rows="2" placeholder="Summary of this broadcast episode..."
+                                class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary"></textarea>
                         </div>
 
-                        <!-- Two-Column Upload Inputs: Cover Image + Audio File -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <!-- Cover Artwork -->
-                            <div class="border border-dashed border-slate-300 rounded-2xl p-5 bg-slate-50/70 text-center">
-                                <span class="material-symbols-outlined text-primary text-3xl mb-2">add_photo_alternate</span>
-                                <h4 class="text-xs font-bold text-text-main">Cover Artwork Image</h4>
-                                <p class="text-[11px] text-text-muted mb-3">Uploads to <code class="text-slate-600">radio-ninada/podcasts/covers</code></p>
-                                <input type="file" id="pod-cover-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark cursor-pointer">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50/70 text-center">
+                                <span class="material-symbols-outlined text-primary text-2xl mb-1">add_photo_alternate</span>
+                                <h5 class="text-xs font-bold">Cover Image</h5>
+                                <p class="text-[10px] text-text-muted mb-2">Cloudinary <code class="text-slate-600">radio-ninada/podcasts/covers</code></p>
+                                <input type="file" id="pod-cover-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:bg-primary file:text-white cursor-pointer">
                             </div>
 
-                            <!-- Audio Episode File -->
-                            <div class="border border-dashed border-slate-300 rounded-2xl p-5 bg-slate-50/70 text-center">
-                                <span class="material-symbols-outlined text-emerald-600 text-3xl mb-2">audio_file</span>
-                                <h4 class="text-xs font-bold text-text-main">Audio Recording (MP3 / WAV / AAC) *</h4>
-                                <p class="text-[11px] text-text-muted mb-3">Uploads to <code class="text-slate-600">radio-ninada/podcasts/episodes</code></p>
-                                <input type="file" id="pod-audio-file" accept="audio/*" required class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
+                            <div class="border border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50/70 text-center">
+                                <span class="material-symbols-outlined text-emerald-600 text-2xl mb-1">audio_file</span>
+                                <h5 class="text-xs font-bold">Audio Recording *</h5>
+                                <p class="text-[10px] text-text-muted mb-2">Cloudinary <code class="text-slate-600">radio-ninada/podcasts/episodes</code></p>
+                                <input type="file" id="pod-audio-file" accept="audio/*" required class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:bg-emerald-600 file:text-white cursor-pointer">
                             </div>
                         </div>
 
                         <div class="flex items-center justify-between pt-2">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="pod-featured" class="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer">
-                                <label for="pod-featured" class="text-xs font-semibold text-slate-700 cursor-pointer">Feature on Homepage</label>
-                            </div>
-
-                            <button type="submit" id="pod-submit-btn"
-                                class="py-2.5 px-6 rounded-xl bg-primary text-white font-bold text-xs hover:bg-primary-dark transition-all shadow-md flex items-center gap-2 cursor-pointer">
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="pod-featured" class="rounded border-border text-primary focus:ring-primary w-4 h-4">
+                                <span>Feature on Homepage</span>
+                            </label>
+                            <button type="submit" id="pod-submit-btn" class="py-2.5 px-6 rounded-xl bg-primary text-white font-bold text-xs hover:bg-primary-dark transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
                                 <span class="material-symbols-outlined text-base">cloud_upload</span>
-                                <span>Upload &amp; Publish Podcast</span>
+                                <span>Upload &amp; Publish</span>
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Existing Podcasts List -->
+                <!-- Podcasts List -->
                 <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
-                    <div class="p-5 border-b border-border bg-slate-50/70 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">library_music</span>
-                            <h3 class="font-display font-bold text-sm text-text-main">Published Podcasts</h3>
-                        </div>
-                        <button onclick="fetchPodcastsList()" class="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">refresh</span> Refresh
-                        </button>
+                    <div class="p-4 border-b border-border bg-slate-50/70 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Live Podcasts</h4>
+                        <button onclick="fetchPodcastsList()" class="text-xs text-primary font-bold hover:underline">Refresh</button>
                     </div>
-
                     <div id="podcasts-container" class="p-6 divide-y divide-border">
-                        <div class="py-12 text-center text-text-muted text-xs">Loading podcasts...</div>
+                        <div class="py-8 text-center text-text-muted text-xs">Loading podcasts...</div>
                     </div>
                 </div>
             </section>
 
             <!-- ============================================================== -->
-            <!-- TAB 3: UPLOAD & MANAGE PROGRAMS / SCHEDULE -->
+            <!-- TAB 3: PROGRAMS / SCHEDULE UPLOADER -->
             <!-- ============================================================== -->
             <section id="tab-programs" class="hidden space-y-6">
                 <div>
-                    <h1 class="text-2xl font-bold font-display text-text-main">Program Schedule Manager</h1>
-                    <p class="text-xs text-text-muted mt-0.5">Add weekly shows, assign RJ hosts, and upload program banners to Cloudinary.</p>
+                    <h1 class="text-2xl font-bold font-display text-text-main">Programs &amp; Weekly Shows</h1>
+                    <p class="text-xs text-text-muted mt-0.5">Publish weekly broadcasts with posters to Cloudinary.</p>
                 </div>
 
-                <!-- Add Program Form -->
                 <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-xs">
-                    <div class="flex items-center gap-2.5 pb-4 mb-6 border-b border-border">
-                        <span class="material-symbols-outlined text-emerald-600 text-2xl">add_circle</span>
-                        <h3 class="text-base font-bold font-display text-text-main">Schedule New Program Show</h3>
+                    <h3 class="font-display font-bold text-sm text-text-main mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-600">add_circle</span> Schedule New Show
+                    </h3>
+                    <form id="program-form" onsubmit="handleCreateProgram(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Show Name *</label>
+                                <input type="text" id="prog-name" required placeholder="Morning Melody"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Presenter / RJ *</label>
+                                <input type="text" id="prog-host" required placeholder="RJ Chethan"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Broadcast Slot *</label>
+                                <input type="text" id="prog-schedule" required placeholder="Mon - Fri | 08:00 AM - 09:30 AM"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Description *</label>
+                            <textarea id="prog-desc" required rows="2" placeholder="About this radio show..."
+                                class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary"></textarea>
+                        </div>
+
+                        <div class="border border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50/70 text-center">
+                            <span class="material-symbols-outlined text-primary text-2xl mb-1">image</span>
+                            <h5 class="text-xs font-bold">Show Artwork / Poster</h5>
+                            <p class="text-[10px] text-text-muted mb-2">Cloudinary <code class="text-slate-600">radio-ninada/programs</code></p>
+                            <input type="file" id="prog-poster-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:bg-primary file:text-white cursor-pointer">
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" id="prog-submit-btn" class="py-2.5 px-6 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-all shadow-sm cursor-pointer">
+                                Schedule Show
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-border bg-slate-50/70 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Active Programs</h4>
+                        <button onclick="fetchProgramsList()" class="text-xs text-primary font-bold hover:underline">Refresh</button>
                     </div>
+                    <div id="programs-container" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="col-span-full py-8 text-center text-text-muted text-xs">Loading programs...</div>
+                    </div>
+                </div>
+            </section>
 
-                    <form id="program-form" class="space-y-5" onsubmit="handleCreateProgram(event)">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Program Name *</label>
-                                <input type="text" id="prog-name" required placeholder="e.g., Morning Melody"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all">
+            <!-- ============================================================== -->
+            <!-- TAB 4: NEWS & BULLETINS UPLOADER -->
+            <!-- ============================================================== -->
+            <section id="tab-news" class="hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-bold font-display text-text-main">News &amp; Bulletins</h1>
+                    <p class="text-xs text-text-muted mt-0.5">Publish campus and community news bulletins with cover images.</p>
+                </div>
+
+                <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-xs">
+                    <h3 class="font-display font-bold text-sm text-text-main mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sky-600">add_circle</span> Publish News Bulletin
+                    </h3>
+                    <form id="news-form" onsubmit="handleCreateNews(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">News Headline *</label>
+                                <input type="text" id="news-title" required placeholder="SDM College Radio Ninada marks another milestone"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                             </div>
-
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">RJ / Host Name *</label>
-                                <input type="text" id="prog-host" required placeholder="e.g., RJ Chethan"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Category *</label>
-                                <select id="prog-category" class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white">
-                                    <option value="Morning Drive">🌅 Morning Drive</option>
-                                    <option value="Music Show">🎶 Music Show</option>
-                                    <option value="Talk & Debate">🎙️ Talk &amp; Debate</option>
-                                    <option value="Evening Chill">🌆 Evening Chill</option>
-                                    <option value="Special Feature">⭐ Special Feature</option>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Category *</label>
+                                <select id="news-category" class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                                    <option value="College">🎓 College</option>
+                                    <option value="Local">📍 Local / Community</option>
+                                    <option value="State">🏛️ State</option>
+                                    <option value="National">🇮🇳 National</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Broadcast Schedule Slot *</label>
-                                <input type="text" id="prog-schedule" required placeholder="e.g., Mon - Fri | 08:00 AM - 09:30 AM"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Duration</label>
-                                <input type="text" id="prog-duration" value="60 min"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all">
-                            </div>
-                        </div>
-
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Description *</label>
-                            <textarea id="prog-desc" required rows="2" placeholder="Brief summary of the show..."
-                                class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all"></textarea>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">News Content *</label>
+                            <textarea id="news-content" required rows="3" placeholder="Full news report text..."
+                                class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary"></textarea>
                         </div>
 
-                        <!-- Poster Banner Image -->
-                        <div class="border border-dashed border-slate-300 rounded-2xl p-5 bg-slate-50/70 text-center">
-                            <span class="material-symbols-outlined text-primary text-3xl mb-1">image</span>
-                            <h4 class="text-xs font-bold text-text-main">Program Poster / Artwork</h4>
-                            <p class="text-[11px] text-text-muted mb-3">Uploads to Cloudinary <code class="text-slate-600">radio-ninada/programs</code></p>
-                            <input type="file" id="prog-poster-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark cursor-pointer">
+                        <div class="border border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50/70 text-center">
+                            <span class="material-symbols-outlined text-sky-600 text-2xl mb-1">add_photo_alternate</span>
+                            <h5 class="text-xs font-bold">News Feature Image</h5>
+                            <p class="text-[10px] text-text-muted mb-2">Cloudinary <code class="text-slate-600">radio-ninada/media</code></p>
+                            <input type="file" id="news-image-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:bg-sky-600 file:text-white cursor-pointer">
                         </div>
 
                         <div class="text-right">
-                            <button type="submit" id="prog-submit-btn"
-                                class="py-2.5 px-6 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-all shadow-md inline-flex items-center gap-2 cursor-pointer">
-                                <span class="material-symbols-outlined text-base">save</span>
-                                <span>Schedule Program</span>
+                            <button type="submit" id="news-submit-btn" class="py-2.5 px-6 rounded-xl bg-sky-600 text-white font-bold text-xs hover:bg-sky-700 transition-all shadow-sm cursor-pointer">
+                                Publish News
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Existing Programs List -->
                 <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
-                    <div class="p-5 border-b border-border bg-slate-50/70 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-emerald-600">view_timeline</span>
-                            <h3 class="font-display font-bold text-sm text-text-main">Active Station Timetable</h3>
-                        </div>
-                        <button onclick="fetchProgramsList()" class="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">refresh</span> Refresh
-                        </button>
+                    <div class="p-4 border-b border-border bg-slate-50/70 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Published News Articles</h4>
+                        <button onclick="fetchNewsList()" class="text-xs text-primary font-bold hover:underline">Refresh</button>
                     </div>
-
-                    <div id="programs-container" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="col-span-full py-12 text-center text-text-muted text-xs">Loading programs...</div>
+                    <div id="news-container" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="col-span-full py-8 text-center text-text-muted text-xs">Loading news...</div>
                     </div>
                 </div>
             </section>
 
             <!-- ============================================================== -->
-            <!-- TAB 4: UPLOAD & MANAGE RJ TEAM / HOSTS -->
+            <!-- TAB 5: EVENTS UPLOADER -->
+            <!-- ============================================================== -->
+            <section id="tab-events" class="hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-bold font-display text-text-main">Station &amp; College Events</h1>
+                    <p class="text-xs text-text-muted mt-0.5">Post upcoming events, workshops, and radio competitions.</p>
+                </div>
+
+                <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-xs">
+                    <h3 class="font-display font-bold text-sm text-text-main mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-purple-600">add_circle</span> Add New Event
+                    </h3>
+                    <form id="event-form" onsubmit="handleCreateEvent(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Event Title *</label>
+                                <input type="text" id="event-title" required placeholder="Radio RJ Hunt 2026"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Date &amp; Time *</label>
+                                <input type="datetime-local" id="event-date" required
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Venue / Location *</label>
+                                <input type="text" id="event-location" required placeholder="SDM College Auditorium"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Description *</label>
+                            <textarea id="event-desc" required rows="2" placeholder="Event details and registration instructions..."
+                                class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary"></textarea>
+                        </div>
+
+                        <div class="border border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50/70 text-center">
+                            <span class="material-symbols-outlined text-purple-600 text-2xl mb-1">image</span>
+                            <h5 class="text-xs font-bold">Event Banner / Poster</h5>
+                            <p class="text-[10px] text-text-muted mb-2">Cloudinary <code class="text-slate-600">radio-ninada/banners</code></p>
+                            <input type="file" id="event-poster-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:bg-purple-600 file:text-white cursor-pointer">
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" id="event-submit-btn" class="py-2.5 px-6 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-all shadow-sm cursor-pointer">
+                                Add Event
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-border bg-slate-50/70 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Upcoming Events</h4>
+                        <button onclick="fetchEventsList()" class="text-xs text-primary font-bold hover:underline">Refresh</button>
+                    </div>
+                    <div id="events-container" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="col-span-full py-8 text-center text-text-muted text-xs">Loading events...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- TAB 6: GALLERY & BTS PHOTOS -->
+            <!-- ============================================================== -->
+            <section id="tab-gallery" class="hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-bold font-display text-text-main">Photo Gallery &amp; BTS</h1>
+                    <p class="text-xs text-text-muted mt-0.5">Upload behind-the-scenes studio photographs directly to Cloudinary.</p>
+                </div>
+
+                <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-xs">
+                    <form id="gallery-form" onsubmit="handleCreateGallery(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Photo Caption / Title *</label>
+                                <input type="text" id="gallery-title" required placeholder="Live in the recording studio"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Album / Category</label>
+                                <input type="text" id="gallery-album" value="Behind The Mic"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                        </div>
+
+                        <div class="border border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50/70 text-center">
+                            <span class="material-symbols-outlined text-teal-600 text-2xl mb-1">add_photo_alternate</span>
+                            <h5 class="text-xs font-bold">Select Photograph *</h5>
+                            <p class="text-[10px] text-text-muted mb-2">Cloudinary <code class="text-slate-600">radio-ninada/gallery</code></p>
+                            <input type="file" id="gallery-photo-file" accept="image/*" required class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:bg-teal-600 file:text-white cursor-pointer">
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" id="gallery-submit-btn" class="py-2.5 px-6 rounded-xl bg-teal-600 text-white font-bold text-xs hover:bg-teal-700 transition-all shadow-sm cursor-pointer">
+                                Upload Photo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-border bg-slate-50/70 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Gallery Photos</h4>
+                        <button onclick="fetchGalleryList()" class="text-xs text-primary font-bold hover:underline">Refresh</button>
+                    </div>
+                    <div id="gallery-container" class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div class="col-span-full py-8 text-center text-text-muted text-xs">Loading photos...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- TAB 7: TICKER ANNOUNCEMENTS -->
+            <!-- ============================================================== -->
+            <section id="tab-announcements" class="hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-bold font-display text-text-main">Station Marquee Alerts</h1>
+                    <p class="text-xs text-text-muted mt-0.5">Broadcast scrolling ticker alerts on the homepage of the website.</p>
+                </div>
+
+                <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-xs">
+                    <form id="announcement-form" onsubmit="handleCreateAnnouncement(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Alert Headline *</label>
+                                <input type="text" id="ann-title" required placeholder="Breaking News or Live Program Alert"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Message Text *</label>
+                                <input type="text" id="ann-message" required placeholder="Tune in today at 4 PM for the special debate show!"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" id="ann-submit-btn" class="py-2.5 px-6 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-all shadow-sm cursor-pointer">
+                                Broadcast Ticker Alert
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-border bg-slate-50/70 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Active Marquee Announcements</h4>
+                        <button onclick="fetchAnnouncementsList()" class="text-xs text-primary font-bold hover:underline">Refresh</button>
+                    </div>
+                    <div id="announcements-container" class="p-6 space-y-3">
+                        <div class="py-8 text-center text-text-muted text-xs">Loading alerts...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- TAB 8: RJ TEAM & HOSTS -->
             <!-- ============================================================== -->
             <section id="tab-hosts" class="hidden space-y-6">
                 <div>
-                    <h1 class="text-2xl font-bold font-display text-text-main">RJ Team &amp; Hosts</h1>
-                    <p class="text-xs text-text-muted mt-0.5">Add station presenters and upload RJ photos to Cloudinary.</p>
+                    <h1 class="text-2xl font-bold font-display text-text-main">RJ Team &amp; Presenters</h1>
+                    <p class="text-xs text-text-muted mt-0.5">Manage the voice of Radio Ninada with profile pictures.</p>
                 </div>
 
-                <!-- Add RJ Form -->
                 <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-xs">
-                    <div class="flex items-center gap-2.5 pb-4 mb-6 border-b border-border">
-                        <span class="material-symbols-outlined text-sky-600 text-2xl">person_add</span>
-                        <h3 class="text-base font-bold font-display text-text-main">Add Presenter / RJ</h3>
-                    </div>
-
-                    <form id="host-form" class="space-y-5" onsubmit="handleCreateHost(event)">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <h3 class="font-display font-bold text-sm text-text-main mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">person_add</span> Add RJ Presenter
+                    </h3>
+                    <form id="host-form" onsubmit="handleCreateHost(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Host Name *</label>
-                                <input type="text" id="host-name-input" required placeholder="e.g., RJ Rashmi"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">RJ Name *</label>
+                                <input type="text" id="host-name" required placeholder="RJ Rashmi"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                             </div>
-
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Designation *</label>
-                                <input type="text" id="host-designation" value="Senior Radio Presenter"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Designation *</label>
+                                <input type="text" id="host-desig" value="Senior Radio Presenter"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Biography &amp; Achievements *</label>
-                            <textarea id="host-bio" required rows="2" placeholder="Tell listeners about this presenter..."
-                                class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all"></textarea>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Bio *</label>
+                            <textarea id="host-bio" required rows="2" placeholder="Biography and show experience..."
+                                class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary"></textarea>
                         </div>
 
-                        <!-- RJ Photo Upload -->
-                        <div class="border border-dashed border-slate-300 rounded-2xl p-5 bg-slate-50/70 text-center">
-                            <span class="material-symbols-outlined text-sky-600 text-3xl mb-1">account_circle</span>
-                            <h4 class="text-xs font-bold text-text-main">RJ Profile Photo</h4>
-                            <p class="text-[11px] text-text-muted mb-3">Uploads to Cloudinary <code class="text-slate-600">radio-ninada/hosts</code></p>
-                            <input type="file" id="host-photo-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700 cursor-pointer">
+                        <div class="border border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50/70 text-center">
+                            <span class="material-symbols-outlined text-primary text-2xl mb-1">account_circle</span>
+                            <h5 class="text-xs font-bold">RJ Profile Photograph</h5>
+                            <p class="text-[10px] text-text-muted mb-2">Cloudinary <code class="text-slate-600">radio-ninada/hosts</code></p>
+                            <input type="file" id="host-photo-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:bg-primary file:text-white cursor-pointer">
                         </div>
 
                         <div class="text-right">
-                            <button type="submit" id="host-submit-btn"
-                                class="py-2.5 px-6 rounded-xl bg-sky-600 text-white font-bold text-xs hover:bg-sky-700 transition-all shadow-md inline-flex items-center gap-2 cursor-pointer">
-                                <span class="material-symbols-outlined text-base">person_add</span>
-                                <span>Add RJ Presenter</span>
+                            <button type="submit" id="host-submit-btn" class="py-2.5 px-6 rounded-xl bg-primary text-white font-bold text-xs hover:bg-primary-dark transition-all shadow-sm cursor-pointer">
+                                Add RJ Presenter
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Existing Hosts List -->
                 <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
-                    <div class="p-5 border-b border-border bg-slate-50/70 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sky-600">group</span>
-                            <h3 class="font-display font-bold text-sm text-text-main">Station RJ Roster</h3>
-                        </div>
-                        <button onclick="fetchHostsList()" class="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">refresh</span> Refresh
-                        </button>
+                    <div class="p-4 border-b border-border bg-slate-50/70 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">RJ Roster</h4>
+                        <button onclick="fetchHostsList()" class="text-xs text-primary font-bold hover:underline">Refresh</button>
                     </div>
-
                     <div id="hosts-container" class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div class="col-span-full py-12 text-center text-text-muted text-xs">Loading RJ team...</div>
+                        <div class="col-span-full py-8 text-center text-text-muted text-xs">Loading RJs...</div>
                     </div>
                 </div>
             </section>
 
             <!-- ============================================================== -->
-            <!-- TAB 5: UPLOAD & MANAGE STATION BANNERS -->
+            <!-- TAB 9: STATION BANNERS -->
             <!-- ============================================================== -->
             <section id="tab-banners" class="hidden space-y-6">
                 <div>
-                    <h1 class="text-2xl font-bold font-display text-text-main">Station Banners &amp; Highlights</h1>
-                    <p class="text-xs text-text-muted mt-0.5">Upload visual announcement banners shown on the station home slider.</p>
+                    <h1 class="text-2xl font-bold font-display text-text-main">Slider Banners</h1>
+                    <p class="text-xs text-text-muted mt-0.5">Upload wide promotional banners for the station website.</p>
                 </div>
 
-                <!-- Add Banner Form -->
                 <div class="bg-white p-6 md:p-8 rounded-3xl border border-border shadow-xs">
-                    <form id="banner-form" class="space-y-4" onsubmit="handleCreateBanner(event)">
+                    <form id="banner-form" onsubmit="handleCreateBanner(event)" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Banner Title *</label>
-                                <input type="text" id="banner-title" required placeholder="e.g., SDM Golden Jubilee Special Broadcast"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Banner Title *</label>
+                                <input type="text" id="banner-title" required placeholder="SDM Golden Jubilee Broadcast"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Target Destination Link (Optional)</label>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Destination URL</label>
                                 <input type="url" id="banner-url" placeholder="https://sdmcujire.in"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">
                             </div>
                         </div>
 
-                        <!-- Banner File -->
-                        <div class="border border-dashed border-slate-300 rounded-2xl p-5 bg-slate-50/70 text-center">
-                            <span class="material-symbols-outlined text-amber-600 text-3xl mb-1">add_photo_alternate</span>
-                            <h4 class="text-xs font-bold text-text-main">Banner Graphic (16:9 recommended) *</h4>
-                            <p class="text-[11px] text-text-muted mb-3">Uploads to Cloudinary <code class="text-slate-600">radio-ninada/banners</code></p>
-                            <input type="file" id="banner-file" accept="image/*" required class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer">
+                        <div class="border border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50/70 text-center">
+                            <span class="material-symbols-outlined text-amber-600 text-2xl mb-1">add_photo_alternate</span>
+                            <h5 class="text-xs font-bold">Banner Image *</h5>
+                            <p class="text-[10px] text-text-muted mb-2">Cloudinary <code class="text-slate-600">radio-ninada/banners</code></p>
+                            <input type="file" id="banner-file" accept="image/*" required class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:bg-amber-600 file:text-white cursor-pointer">
                         </div>
 
                         <div class="text-right">
-                            <button type="submit" id="banner-submit-btn"
-                                class="py-2.5 px-6 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-all shadow-md inline-flex items-center gap-2 cursor-pointer">
-                                <span class="material-symbols-outlined text-base">upload</span>
-                                <span>Upload Banner</span>
+                            <button type="submit" id="banner-submit-btn" class="py-2.5 px-6 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-all shadow-sm cursor-pointer">
+                                Upload Banner
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Existing Banners List -->
                 <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
-                    <div class="p-5 border-b border-border bg-slate-50/70 flex items-center justify-between">
-                        <h3 class="font-display font-bold text-sm text-text-main">Active Banners</h3>
-                        <button onclick="fetchBannersList()" class="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">refresh</span> Refresh
-                        </button>
+                    <div class="p-4 border-b border-border bg-slate-50/70 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Active Banners</h4>
+                        <button onclick="fetchBannersList()" class="text-xs text-primary font-bold hover:underline">Refresh</button>
                     </div>
                     <div id="banners-container" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="col-span-full py-12 text-center text-text-muted text-xs">Loading banners...</div>
+                        <div class="col-span-full py-8 text-center text-text-muted text-xs">Loading banners...</div>
                     </div>
                 </div>
             </section>
 
             <!-- ============================================================== -->
-            <!-- TAB 6: CLOUDINARY MEDIA EXPLORER -->
+            <!-- TAB 10: CLOUDINARY MEDIA EXPLORER -->
             <!-- ============================================================== -->
             <section id="tab-media" class="hidden space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <h1 class="text-2xl font-bold font-display text-text-main">Cloudinary Media Explorer</h1>
-                        <p class="text-xs text-text-muted mt-0.5">Explore files stored across your Cloudinary cloud folders.</p>
+                        <h1 class="text-2xl font-bold font-display text-text-main">Cloudinary Asset Explorer</h1>
+                        <p class="text-xs text-text-muted mt-0.5">Explore, play, copy CDN links, and delete files on Cloudinary.</p>
                     </div>
 
-                    <!-- Direct Uploader -->
                     <div class="flex items-center gap-3">
                         <select id="raw-upload-folder" class="px-3 py-2 rounded-xl border border-border bg-white text-xs font-semibold focus:outline-none focus:border-primary">
                             <option value="radio-ninada/podcasts/episodes">🎙️ Podcasts (Audio)</option>
@@ -653,6 +807,7 @@
                             <option value="radio-ninada/programs">📻 Programs</option>
                             <option value="radio-ninada/hosts">👥 Hosts</option>
                             <option value="radio-ninada/banners">📢 Banners</option>
+                            <option value="radio-ninada/gallery">📷 Gallery</option>
                             <option value="radio-ninada/media" selected>📁 General Media</option>
                         </select>
                         <button onclick="document.getElementById('raw-media-file').click()"
@@ -664,28 +819,47 @@
                     </div>
                 </div>
 
-                <!-- Media List Card -->
                 <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
-                    <div class="p-4 border-b border-border bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
-                        <div class="flex items-center gap-2 w-full sm:w-auto">
-                            <span class="text-xs font-bold text-slate-500 uppercase">Folder Filter:</span>
+                    <div class="p-4 border-b border-border bg-slate-50 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Folder:</span>
                             <select id="media-folder-filter" onchange="fetchCloudinaryMedia()" class="px-3 py-1.5 rounded-lg border border-border text-xs bg-white focus:outline-none focus:border-primary">
                                 <option value="ALL">All Cloudinary Folders</option>
-                                <option value="radio-ninada/podcasts/episodes">Podcast Episodes (Audio)</option>
-                                <option value="radio-ninada/podcasts/covers">Podcast Covers</option>
+                                <option value="radio-ninada/podcasts/episodes">Podcasts (Audio)</option>
+                                <option value="radio-ninada/podcasts/covers">Covers</option>
                                 <option value="radio-ninada/programs">Programs</option>
                                 <option value="radio-ninada/hosts">Hosts</option>
                                 <option value="radio-ninada/banners">Banners</option>
+                                <option value="radio-ninada/gallery">Gallery</option>
                                 <option value="radio-ninada/media">General Media</option>
                             </select>
                         </div>
-                        <button onclick="fetchCloudinaryMedia()" class="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">refresh</span> Refresh Assets
+                        <button onclick="fetchCloudinaryMedia()" class="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">refresh</span> Refresh
                         </button>
                     </div>
-
                     <div id="media-grid" class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        <div class="col-span-full py-12 text-center text-text-muted text-xs">Loading Cloudinary media assets...</div>
+                        <div class="col-span-full py-8 text-center text-text-muted text-xs">Loading Cloudinary assets...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- TAB 11: LISTENER CONTACT MESSAGES -->
+            <!-- ============================================================== -->
+            <section id="tab-contact" class="hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-bold font-display text-text-main">Listener Feedback &amp; Inquiries</h1>
+                    <p class="text-xs text-text-muted mt-0.5">Messages and program requests submitted from the public contact form.</p>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-border shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-border bg-slate-50/70 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Inbox</h4>
+                        <button onclick="fetchContactMessages()" class="text-xs text-primary font-bold hover:underline">Refresh</button>
+                    </div>
+                    <div id="contact-container" class="p-6 divide-y divide-border">
+                        <div class="py-8 text-center text-text-muted text-xs">Loading messages...</div>
                     </div>
                 </div>
             </section>
@@ -693,10 +867,9 @@
         </main>
     </div>
 
-    <!-- Scripts -->
+    <!-- Client Scripts -->
     <script src="js/api-client.js"></script>
     <script>
-        // State
         let currentUser = null;
         let activeTab = 'overview';
 
@@ -705,7 +878,6 @@
             setupLoginForm();
         });
 
-        // Toast Alert System
         function showToast(message, isError = false) {
             const container = document.getElementById('toast-container');
             if (!container) return;
@@ -715,53 +887,39 @@
             toast.innerHTML = `<span class="material-symbols-outlined text-base">${isError ? 'error' : 'check_circle'}</span><span>${message}</span>`;
             container.appendChild(toast);
 
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            });
-
+            requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
         }
 
-        // Authentication Setup
         async function initAuth() {
             const token = localStorage.getItem('radio_token');
             if (!token) {
-                renderAuthScreen(false);
+                renderAuth(false);
                 return;
             }
 
             const res = await window.RadioAPI.getCurrentStaff();
             if (res && res.success && res.data) {
                 currentUser = res.data;
-                renderAuthScreen(true);
+                renderAuth(true);
             } else {
                 localStorage.removeItem('radio_token');
-                renderAuthScreen(false);
+                renderAuth(false);
             }
         }
 
-        function renderAuthScreen(isAuthenticated) {
-            const authEl = document.getElementById('auth-screen');
-            const dashEl = document.getElementById('dashboard-screen');
+        function renderAuth(isAuth) {
+            document.getElementById('auth-screen').classList.toggle('hidden', isAuth);
+            document.getElementById('dashboard-screen').classList.toggle('hidden', !isAuth);
 
-            if (isAuthenticated) {
-                authEl.classList.add('hidden');
-                dashEl.classList.remove('hidden');
-
-                if (currentUser) {
-                    document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
-                    document.getElementById('user-role').textContent = currentUser.role || 'STAFF';
-                    const initials = (currentUser.name || currentUser.email).substring(0, 2).toUpperCase();
-                    document.getElementById('user-initials').textContent = initials;
-                }
-
-                loadOverviewMetrics();
-            } else {
-                authEl.classList.remove('hidden');
-                dashEl.classList.add('hidden');
+            if (isAuth && currentUser) {
+                document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
+                document.getElementById('user-role').textContent = currentUser.role || 'STAFF';
+                document.getElementById('user-initials').textContent = (currentUser.name || currentUser.email).substring(0, 2).toUpperCase();
+                loadStudioData();
             }
         }
 
@@ -785,9 +943,9 @@
                 if (res.success) {
                     showToast('Welcome to Radio Ninada Studio Admin!');
                     currentUser = res.user || { name: 'Admin', role: 'SUPER_ADMIN' };
-                    renderAuthScreen(true);
+                    renderAuth(true);
                 } else {
-                    showToast(res.message || 'Login failed. Check your email/password.', true);
+                    showToast(res.message || 'Login failed', true);
                 }
             });
         }
@@ -795,20 +953,17 @@
         function handleLogout() {
             window.RadioAPI.staffLogout();
             currentUser = null;
-            renderAuthScreen(false);
-            showToast('Signed out successfully.');
+            renderAuth(false);
         }
 
-        // Navigation Tabs
         function switchTab(tab) {
             activeTab = tab;
-            const tabs = ['overview', 'podcasts', 'programs', 'hosts', 'banners', 'media'];
+            const allTabs = ['overview', 'podcasts', 'programs', 'news', 'events', 'gallery', 'announcements', 'hosts', 'banners', 'media', 'contact'];
 
-            tabs.forEach(t => {
-                const section = document.getElementById(`tab-${t}`);
+            allTabs.forEach(t => {
+                const sec = document.getElementById(`tab-${t}`);
                 const btn = document.getElementById(`nav-btn-${t}`);
-                if (section) section.classList.toggle('hidden', t !== tab);
-
+                if (sec) sec.classList.toggle('hidden', t !== tab);
                 if (btn) {
                     if (t === tab) {
                         btn.className = 'nav-tab w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-primary bg-primary-light cursor-pointer shadow-2xs';
@@ -818,18 +973,23 @@
                 }
             });
 
-            if (tab === 'overview') loadOverviewMetrics();
+            if (tab === 'overview') loadStudioData();
             if (tab === 'podcasts') fetchPodcastsList();
             if (tab === 'programs') fetchProgramsList();
+            if (tab === 'news') fetchNewsList();
+            if (tab === 'events') fetchEventsList();
+            if (tab === 'gallery') fetchGalleryList();
+            if (tab === 'announcements') fetchAnnouncementsList();
             if (tab === 'hosts') fetchHostsList();
             if (tab === 'banners') fetchBannersList();
             if (tab === 'media') fetchCloudinaryMedia();
+            if (tab === 'contact') fetchContactMessages();
         }
 
-        // ==============================================================
-        // 1. OVERVIEW LOGIC
-        // ==============================================================
-        async function loadOverviewMetrics() {
+        // ==========================================
+        // 1. STUDIO & LIVE CONTROL
+        // ==========================================
+        async function loadStudioData() {
             try {
                 const [podcastsRes, programsRes, hostsRes, mediaRes, liveRes] = await Promise.all([
                     window.RadioAPI.getPodcasts(),
@@ -844,9 +1004,15 @@
                 if (hostsRes?.data) document.getElementById('stat-hosts').textContent = hostsRes.data.length;
                 if (mediaRes?.data) document.getElementById('stat-media').textContent = mediaRes.data.length;
 
-                if (liveRes?.data) updateLiveUI(liveRes.data.isLive);
+                if (liveRes?.data) {
+                    updateLiveUI(liveRes.data.isLive);
+                    document.getElementById('live-program-input').value = liveRes.data.currentProgram || '';
+                    document.getElementById('live-host-input').value = liveRes.data.currentHost || '';
+                    document.getElementById('live-song-input').value = liveRes.data.currentSong || '';
+                    document.getElementById('live-url-input').value = liveRes.data.streamUrl || '';
+                }
             } catch (err) {
-                console.error('Failed to load metrics:', err);
+                console.error(err);
             }
         }
 
@@ -861,29 +1027,42 @@
                 text.textContent = 'STREAM ONLINE';
                 text.className = 'text-xs font-extrabold uppercase tracking-wider text-emerald-700';
                 btn.textContent = 'Pause Stream';
-                btn.className = 'py-2 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all cursor-pointer shadow-sm';
+                btn.className = 'py-2 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold cursor-pointer';
             } else {
                 dot.className = 'w-3.5 h-3.5 rounded-full bg-slate-400';
                 text.textContent = 'STREAM OFFLINE';
                 text.className = 'text-xs font-extrabold uppercase tracking-wider text-slate-500';
                 btn.textContent = 'Start Stream';
-                btn.className = 'py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all cursor-pointer shadow-sm';
+                btn.className = 'py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer';
             }
         }
 
         async function toggleLiveStatus() {
             const res = await window.RadioAPI.toggleLiveBroadcast();
-            if (res && res.success) {
-                showToast(`Broadcast stream is now ${res.data?.isLive ? 'ACTIVE' : 'OFFLINE'}`);
+            if (res?.success) {
+                showToast(`Broadcast stream status toggled`);
                 updateLiveUI(res.data?.isLive);
-            } else {
-                showToast(res.message || 'Could not update broadcast stream', true);
             }
         }
 
-        // ==============================================================
-        // 2. PODCAST UPLOADER & MANAGER
-        // ==============================================================
+        async function handleUpdateLiveStream(e) {
+            e.preventDefault();
+            const currentProgram = document.getElementById('live-program-input').value.trim();
+            const currentHost = document.getElementById('live-host-input').value.trim();
+            const currentSong = document.getElementById('live-song-input').value.trim();
+            const streamUrl = document.getElementById('live-url-input').value.trim();
+
+            const res = await window.RadioAPI.updateLiveState({ currentProgram, currentHost, currentSong, streamUrl });
+            if (res?.success) {
+                showToast('Broadcast metadata updated in real-time!');
+            } else {
+                showToast(res?.message || 'Update failed', true);
+            }
+        }
+
+        // ==========================================
+        // 2. PODCASTS
+        // ==========================================
         async function handleCreatePodcast(e) {
             e.preventDefault();
             const btn = document.getElementById('pod-submit-btn');
@@ -896,7 +1075,7 @@
             const audioFile = document.getElementById('pod-audio-file').files[0];
 
             if (!audioFile) {
-                showToast('Please select an audio file (MP3/WAV/AAC) for the podcast.', true);
+                showToast('Please select an audio file (MP3/WAV/AAC)', true);
                 return;
             }
 
@@ -904,22 +1083,21 @@
             btn.innerHTML = `<span class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Uploading to Cloudinary...</span>`;
 
             try {
-                // 1. Upload Cover if selected
                 let coverUrl = null;
                 let coverPublicId = null;
+
                 if (coverFile) {
                     showToast('Uploading cover artwork to Cloudinary...');
                     const coverRes = await window.RadioAPI.uploadMedia(coverFile, 'radio-ninada/podcasts/covers');
-                    if (coverRes && coverRes.success && coverRes.data) {
+                    if (coverRes?.success && coverRes.data) {
                         coverUrl = coverRes.data.secureUrl || coverRes.data.url;
                         coverPublicId = coverRes.data.publicId;
                     }
                 }
 
-                // 2. Upload Audio File
                 showToast('Uploading podcast audio recording to Cloudinary...');
                 const audioRes = await window.RadioAPI.uploadMedia(audioFile, 'radio-ninada/podcasts/episodes');
-                if (!audioRes || !audioRes.success || !audioRes.data) {
+                if (!audioRes?.success || !audioRes.data) {
                     throw new Error(audioRes?.message || 'Audio upload to Cloudinary failed');
                 }
 
@@ -927,311 +1105,512 @@
                 const audioPublicId = audioRes.data.publicId;
                 const duration = audioRes.data.duration ? `${Math.floor(audioRes.data.duration / 60)}:${Math.floor(audioRes.data.duration % 60).toString().padStart(2, '0')}` : '30:00';
 
-                // 3. Save Podcast to Database
-                showToast('Saving podcast record to database...');
-                const createRes = await window.RadioAPI.createPodcast({
-                    title,
-                    description,
+                const res = await window.RadioAPI.createPodcast({
+                    title, description,
                     coverUrl: coverUrl || 'images/radio_ninada_logo.png',
-                    coverPublicId,
-                    audioUrl,
-                    audioPublicId,
-                    duration,
-                    featured,
-                    status: 'PUBLISHED'
+                    coverPublicId, audioUrl, audioPublicId, duration,
+                    featured, status: 'PUBLISHED'
                 });
 
-                if (createRes && createRes.success) {
-                    showToast('🎉 Podcast published successfully with Cloudinary streaming!');
+                if (res?.success) {
+                    showToast('🎉 Podcast published with Cloudinary audio!');
                     document.getElementById('podcast-form').reset();
                     fetchPodcastsList();
-                    loadOverviewMetrics();
+                    loadStudioData();
                 } else {
-                    throw new Error(createRes?.message || 'Failed to save podcast');
+                    throw new Error(res?.message || 'Failed to save podcast');
                 }
-
             } catch (err) {
-                console.error(err);
-                showToast(err.message || 'Error publishing podcast', true);
+                showToast(err.message || 'Error creating podcast', true);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<span class="material-symbols-outlined text-base">cloud_upload</span><span>Upload &amp; Publish Podcast</span>`;
+                btn.innerHTML = `<span class="material-symbols-outlined text-base">cloud_upload</span><span>Upload &amp; Publish</span>`;
             }
         }
 
         async function fetchPodcastsList() {
-            const container = document.getElementById('podcasts-container');
-            if (!container) return;
-
-            container.innerHTML = `<div class="py-12 text-center text-text-muted text-xs">Loading live podcasts from database...</div>`;
-
+            const c = document.getElementById('podcasts-container');
             const res = await window.RadioAPI.getPodcasts();
-            if (!res || !res.success || !Array.isArray(res.data) || res.data.length === 0) {
-                container.innerHTML = `<div class="py-12 text-center text-text-muted text-xs">No podcasts published yet. Upload your first episode above!</div>`;
+            if (!res?.data || res.data.length === 0) {
+                c.innerHTML = `<div class="py-8 text-center text-text-muted text-xs">No podcasts found. Upload one above!</div>`;
                 return;
             }
 
-            container.innerHTML = res.data.map(p => {
-                const audioUrl = p.audioUrl || (p.episodes && p.episodes[0]?.audioUrl);
+            c.innerHTML = res.data.map(p => {
+                const audio = p.audioUrl || (p.episodes && p.episodes[0]?.audioUrl);
                 return `
                 <div class="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div class="flex items-start gap-4">
-                        <img src="${p.coverUrl || 'images/radio_ninada_logo.png'}" alt="${p.title}" class="w-16 h-16 rounded-2xl object-cover border border-border shrink-0" />
+                        <img src="${p.coverUrl || 'images/radio_ninada_logo.png'}" class="w-14 h-14 rounded-2xl object-cover border border-border shrink-0" />
                         <div>
                             <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-sm text-text-main">${p.title}</h4>
-                                ${p.featured ? '<span class="bg-primary-light text-primary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Featured</span>' : ''}
+                                <h4 class="font-bold text-sm">${p.title}</h4>
+                                ${p.featured ? '<span class="bg-primary-light text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">Featured</span>' : ''}
                             </div>
                             <p class="text-xs text-text-muted line-clamp-1 mt-0.5">${p.description}</p>
-                            <div class="flex items-center gap-3 text-[11px] text-slate-400 mt-2">
-                                <span>Duration: <strong class="text-slate-600">${p.duration || '30:00'}</strong></span>
-                                <span>•</span>
-                                <span>Category: <strong class="text-slate-600">${p.category?.name || 'General'}</strong></span>
-                            </div>
+                            <span class="text-[11px] text-slate-400 mt-1 inline-block">Duration: <strong class="text-slate-600">${p.duration || '30:00'}</strong></span>
                         </div>
                     </div>
-
-                    <div class="flex items-center gap-3 shrink-0">
-                        ${audioUrl ? `
-                            <audio controls class="h-9 w-48 sm:w-60">
-                                <source src="${audioUrl}" type="audio/mpeg">
-                                Your browser does not support audio.
-                            </audio>
-                        ` : ''}
-
-                        <button onclick="copyCdnUrl('${audioUrl || p.coverUrl}')"
-                            class="p-2 rounded-xl border border-border text-slate-600 hover:bg-slate-100 transition-all cursor-pointer"
-                            title="Copy Cloudinary CDN Link">
-                            <span class="material-symbols-outlined text-base">content_copy</span>
-                        </button>
-
-                        <button onclick="handleDeletePodcast('${p.id}')"
-                            class="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-all cursor-pointer"
-                            title="Delete Podcast">
-                            <span class="material-symbols-outlined text-base">delete</span>
-                        </button>
+                    <div class="flex items-center gap-3">
+                        ${audio ? `<audio controls class="h-8 w-48"><source src="${audio}" type="audio/mpeg"></audio>` : ''}
+                        <button onclick="copyUrl('${audio || p.coverUrl}')" class="p-1.5 rounded-lg border border-border text-slate-600 hover:bg-slate-50 cursor-pointer" title="Copy CDN Link"><span class="material-symbols-outlined text-sm">content_copy</span></button>
+                        <button onclick="deletePodcastItem('${p.id}')" class="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        async function handleDeletePodcast(id) {
-            if (!confirm('Are you sure you want to delete this podcast and its Cloudinary audio from the station?')) return;
+        async function deletePodcastItem(id) {
+            if (!confirm('Delete this podcast and its Cloudinary audio?')) return;
             const res = await window.RadioAPI.deletePodcast(id);
-            if (res && res.success) {
-                showToast('Podcast deleted successfully.');
+            if (res?.success) {
+                showToast('Podcast deleted');
                 fetchPodcastsList();
-                loadOverviewMetrics();
-            } else {
-                showToast(res?.message || 'Could not delete podcast', true);
+                loadStudioData();
             }
         }
 
-        // ==============================================================
-        // 3. PROGRAM SCHEDULE MANAGER
-        // ==============================================================
+        // ==========================================
+        // 3. PROGRAMS
+        // ==========================================
         async function handleCreateProgram(e) {
             e.preventDefault();
             const btn = document.getElementById('prog-submit-btn');
             const name = document.getElementById('prog-name').value.trim();
             const hostName = document.getElementById('prog-host').value.trim();
-            const categoryName = document.getElementById('prog-category').value;
             const schedule = document.getElementById('prog-schedule').value.trim();
-            const duration = document.getElementById('prog-duration').value.trim();
             const description = document.getElementById('prog-desc').value.trim();
             const posterFile = document.getElementById('prog-poster-file').files[0];
 
             btn.disabled = true;
-            btn.innerHTML = `<span class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Saving Program...</span>`;
+            btn.innerHTML = `Scheduling...`;
 
             try {
                 let banner = null;
                 let bannerPublicId = null;
-
                 if (posterFile) {
-                    showToast('Uploading program poster to Cloudinary...');
-                    const mediaRes = await window.RadioAPI.uploadMedia(posterFile, 'radio-ninada/programs');
-                    if (mediaRes && mediaRes.success && mediaRes.data) {
-                        banner = mediaRes.data.secureUrl || mediaRes.data.url;
-                        bannerPublicId = mediaRes.data.publicId;
+                    showToast('Uploading show poster to Cloudinary...');
+                    const r = await window.RadioAPI.uploadMedia(posterFile, 'radio-ninada/programs');
+                    if (r?.success && r.data) {
+                        banner = r.data.secureUrl || r.data.url;
+                        bannerPublicId = r.data.publicId;
                     }
                 }
 
-                const createRes = await window.RadioAPI.createProgram({
-                    name,
-                    description,
-                    hostName,
-                    categoryName,
-                    schedule,
-                    duration,
+                const res = await window.RadioAPI.createProgram({
+                    name, description, hostName, schedule,
                     banner: banner || 'images/radio_ninada_logo.png',
-                    bannerPublicId,
-                    language: 'Kannada',
-                    tags: 'radio,program',
-                    status: 'PUBLISHED'
+                    bannerPublicId, duration: '60 min', status: 'PUBLISHED'
                 });
 
-                if (createRes && createRes.success) {
-                    showToast('Program scheduled successfully!');
+                if (res?.success) {
+                    showToast('Show scheduled successfully!');
                     document.getElementById('program-form').reset();
                     fetchProgramsList();
-                    loadOverviewMetrics();
+                    loadStudioData();
                 } else {
-                    throw new Error(createRes?.message || 'Failed to create program');
+                    throw new Error(res?.message || 'Could not schedule program');
                 }
-
             } catch (err) {
-                console.error(err);
-                showToast(err.message || 'Error scheduling program', true);
+                showToast(err.message, true);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<span class="material-symbols-outlined text-base">save</span><span>Schedule Program</span>`;
+                btn.innerHTML = `Schedule Show`;
             }
         }
 
         async function fetchProgramsList() {
-            const container = document.getElementById('programs-container');
-            if (!container) return;
-
-            container.innerHTML = `<div class="col-span-full py-12 text-center text-text-muted text-xs">Loading programs from database...</div>`;
-
+            const c = document.getElementById('programs-container');
             const res = await window.RadioAPI.getPrograms();
-            if (!res || !res.success || !Array.isArray(res.data) || res.data.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-12 text-center text-text-muted text-xs">No programs scheduled yet. Add one above!</div>`;
+            if (!res?.data || res.data.length === 0) {
+                c.innerHTML = `<div class="col-span-full py-8 text-center text-text-muted text-xs">No programs scheduled yet.</div>`;
                 return;
             }
 
-            container.innerHTML = res.data.map(prog => `
-                <div class="bg-slate-50/70 p-4 rounded-2xl border border-border flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-3.5">
-                        <img src="${prog.banner || prog.thumbnail || 'images/radio_ninada_logo.png'}" alt="${prog.name}" class="w-14 h-14 rounded-xl object-cover border border-border" />
+            c.innerHTML = res.data.map(p => `
+                <div class="bg-slate-50/70 p-4 rounded-2xl border border-border flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${p.banner || 'images/radio_ninada_logo.png'}" class="w-12 h-12 rounded-xl object-cover border border-border" />
                         <div>
-                            <h4 class="font-bold text-sm text-text-main">${prog.name}</h4>
-                            <p class="text-xs text-text-muted mt-0.5">Presenter: <strong class="text-slate-700">${prog.hostName || prog.host?.name || 'Radio Ninada RJ'}</strong></p>
-                            <p class="text-[11px] text-primary font-bold mt-1">${prog.schedule || 'Daily Broadcast'}</p>
+                            <h5 class="font-bold text-xs">${p.name}</h5>
+                            <p class="text-[11px] text-text-muted">${p.hostName || 'RJ'}</p>
+                            <span class="text-[10px] text-primary font-bold">${p.schedule || ''}</span>
                         </div>
                     </div>
-
-                    <button onclick="handleDeleteProgram('${prog.id}')"
-                        class="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-all cursor-pointer"
-                        title="Delete Program">
-                        <span class="material-symbols-outlined text-base">delete</span>
-                    </button>
+                    <button onclick="deleteProgramItem('${p.id}')" class="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
                 </div>
             `).join('');
         }
 
-        async function handleDeleteProgram(id) {
-            if (!confirm('Are you sure you want to delete this program?')) return;
+        async function deleteProgramItem(id) {
+            if (!confirm('Delete this show?')) return;
             const res = await window.RadioAPI.deleteProgram(id);
-            if (res && res.success) {
-                showToast('Program deleted.');
+            if (res?.success) {
+                showToast('Show deleted');
                 fetchProgramsList();
-                loadOverviewMetrics();
-            } else {
-                showToast(res?.message || 'Could not delete program', true);
+                loadStudioData();
             }
         }
 
-        // ==============================================================
-        // 4. RJ TEAM / HOSTS MANAGER
-        // ==============================================================
+        // ==========================================
+        // 4. NEWS
+        // ==========================================
+        async function handleCreateNews(e) {
+            e.preventDefault();
+            const btn = document.getElementById('news-submit-btn');
+            const title = document.getElementById('news-title').value.trim();
+            const category = document.getElementById('news-category').value;
+            const content = document.getElementById('news-content').value.trim();
+            const file = document.getElementById('news-image-file').files[0];
+
+            btn.disabled = true;
+            btn.innerHTML = `Publishing...`;
+
+            try {
+                let featuredImage = null;
+                if (file) {
+                    showToast('Uploading news image to Cloudinary...');
+                    const r = await window.RadioAPI.uploadMedia(file, 'radio-ninada/media');
+                    if (r?.success && r.data) featuredImage = r.data.secureUrl || r.data.url;
+                }
+
+                const res = await window.RadioAPI.createNews({
+                    title, category, content,
+                    featuredImage: featuredImage || 'images/radio_ninada_logo.png',
+                    status: 'PUBLISHED'
+                });
+
+                if (res?.success) {
+                    showToast('News bulletin published!');
+                    document.getElementById('news-form').reset();
+                    fetchNewsList();
+                } else {
+                    throw new Error(res?.message || 'Could not publish news');
+                }
+            } catch (err) {
+                showToast(err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `Publish News`;
+            }
+        }
+
+        async function fetchNewsList() {
+            const c = document.getElementById('news-container');
+            const res = await window.RadioAPI.getNews();
+            if (!res?.data || res.data.length === 0) {
+                c.innerHTML = `<div class="col-span-full py-8 text-center text-text-muted text-xs">No news articles published.</div>`;
+                return;
+            }
+
+            c.innerHTML = res.data.map(n => `
+                <div class="bg-slate-50/70 p-4 rounded-2xl border border-border flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <img src="${n.featuredImage || n.imageUrl || 'images/radio_ninada_logo.png'}" class="w-14 h-14 rounded-xl object-cover border border-border shrink-0" />
+                        <div>
+                            <span class="text-[10px] font-bold text-sky-600 uppercase">${n.category}</span>
+                            <h5 class="font-bold text-xs mt-0.5">${n.title}</h5>
+                            <p class="text-[11px] text-text-muted line-clamp-2 mt-1">${n.content}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteNewsItem('${n.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer shrink-0"><span class="material-symbols-outlined text-sm">delete</span></button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteNewsItem(id) {
+            if (!confirm('Delete this news bulletin?')) return;
+            const res = await window.RadioAPI.deleteNews(id);
+            if (res?.success) {
+                showToast('News article deleted');
+                fetchNewsList();
+            }
+        }
+
+        // ==========================================
+        // 5. EVENTS
+        // ==========================================
+        async function handleCreateEvent(e) {
+            e.preventDefault();
+            const btn = document.getElementById('event-submit-btn');
+            const title = document.getElementById('event-title').value.trim();
+            const eventDate = document.getElementById('event-date').value;
+            const location = document.getElementById('event-location').value.trim();
+            const description = document.getElementById('event-desc').value.trim();
+            const file = document.getElementById('event-poster-file').files[0];
+
+            btn.disabled = true;
+            btn.innerHTML = `Adding Event...`;
+
+            try {
+                let banner = null;
+                if (file) {
+                    showToast('Uploading event banner to Cloudinary...');
+                    const r = await window.RadioAPI.uploadMedia(file, 'radio-ninada/banners');
+                    if (r?.success && r.data) banner = r.data.secureUrl || r.data.url;
+                }
+
+                const res = await window.RadioAPI.createEvent({
+                    title, description, eventDate: new Date(eventDate).toISOString(),
+                    location, banner: banner || 'images/radio_ninada_logo.png',
+                    registrationRequired: true
+                });
+
+                if (res?.success) {
+                    showToast('Event created successfully!');
+                    document.getElementById('event-form').reset();
+                    fetchEventsList();
+                } else {
+                    throw new Error(res?.message || 'Could not add event');
+                }
+            } catch (err) {
+                showToast(err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `Add Event`;
+            }
+        }
+
+        async function fetchEventsList() {
+            const c = document.getElementById('events-container');
+            const res = await window.RadioAPI.getEvents();
+            if (!res?.data || res.data.length === 0) {
+                c.innerHTML = `<div class="col-span-full py-8 text-center text-text-muted text-xs">No upcoming events.</div>`;
+                return;
+            }
+
+            c.innerHTML = res.data.map(ev => `
+                <div class="bg-slate-50/70 p-4 rounded-2xl border border-border flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${ev.banner || 'images/radio_ninada_logo.png'}" class="w-14 h-14 rounded-xl object-cover border border-border" />
+                        <div>
+                            <h5 class="font-bold text-xs">${ev.title}</h5>
+                            <p class="text-[11px] text-purple-700 font-semibold mt-0.5">📅 ${new Date(ev.eventDate).toLocaleDateString()} | 📍 ${ev.location}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteEventItem('${ev.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteEventItem(id) {
+            if (!confirm('Delete this event?')) return;
+            const res = await window.RadioAPI.deleteEvent(id);
+            if (res?.success) {
+                showToast('Event deleted');
+                fetchEventsList();
+            }
+        }
+
+        // ==========================================
+        // 6. GALLERY & BTS
+        // ==========================================
+        async function handleCreateGallery(e) {
+            e.preventDefault();
+            const btn = document.getElementById('gallery-submit-btn');
+            const title = document.getElementById('gallery-title').value.trim();
+            const album = document.getElementById('gallery-album').value.trim();
+            const file = document.getElementById('gallery-photo-file').files[0];
+
+            btn.disabled = true;
+            btn.innerHTML = `Uploading...`;
+
+            try {
+                showToast('Uploading photograph to Cloudinary...');
+                const r = await window.RadioAPI.uploadMedia(file, 'radio-ninada/gallery');
+                if (!r?.success || !r.data) throw new Error('Cloudinary photo upload failed');
+
+                const mediaUrl = r.data.secureUrl || r.data.url;
+                const publicId = r.data.publicId;
+
+                const res = await window.RadioAPI.createGalleryItem({
+                    title, album, mediaUrl, publicId, type: 'PHOTO'
+                });
+
+                if (res?.success) {
+                    showToast('Photo added to station gallery!');
+                    document.getElementById('gallery-form').reset();
+                    fetchGalleryList();
+                } else {
+                    throw new Error(res?.message || 'Could not save gallery photo');
+                }
+            } catch (err) {
+                showToast(err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `Upload Photo`;
+            }
+        }
+
+        async function fetchGalleryList() {
+            const c = document.getElementById('gallery-container');
+            const res = await window.RadioAPI.getGallery();
+            if (!res?.data || res.data.length === 0) {
+                c.innerHTML = `<div class="col-span-full py-8 text-center text-text-muted text-xs">No gallery photos uploaded yet.</div>`;
+                return;
+            }
+
+            c.innerHTML = res.data.map(g => `
+                <div class="relative group rounded-2xl overflow-hidden border border-border aspect-square bg-slate-100">
+                    <img src="${g.mediaUrl}" alt="${g.title}" class="w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5 text-white">
+                        <span class="text-[10px] font-bold truncate">${g.title}</span>
+                        <div class="flex items-center justify-between">
+                            <button onclick="copyUrl('${g.mediaUrl}')" class="p-1 rounded bg-white/20 hover:bg-white/40 cursor-pointer"><span class="material-symbols-outlined text-xs">content_copy</span></button>
+                            <button onclick="deleteGalleryPhoto('${g.id}')" class="p-1 rounded bg-red-600/80 hover:bg-red-600 cursor-pointer"><span class="material-symbols-outlined text-xs">delete</span></button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function deleteGalleryPhoto(id) {
+            if (!confirm('Delete this photograph?')) return;
+            const res = await window.RadioAPI.deleteGalleryItem(id);
+            if (res?.success) {
+                showToast('Photo removed from gallery');
+                fetchGalleryList();
+            }
+        }
+
+        // ==========================================
+        // 7. ANNOUNCEMENTS
+        // ==========================================
+        async function handleCreateAnnouncement(e) {
+            e.preventDefault();
+            const btn = document.getElementById('ann-submit-btn');
+            const title = document.getElementById('ann-title').value.trim();
+            const message = document.getElementById('ann-message').value.trim();
+
+            btn.disabled = true;
+            try {
+                const res = await window.RadioAPI.createAnnouncement({
+                    title, message, audience: 'ALL', status: 'PUBLISHED'
+                });
+
+                if (res?.success) {
+                    showToast('Ticker alert broadcasted live!');
+                    document.getElementById('announcement-form').reset();
+                    fetchAnnouncementsList();
+                } else {
+                    throw new Error(res?.message || 'Could not post alert');
+                }
+            } catch (err) {
+                showToast(err.message, true);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function fetchAnnouncementsList() {
+            const c = document.getElementById('announcements-container');
+            const res = await window.RadioAPI.getAnnouncements();
+            if (!res?.data || res.data.length === 0) {
+                c.innerHTML = `<div class="py-8 text-center text-text-muted text-xs">No active ticker announcements.</div>`;
+                return;
+            }
+
+            c.innerHTML = res.data.map(a => `
+                <div class="p-3 bg-slate-50/70 rounded-xl border border-border flex items-center justify-between gap-3">
+                    <div>
+                        <h6 class="font-bold text-xs">${a.title}</h6>
+                        <p class="text-[11px] text-text-muted mt-0.5">${a.message}</p>
+                    </div>
+                    <button onclick="deleteAnnouncementItem('${a.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteAnnouncementItem(id) {
+            if (!confirm('Remove this announcement?')) return;
+            const res = await window.RadioAPI.deleteAnnouncement(id);
+            if (res?.success) {
+                showToast('Announcement removed');
+                fetchAnnouncementsList();
+            }
+        }
+
+        // ==========================================
+        // 8. RJ HOSTS
+        // ==========================================
         async function handleCreateHost(e) {
             e.preventDefault();
             const btn = document.getElementById('host-submit-btn');
-            const name = document.getElementById('host-name-input').value.trim();
-            const designation = document.getElementById('host-designation').value.trim();
+            const name = document.getElementById('host-name').value.trim();
+            const designation = document.getElementById('host-desig').value.trim();
             const bio = document.getElementById('host-bio').value.trim();
-            const photoFile = document.getElementById('host-photo-file').files[0];
+            const file = document.getElementById('host-photo-file').files[0];
 
             btn.disabled = true;
-            btn.innerHTML = `<span class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Adding RJ...</span>`;
-
             try {
                 let photoUrl = null;
                 let publicId = null;
 
-                if (photoFile) {
+                if (file) {
                     showToast('Uploading RJ photo to Cloudinary...');
-                    const mediaRes = await window.RadioAPI.uploadMedia(photoFile, 'radio-ninada/hosts');
-                    if (mediaRes && mediaRes.success && mediaRes.data) {
-                        photoUrl = mediaRes.data.secureUrl || mediaRes.data.url;
-                        publicId = mediaRes.data.publicId;
+                    const r = await window.RadioAPI.uploadMedia(file, 'radio-ninada/hosts');
+                    if (r?.success && r.data) {
+                        photoUrl = r.data.secureUrl || r.data.url;
+                        publicId = r.data.publicId;
                     }
                 }
 
-                const createRes = await window.RadioAPI.createHost({
-                    name,
-                    designation,
-                    bio,
+                const res = await window.RadioAPI.createHost({
+                    name, designation, bio,
                     photoUrl: photoUrl || 'images/radio_ninada_logo.png',
-                    publicId,
-                    status: 'ACTIVE'
+                    publicId, status: 'ACTIVE'
                 });
 
-                if (createRes && createRes.success) {
-                    showToast('RJ Presenter added successfully!');
+                if (res?.success) {
+                    showToast('RJ Presenter added!');
                     document.getElementById('host-form').reset();
                     fetchHostsList();
-                    loadOverviewMetrics();
+                    loadStudioData();
                 } else {
-                    throw new Error(createRes?.message || 'Failed to add host');
+                    throw new Error(res?.message || 'Could not add host');
                 }
-
             } catch (err) {
-                console.error(err);
-                showToast(err.message || 'Error adding host', true);
+                showToast(err.message, true);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<span class="material-symbols-outlined text-base">person_add</span><span>Add RJ Presenter</span>`;
             }
         }
 
         async function fetchHostsList() {
-            const container = document.getElementById('hosts-container');
-            if (!container) return;
-
-            container.innerHTML = `<div class="col-span-full py-12 text-center text-text-muted text-xs">Loading RJ team...</div>`;
-
+            const c = document.getElementById('hosts-container');
             const res = await window.RadioAPI.getHosts();
-            if (!res || !res.success || !Array.isArray(res.data) || res.data.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-12 text-center text-text-muted text-xs">No RJ profiles added yet.</div>`;
+            if (!res?.data || res.data.length === 0) {
+                c.innerHTML = `<div class="col-span-full py-8 text-center text-text-muted text-xs">No presenters added yet.</div>`;
                 return;
             }
 
-            container.innerHTML = res.data.map(h => `
-                <div class="bg-slate-50/70 p-4 rounded-2xl border border-border flex items-center justify-between gap-3">
+            c.innerHTML = res.data.map(h => `
+                <div class="bg-slate-50/70 p-3.5 rounded-2xl border border-border flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        <img src="${h.photo || h.photoUrl || 'images/radio_ninada_logo.png'}" alt="${h.name}" class="w-12 h-12 rounded-full object-cover border border-border" />
+                        <img src="${h.photo || h.photoUrl || 'images/radio_ninada_logo.png'}" class="w-12 h-12 rounded-full object-cover border border-border" />
                         <div>
-                            <h4 class="font-bold text-sm text-text-main">${h.name}</h4>
-                            <p class="text-[11px] text-primary font-semibold">${h.designation || 'Presenter'}</p>
+                            <h5 class="font-bold text-xs">${h.name}</h5>
+                            <p class="text-[10px] text-primary font-semibold">${h.designation || 'Presenter'}</p>
                         </div>
                     </div>
-                    <button onclick="handleDeleteHost('${h.id}')"
-                        class="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-all cursor-pointer"
-                        title="Delete Host">
-                        <span class="material-symbols-outlined text-base">delete</span>
-                    </button>
+                    <button onclick="deleteHostItem('${h.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
                 </div>
             `).join('');
         }
 
-        async function handleDeleteHost(id) {
-            if (!confirm('Are you sure you want to delete this RJ?')) return;
+        async function deleteHostItem(id) {
+            if (!confirm('Remove this RJ?')) return;
             const res = await window.RadioAPI.deleteHost(id);
-            if (res && res.success) {
-                showToast('RJ removed.');
+            if (res?.success) {
+                showToast('Presenter removed');
                 fetchHostsList();
-                loadOverviewMetrics();
-            } else {
-                showToast(res?.message || 'Could not delete RJ', true);
+                loadStudioData();
             }
         }
 
-        // ==============================================================
-        // 5. BANNERS MANAGER
-        // ==============================================================
+        // ==========================================
+        // 9. BANNERS
+        // ==========================================
         async function handleCreateBanner(e) {
             e.preventDefault();
             const btn = document.getElementById('banner-submit-btn');
@@ -1239,13 +1618,8 @@
             const targetUrl = document.getElementById('banner-url').value.trim();
             const file = document.getElementById('banner-file').files[0];
 
-            if (!file) {
-                showToast('Please select a banner image', true);
-                return;
-            }
-
+            if (!file) return;
             btn.disabled = true;
-            btn.innerHTML = `<span class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span><span>Uploading Banner...</span>`;
 
             try {
                 const formData = new FormData();
@@ -1254,65 +1628,51 @@
                 formData.append('image', file);
 
                 const res = await window.RadioAPI.createBanner(formData);
-                if (res && res.success) {
-                    showToast('Banner uploaded and published!');
+                if (res?.success) {
+                    showToast('Banner uploaded and active!');
                     document.getElementById('banner-form').reset();
                     fetchBannersList();
                 } else {
-                    throw new Error(res?.message || 'Failed to upload banner');
+                    throw new Error(res?.message || 'Banner upload failed');
                 }
             } catch (err) {
-                showToast(err.message || 'Banner upload failed', true);
+                showToast(err.message, true);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<span class="material-symbols-outlined text-base">upload</span><span>Upload Banner</span>`;
             }
         }
 
         async function fetchBannersList() {
-            const container = document.getElementById('banners-container');
-            if (!container) return;
-
-            container.innerHTML = `<div class="col-span-full py-12 text-center text-text-muted text-xs">Loading banners...</div>`;
-
+            const c = document.getElementById('banners-container');
             const res = await window.RadioAPI.getBanners();
-            if (!res || !res.success || !Array.isArray(res.data) || res.data.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-12 text-center text-text-muted text-xs">No active banners. Add one above!</div>`;
+            if (!res?.data || res.data.length === 0) {
+                c.innerHTML = `<div class="col-span-full py-8 text-center text-text-muted text-xs">No active banners.</div>`;
                 return;
             }
 
-            container.innerHTML = res.data.map(b => `
-                <div class="bg-slate-50/70 p-4 rounded-2xl border border-border flex flex-col justify-between">
-                    <div>
-                        <img src="${b.imageUrl}" alt="${b.title}" class="w-full h-36 object-cover rounded-xl border border-border mb-3" />
-                        <h4 class="font-bold text-xs text-text-main truncate">${b.title}</h4>
-                    </div>
-                    <div class="pt-3 border-t border-border flex items-center justify-between mt-3">
-                        <button onclick="copyCdnUrl('${b.imageUrl}')" class="text-xs text-slate-600 font-semibold hover:text-primary flex items-center gap-1 cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">content_copy</span> Copy CDN Link
-                        </button>
-                        <button onclick="handleDeleteBanner('${b.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer">
-                            <span class="material-symbols-outlined text-base">delete</span>
-                        </button>
+            c.innerHTML = res.data.map(b => `
+                <div class="bg-slate-50/70 p-3.5 rounded-2xl border border-border">
+                    <img src="${b.imageUrl}" class="w-full h-32 object-cover rounded-xl border border-border mb-2" />
+                    <div class="flex items-center justify-between">
+                        <h6 class="font-bold text-xs truncate">${b.title}</h6>
+                        <button onclick="deleteBannerItem('${b.id}')" class="p-1 rounded text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function handleDeleteBanner(id) {
-            if (!confirm('Are you sure you want to delete this banner?')) return;
+        async function deleteBannerItem(id) {
+            if (!confirm('Delete this banner?')) return;
             const res = await window.RadioAPI.deleteBanner(id);
-            if (res && res.success) {
-                showToast('Banner deleted.');
+            if (res?.success) {
+                showToast('Banner deleted');
                 fetchBannersList();
-            } else {
-                showToast(res?.message || 'Could not delete banner', true);
             }
         }
 
-        // ==============================================================
-        // 6. CLOUDINARY MEDIA EXPLORER
-        // ==============================================================
+        // ==========================================
+        // 10. CLOUDINARY EXPLORER
+        // ==========================================
         async function handleRawUpload(e) {
             const file = e.target.files?.[0];
             if (!file) return;
@@ -1323,97 +1683,99 @@
             const res = await window.RadioAPI.uploadMedia(file, folder);
             e.target.value = '';
 
-            if (res && res.success) {
+            if (res?.success) {
                 showToast('Uploaded to Cloudinary successfully!');
                 fetchCloudinaryMedia();
-                loadOverviewMetrics();
+                loadStudioData();
             } else {
-                showToast(res.message || 'Upload to Cloudinary failed', true);
+                showToast(res?.message || 'Upload failed', true);
             }
         }
 
         async function fetchCloudinaryMedia() {
             const grid = document.getElementById('media-grid');
-            if (!grid) return;
-
-            grid.innerHTML = `<div class="col-span-full py-12 text-center text-text-muted text-xs">
-                <span class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent mb-2"></span>
-                <p>Fetching Cloudinary assets...</p>
-            </div>`;
-
             const folder = document.getElementById('media-folder-filter').value;
             const params = {};
             if (folder !== 'ALL') params.folder = folder;
 
             const res = await window.RadioAPI.listMedia(params);
-            if (!res || !res.success || !Array.isArray(res.data) || res.data.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-12 text-center text-text-muted text-xs">No media assets found in this folder.</div>`;
+            if (!res?.data || res.data.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-8 text-center text-text-muted text-xs">No assets in this Cloudinary folder.</div>`;
                 return;
             }
 
-            grid.innerHTML = res.data.map(item => {
-                const isAudio = item.resourceType === 'video' || item.format === 'mp3' || item.format === 'wav' || item.format === 'aac';
-                const sizeKb = Math.round((item.bytes || 0) / 1024);
+            grid.innerHTML = res.data.map(m => {
+                const isAudio = m.resourceType === 'video' || m.format === 'mp3' || m.format === 'wav' || m.format === 'aac';
+                const sizeKb = Math.round((m.bytes || 0) / 1024);
                 const sizeStr = sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`;
 
                 return `
-                <div class="bg-white rounded-2xl border border-border p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+                <div class="bg-white rounded-2xl border border-border p-3.5 shadow-2xs flex flex-col justify-between">
                     <div>
-                        <div class="h-32 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden mb-3 border border-slate-100 relative group">
+                        <div class="h-28 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden mb-2.5 border border-slate-100">
                             ${isAudio ? `
-                                <div class="text-center p-3">
-                                    <span class="material-symbols-outlined text-4xl text-primary mb-1">audio_file</span>
-                                    <p class="text-[11px] font-mono text-slate-600 font-bold uppercase">${item.format || 'AUDIO'}</p>
+                                <div class="text-center p-2">
+                                    <span class="material-symbols-outlined text-3xl text-primary mb-1">audio_file</span>
+                                    <p class="text-[10px] font-mono font-bold uppercase">${m.format || 'AUDIO'}</p>
                                 </div>
-                            ` : `
-                                <img src="${item.secureUrl || item.url}" alt="${item.filename}" class="w-full h-full object-cover" />
-                            `}
+                            ` : `<img src="${m.secureUrl || m.url}" class="w-full h-full object-cover" />`}
                         </div>
-                        <h4 class="text-xs font-bold text-text-main truncate mb-1" title="${item.filename}">${item.filename}</h4>
-                        <div class="flex items-center justify-between text-[10px] text-text-muted mb-3">
-                            <span class="font-mono">${sizeStr}</span>
-                            <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold truncate max-w-[120px]">${item.folder || 'media'}</span>
+                        <h6 class="text-xs font-bold truncate mb-1" title="${m.filename}">${m.filename}</h6>
+                        <div class="flex justify-between text-[10px] text-text-muted mb-2">
+                            <span>${sizeStr}</span>
+                            <span class="bg-slate-100 px-1.5 py-0.5 rounded font-medium truncate max-w-[100px]">${m.folder || 'media'}</span>
                         </div>
                     </div>
 
-                    ${isAudio ? `
-                        <audio controls class="w-full h-8 mb-2">
-                            <source src="${item.secureUrl || item.url}" type="audio/mpeg">
-                        </audio>
-                    ` : ''}
+                    ${isAudio ? `<audio controls class="w-full h-7 mb-2"><source src="${m.secureUrl || m.url}" type="audio/mpeg"></audio>` : ''}
 
                     <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button onclick="copyCdnUrl('${item.secureUrl || item.url}')"
-                            class="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">content_copy</span>
-                            <span>Copy URL</span>
+                        <button onclick="copyUrl('${m.secureUrl || m.url}')" class="flex-1 py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer">
+                            <span class="material-symbols-outlined text-xs">content_copy</span> Copy URL
                         </button>
-                        <button onclick="handleDeleteMedia('${item.id}')"
-                            class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                            title="Delete from Cloudinary & DB">
-                            <span class="material-symbols-outlined text-base">delete</span>
-                        </button>
+                        <button onclick="deleteMediaFile('${m.id}')" class="p-1 rounded text-red-500 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        async function handleDeleteMedia(id) {
-            if (!confirm('Are you sure you want to delete this file from Cloudinary and the database?')) return;
+        async function deleteMediaFile(id) {
+            if (!confirm('Delete this file from Cloudinary and database?')) return;
             const res = await window.RadioAPI.deleteMedia(id);
-            if (res && res.success) {
-                showToast('Deleted file from Cloudinary.');
+            if (res?.success) {
+                showToast('Deleted media file');
                 fetchCloudinaryMedia();
-                loadOverviewMetrics();
-            } else {
-                showToast(res?.message || 'Delete failed', true);
+                loadStudioData();
             }
         }
 
-        function copyCdnUrl(url) {
+        // ==========================================
+        // 11. LISTENER CONTACT MESSAGES
+        // ==========================================
+        async function fetchContactMessages() {
+            const c = document.getElementById('contact-container');
+            const res = await window.RadioAPI.getContactMessages();
+            if (!res?.data || res.data.length === 0) {
+                c.innerHTML = `<div class="py-8 text-center text-text-muted text-xs">Inbox is empty. No listener feedback yet.</div>`;
+                return;
+            }
+
+            c.innerHTML = res.data.map(m => `
+                <div class="py-4">
+                    <div class="flex items-center justify-between mb-1">
+                        <h5 class="font-bold text-xs">${m.name} <span class="text-text-muted font-normal">(${m.email})</span></h5>
+                        <span class="text-[10px] text-slate-400">${new Date(m.createdAt).toLocaleString()}</span>
+                    </div>
+                    ${m.subject ? `<p class="text-xs font-semibold text-primary mb-1">Subject: ${m.subject}</p>` : ''}
+                    <p class="text-xs text-slate-700 whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-border">${m.message}</p>
+                </div>
+            `).join('');
+        }
+
+        function copyUrl(url) {
             if (!url) return;
             navigator.clipboard.writeText(url).then(() => {
-                showToast('Copied Cloudinary CDN URL to clipboard!');
+                showToast('Copied Cloudinary CDN Link!');
             }).catch(() => {
                 showToast('Could not copy URL', true);
             });

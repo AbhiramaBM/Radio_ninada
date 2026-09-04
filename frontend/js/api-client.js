@@ -239,6 +239,85 @@
       });
     },
 
+    async addEpisode(podcastId, data) {
+      return await fetchApi(`/podcasts/${podcastId}/episodes`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async createNews(data) {
+      return await fetchApi('/news', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async deleteNews(id) {
+      return await fetchApi(`/news/${id}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async createEvent(data) {
+      return await fetchApi('/events', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async deleteEvent(id) {
+      return await fetchApi(`/events/${id}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async getGallery(params = {}) {
+      const query = new URLSearchParams(params).toString();
+      return await fetchApi(`/gallery${query ? '?' + query : ''}`);
+    },
+
+    async createGalleryItem(data) {
+      return await fetchApi('/gallery', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async deleteGalleryItem(id) {
+      return await fetchApi(`/gallery/${id}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async getAnnouncements() {
+      return await fetchApi('/announcements');
+    },
+
+    async createAnnouncement(data) {
+      return await fetchApi('/announcements', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async deleteAnnouncement(id) {
+      return await fetchApi(`/announcements/${id}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async updateLiveState(data) {
+      return await fetchApi('/live', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async getContactMessages() {
+      return await fetchApi('/contact');
+    },
+
     async getCurrentStaff() {
       return await fetchApi('/auth/me');
     },
