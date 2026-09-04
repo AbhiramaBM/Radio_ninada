@@ -40,7 +40,7 @@ async function getDashboardStats(req, res, next) {
             prisma_1.prisma.event.count({ where: { deletedAt: null } }),
             prisma_1.prisma.news.count({ where: { deletedAt: null } }),
             prisma_1.prisma.rJProfile.count({ where: { deletedAt: null } }),
-            prisma_1.prisma.liveRadioState.findUnique({ where: { id: 'live-config' } }),
+            prisma_1.prisma.liveStream.findUnique({ where: { id: 'live-config' } }),
             prisma_1.prisma.analyticsEvent.count({ where: { timestamp: { gte: startOfToday } } }),
             prisma_1.prisma.auditLog.findMany({ take: 5, orderBy: { createdAt: 'desc' } }),
             prisma_1.prisma.analyticsEvent.findMany({ where: { timestamp: { gte: sevenDaysAgo } } }),
@@ -76,11 +76,11 @@ async function getDashboardStats(req, res, next) {
             listeners,
             downloads,
         }));
-        const totalDeviceEvents = deviceGroup.reduce((acc, curr) => acc + curr._count.device, 0);
+        const totalDeviceEvents = deviceGroup.reduce((acc, curr) => acc + (curr._count?.device || 0), 0);
         const deviceBreakdown = totalDeviceEvents > 0
             ? deviceGroup.map((item) => ({
                 name: item.device || 'Unknown',
-                value: Math.round((item._count.device / totalDeviceEvents) * 100),
+                value: Math.round(((item._count?.device || 0) / totalDeviceEvents) * 100),
             }))
             : [
                 { name: 'Mobile', value: 0 },

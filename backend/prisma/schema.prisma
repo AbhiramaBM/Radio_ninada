@@ -3,28 +3,55 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+  RJ
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LiveStatus {
+  LIVE
+  OFFLINE
+  MAINTENANCE
+}
+
 model User {
-  id           String         @id @default(uuid())
-  email        String         @unique
-  password     String?
-  firebaseUid  String?        @unique
-  phone        String?
-  name         String
-  role         String         @default("EDITOR") // SUPER_ADMIN, ADMIN, EDITOR, RJ, MODERATOR
-  avatar       String?
-  bio          String?
-  status       String         @default("ACTIVE") // ACTIVE, SUSPENDED, BANNED
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  deletedAt    DateTime?
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  phone         String?
+  name          String
+  role          Role           @default(USER)
+  avatar        String?
+  bio           String?
+  status        UserStatus     @default(ACTIVE)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
   refreshTokens RefreshToken[]
-  auditLogs    AuditLog[]
-  bookmarks    UserBookmark[]
-  histories    UserHistory[]
+  auditLogs     AuditLog[]
+  bookmarks     UserBookmark[]
+  histories     UserHistory[]
+  uploadedMedia Media[]
+  hostProfile   Host?
 }
 
 model RefreshToken {
@@ -36,64 +63,149 @@ model RefreshToken {
   createdAt DateTime @default(now())
 }
 
-model LiveRadioState {
-  id             String   @id @default("live-config")
-  isLive         Boolean  @default(false)
-  streamUrl      String   @default("https://stream.radioninada.com/live")
-  title          String   @default("Radio Ninada Live Stream")
-  currentProgram String   @default("Morning Beats")
-  currentRJ      String   @default("RJ Ananya")
-  currentSong    String   @default("Community Melodies - Special Broadcast")
-  bitrate        Int      @default(320)
-  quality        String   @default("HD Stereo 44.1kHz")
-  status         String   @default("OFFLINE") // LIVE, OFFLINE, MAINTENANCE
-  liveListeners  Int      @default(42)
-  updatedAt      DateTime @updatedAt
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  type        String    @default("GENERAL") // PODCAST, PROGRAM, NEWS, GENERAL
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  podcasts    Podcast[]
+  programs    Program[]
+}
+
+model Host {
+  id           String    @id @default(uuid())
+  userId       String?   @unique
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name         String
+  designation  String    @default("Radio Host / RJ")
+  bio          String
+  photoUrl     String?
+  publicId     String?
+  socialMedia  String?   // JSON string of social handles
+  achievements String?
+  status       String    @default("ACTIVE") // ACTIVE, ON_LEAVE, INACTIVE
+  followers    Int       @default(0)
+  episodeCount Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  programs     Program[]
+  podcasts     Podcast[]
+}
+
+model RJProfile {
+  id           String    @id @default(uuid())
+  userId       String?
+  name         String
+  photo        String?
+  publicId     String?
+  designation  String    @default("Senior RJ")
+  bio          String
+  socialMedia  String?
+  achievements String?
+  status       String    @default("ACTIVE")
+  followers    Int       @default(0)
+  episodeCount Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+}
+
+model Media {
+  id                 String           @id @default(uuid())
+  originalName       String
+  cloudinaryPublicId String           @unique
+  cloudinaryUrl      String
+  resourceType       String           @default("image") // image, video, raw, auto
+  format             String?
+  mimeType           String?
+  fileSize           Int?
+  duration           Float?
+  width              Int?
+  height             Int?
+  folder             String           @default("radio-ninada/media")
+  userId             String?
+  user               User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  episodes           PodcastEpisode[]
+  liveStreams        LiveStream[]
+}
+
+model Podcast {
+  id            String           @id @default(uuid())
+  slug          String           @unique
+  title         String
+  description   String
+  coverUrl      String?
+  coverPublicId String?
+  audioUrl      String?
+  audioPublicId String?
+  duration      String?          @default("30:00")
+  categoryId    String?
+  category      Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  hostId        String?
+  host          Host?            @relation(fields: [hostId], references: [id], onDelete: SetNull)
+  status        ContentStatus    @default(PUBLISHED)
+  featured      Boolean          @default(false)
+  downloads     Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+  episodes      PodcastEpisode[]
+}
+
+model PodcastEpisode {
+  id                 String        @id @default(uuid())
+  podcastId          String
+  podcast            Podcast       @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  title              String
+  description        String
+  episodeNumber      Int           @default(1)
+  season             Int           @default(1)
+  mediaId            String?
+  media              Media?        @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  audioUrl           String
+  audioPublicId      String?
+  coverUrl           String?
+  coverPublicId      String?
+  duration           String        @default("30:00")
+  downloads          Int           @default(0)
+  status             ContentStatus @default(PUBLISHED)
+  publishedAt        DateTime?     @default(now())
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  deletedAt          DateTime?
 }
 
 model Program {
-  id                String     @id @default(uuid())
-  slug              String     @unique
+  id                String        @id @default(uuid())
+  slug              String        @unique
   name              String
   description       String
   hostId            String?
-  hostName          String     @default("Radio Ninada RJ")
-  category          String     @default("Music")
+  host              Host?         @relation(fields: [hostId], references: [id], onDelete: SetNull)
+  hostName          String        @default("Radio Ninada RJ")
+  categoryId        String?
+  category          Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryName      String        @default("Music")
   thumbnail         String?
   thumbnailPublicId String?
   banner            String?
   bannerPublicId    String?
-  duration          String     @default("60 min")
-  language          String     @default("Kannada")
-  tags              String     @default("entertainment,music")
-  schedule          String     @default("Mon - Fri @ 8:00 AM")
-  featured          Boolean    @default(false)
-  status            String     @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  duration          String        @default("60 min")
+  language          String        @default("Kannada")
+  tags              String        @default("entertainment,music")
+  schedule          String        @default("Mon - Fri @ 8:00 AM")
+  featured          Boolean       @default(false)
+  status            ContentStatus @default(PUBLISHED)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
   deletedAt         DateTime?
   schedules         Schedule[]
-}
-
-model Podcast {
-  id            String    @id @default(uuid())
-  slug          String    @unique
-  title         String
-  audioUrl      String
-  audioPublicId String?
-  coverUrl      String?
-  coverPublicId String?
-  category      String    @default("Talk Show")
-  episodeNumber Int       @default(1)
-  season        Int       @default(1)
-  description   String
-  duration      String    @default("45:00")
-  downloads     Int       @default(0)
-  featured      Boolean   @default(false)
-  visibility    String    @default("PUBLIC") // PUBLIC, PRIVATE, DRAFT
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
 }
 
 model Schedule {
@@ -111,6 +223,115 @@ model Schedule {
   deletedAt   DateTime?
 }
 
+model LiveStream {
+  id             String     @id @default("live-config")
+  isLive         Boolean    @default(true)
+  streamUrl      String     @default("https://stream.zeno.fm/f3wvbbqmdg8uv")
+  title          String     @default("Radio Ninada 90.4 FM Live")
+  currentProgram String     @default("Ninada Morning Buzz (SDM Ujire)")
+  currentHost    String     @default("RJ Ananya")
+  currentSong    String     @default("Community Melodies - Special Broadcast")
+  bitrate        Int        @default(320)
+  quality        String     @default("HD Stereo 44.1kHz")
+  status         LiveStatus @default(LIVE)
+  liveListeners  Int        @default(48)
+  mediaId        String?
+  media          Media?     @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  updatedAt      DateTime   @updatedAt
+}
+
+model Banner {
+  id         String    @id @default(uuid())
+  title      String
+  imageUrl   String
+  publicId   String?
+  targetUrl  String?
+  type       String    @default("HOMEPAGE") // HOMEPAGE, EVENT, SPONSOR, POPUP
+  priority   Int       @default(1)
+  expiryDate DateTime?
+  status     String    @default("ACTIVE") // ACTIVE, EXPIRED, INACTIVE
+  createdAt  DateTime  @default(now())
+}
+
+model Sponsor {
+  id         String    @id @default(uuid())
+  name       String
+  logoUrl    String
+  publicId   String?
+  website    String?
+  campaign   String    @default("Brand Awareness")
+  clicks     Int       @default(0)
+  views      Int       @default(0)
+  expiryDate DateTime?
+  status     String    @default("ACTIVE")
+  createdAt  DateTime  @default(now())
+}
+
+model GalleryItem {
+  id                String    @id @default(uuid())
+  title             String
+  description       String?
+  type              String    @default("PHOTO") // PHOTO, VIDEO
+  mediaUrl          String
+  publicId          String?
+  thumbnail         String?
+  thumbnailPublicId String?
+  duration          String?
+  album             String    @default("General")
+  category          String    @default("Events")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+}
+
+model Announcement {
+  id          String    @id @default(uuid())
+  title       String
+  message     String
+  audience    String    @default("ALL") // ALL, SUBSCRIBERS, RJS
+  isRead      Boolean   @default(false)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  status      String    @default("PUBLISHED") // DRAFT, SCHEDULED, PUBLISHED
+  createdAt   DateTime  @default(now())
+}
+
+model Notification {
+  id          String    @id @default(uuid())
+  title       String
+  message     String
+  audience    String    @default("ALL")
+  isRead      Boolean   @default(false)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  status      String    @default("DRAFT")
+  createdAt   DateTime  @default(now())
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  eventType String
+  path      String?
+  ip        String?
+  userAgent String?
+  country   String?  @default("India")
+  device    String?  @default("Mobile")
+  browser   String?  @default("Chrome")
+  timestamp DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  status    String   @default("NEW") // NEW, READ, REPLIED, ARCHIVED
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
 model News {
   id            String    @id @default(uuid())
   slug          String    @unique
@@ -125,24 +346,6 @@ model News {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
-}
-
-model RJProfile {
-  id           String    @id @default(uuid())
-  userId       String?
-  name         String
-  photo        String?
-  publicId     String?
-  designation  String    @default("Senior RJ")
-  bio          String
-  socialMedia  String?   // JSON string of social handles
-  achievements String?   // JSON or text
-  status       String    @default("ACTIVE") // ACTIVE, ON_LEAVE, INACTIVE
-  followers    Int       @default(0)
-  episodeCount Int       @default(0)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
 }
 
 model Event {
@@ -169,79 +372,10 @@ model EventParticipant {
   name       String
   email      String
   phone      String
-  qrCode     String?  // Data URL or string
-  attendance String   @default("REGISTERED") // REGISTERED, ATTENDED, CANCELLED
-  status     String   @default("APPROVED") // PENDING, APPROVED, REJECTED
+  qrCode     String?
+  attendance String   @default("REGISTERED")
+  status     String   @default("APPROVED")
   createdAt  DateTime @default(now())
-}
-
-model GalleryItem {
-  id                String    @id @default(uuid())
-  title             String
-  description       String?
-  type              String    @default("PHOTO") // PHOTO, VIDEO
-  mediaUrl          String
-  publicId          String?
-  thumbnail         String?
-  thumbnailPublicId String?
-  duration          String?   // e.g. "0:45", "1:15"
-  album             String    @default("General")
-  category          String    @default("Events") // "BTS Shorts", "Studio Bloopers", "Behind The Mic", "Photos", "Events"
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  deletedAt         DateTime?
-}
-
-model Notification {
-  id          String    @id @default(uuid())
-  title       String
-  message     String
-  audience    String    @default("ALL") // ALL, SUBSCRIBERS, RJS
-  isRead      Boolean   @default(false)
-  scheduledAt DateTime?
-  sentAt      DateTime?
-  status      String    @default("DRAFT") // DRAFT, SCHEDULED, SENT
-  createdAt   DateTime  @default(now())
-}
-
-
-model Banner {
-  id         String    @id @default(uuid())
-  title      String
-  imageUrl   String
-  publicId   String?
-  targetUrl  String?
-  type       String    @default("HOMEPAGE") // HOMEPAGE, EVENT, SPONSOR, POPUP
-  priority   Int       @default(1)
-  expiryDate DateTime?
-  status     String    @default("ACTIVE") // ACTIVE, EXPIRED, INACTIVE
-  createdAt  DateTime  @default(now())
-}
-
-model Sponsor {
-  id         String    @id @default(uuid())
-  name       String
-  logoUrl    String
-  publicId   String?
-  website    String?
-  campaign   String    @default("Brand Awareness")
-  clicks     Int       @default(0)
-  views      Int       @default(0)
-  expiryDate DateTime?
-  status     String    @default("ACTIVE") // ACTIVE, EXPIRED, INACTIVE
-  createdAt  DateTime  @default(now())
-}
-
-model AnalyticsEvent {
-  id        String   @id @default(uuid())
-  eventType String   // PAGE_VIEW, PODCAST_LISTEN, LIVE_LISTEN, DOWNLOAD
-  path      String?
-  ip        String?
-  userAgent String?
-  country   String?  @default("India")
-  device    String?  @default("Mobile")
-  browser   String?  @default("Chrome")
-  timestamp DateTime @default(now())
 }
 
 model AuditLog {
@@ -249,8 +383,8 @@ model AuditLog {
   userId         String?
   userEmail      String?
   user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  action         String   // LOGIN, LOGOUT, CREATE, UPDATE, DELETE, ROLE_CHANGE
-  targetResource String   // e.g. "Program:123"
+  action         String   // LOGIN, LOGOUT, CREATE, UPDATE, DELETE, UPLOAD, MEDIA_DELETE, ROLE_CHANGE
+  targetResource String   // e.g. "Media:123"
   details        String?  // JSON detail
   ipAddress      String?
   createdAt      DateTime @default(now())
@@ -293,16 +427,6 @@ model Like {
   createdAt  DateTime @default(now())
 }
 
-model OtpCode {
-  id        String   @id @default(uuid())
-  email     String
-  code      String
-  type      String   @default("VERIFICATION") // VERIFICATION, FORGOT_PASSWORD, LOGIN
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-}
-
 model Playlist {
   id          String         @id @default(uuid())
   sessionId   String?        @default("default-session")
@@ -325,5 +449,3 @@ model PlaylistItem {
   position   Int      @default(0)
   createdAt  DateTime @default(now())
 }
-
-

@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const rj_controller_1 = require("../controllers/rj.controller");
+const host_controller_1 = require("../controllers/host.controller");
 const auth_1 = require("../middlewares/auth");
 const audit_1 = require("../middlewares/audit");
 const router = (0, express_1.Router)();
-router.get('/', rj_controller_1.getRJs);
-router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('CREATE', 'RJProfile'), rj_controller_1.createRJ);
-router.put('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'RJ']), (0, audit_1.auditLog)('UPDATE', 'RJProfile'), rj_controller_1.updateRJ);
-router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'RJProfile'), rj_controller_1.deleteRJ);
+router.get('/', host_controller_1.listHosts);
+router.get('/:id', host_controller_1.getHostById);
+router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('CREATE', 'Host'), host_controller_1.createHost);
+router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Host'), host_controller_1.deleteHost);
 exports.default = router;

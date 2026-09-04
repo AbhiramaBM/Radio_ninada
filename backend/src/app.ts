@@ -13,18 +13,22 @@ import userRoutes from './routes/user.routes';
 import liveRoutes from './routes/live.routes';
 import programRoutes from './routes/program.routes';
 import podcastRoutes from './routes/podcast.routes';
+import categoryRoutes from './routes/category.routes';
+import hostRoutes from './routes/host.routes';
+import rjRoutes from './routes/rj.routes';
+import mediaRoutes from './routes/media.routes';
+import contactRoutes from './routes/contact.routes';
+import bannerRoutes from './routes/banner.routes';
+import announcementRoutes from './routes/announcement.routes';
+import notificationRoutes from './routes/notification.routes';
 import scheduleRoutes from './routes/schedule.routes';
 import newsRoutes from './routes/news.routes';
-import rjRoutes from './routes/rj.routes';
 import eventRoutes from './routes/event.routes';
 import galleryRoutes from './routes/gallery.routes';
-import notificationRoutes from './routes/notification.routes';
 import playlistRoutes from './routes/playlist.routes';
-import bannerRoutes from './routes/banner.routes';
 import sponsorRoutes from './routes/sponsor.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import aiRoutes from './routes/ai.routes';
-import uploadRoutes from './routes/upload.routes';
 
 const app = express();
 
@@ -45,7 +49,7 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-// Static uploads serving
+// Static uploads serving (temporary local directory)
 app.use('/uploads', express.static(config.uploadDir));
 
 // Static Public Frontend Serving
@@ -53,40 +57,45 @@ const frontendPath = path.join(__dirname, '../../frontend');
 app.use(express.static(frontendPath));
 
 // Health Check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({
     status: 'UP',
     service: 'Radio Ninada REST API Server',
+    database: 'PostgreSQL',
     timestamp: new Date().toISOString(),
   });
 });
 
-// API Routes Mapping
+// REST API Endpoints
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/live', liveRoutes);
 app.use('/api/programs', programRoutes);
 app.use('/api/podcasts', podcastRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/hosts', hostRoutes);
+app.use('/api/rj', rjRoutes);
+app.use('/api/media', mediaRoutes);
+app.use('/api/upload', mediaRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/banners', bannerRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/news', newsRoutes);
-app.use('/api/rj', rjRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/gallery', galleryRoutes);
-app.use('/api/notifications', notificationRoutes);
 app.use('/api/playlists', playlistRoutes);
-app.use('/api/banners', bannerRoutes);
-
 app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ai', aiRoutes);
-app.use('/api/upload', uploadRoutes);
 
 // Root route serves the Public Website
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-// Error Handler
+// Centralized Error Handler
 app.use(errorHandler);
 
 export default app;

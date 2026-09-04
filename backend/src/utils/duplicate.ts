@@ -11,13 +11,10 @@ export async function checkDuplicateProgram(name: string, excludeId?: string) {
   return existing !== null;
 }
 
-export async function checkDuplicatePodcast(title: string, episodeNumber: number, season: number, excludeId?: string) {
+export async function checkDuplicatePodcast(title: string, excludeId?: string) {
   const existing = await prisma.podcast.findFirst({
     where: {
-      OR: [
-        { title: { equals: title } },
-        { AND: [{ episodeNumber }, { season }] },
-      ],
+      title: { equals: title },
       deletedAt: null,
       NOT: excludeId ? { id: excludeId } : undefined,
     },

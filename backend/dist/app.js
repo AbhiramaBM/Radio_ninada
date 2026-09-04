@@ -16,18 +16,22 @@ const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const live_routes_1 = __importDefault(require("./routes/live.routes"));
 const program_routes_1 = __importDefault(require("./routes/program.routes"));
 const podcast_routes_1 = __importDefault(require("./routes/podcast.routes"));
+const category_routes_1 = __importDefault(require("./routes/category.routes"));
+const host_routes_1 = __importDefault(require("./routes/host.routes"));
+const rj_routes_1 = __importDefault(require("./routes/rj.routes"));
+const media_routes_1 = __importDefault(require("./routes/media.routes"));
+const contact_routes_1 = __importDefault(require("./routes/contact.routes"));
+const banner_routes_1 = __importDefault(require("./routes/banner.routes"));
+const announcement_routes_1 = __importDefault(require("./routes/announcement.routes"));
+const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
 const schedule_routes_1 = __importDefault(require("./routes/schedule.routes"));
 const news_routes_1 = __importDefault(require("./routes/news.routes"));
-const rj_routes_1 = __importDefault(require("./routes/rj.routes"));
 const event_routes_1 = __importDefault(require("./routes/event.routes"));
 const gallery_routes_1 = __importDefault(require("./routes/gallery.routes"));
-const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
 const playlist_routes_1 = __importDefault(require("./routes/playlist.routes"));
-const banner_routes_1 = __importDefault(require("./routes/banner.routes"));
 const sponsor_routes_1 = __importDefault(require("./routes/sponsor.routes"));
 const analytics_routes_1 = __importDefault(require("./routes/analytics.routes"));
 const ai_routes_1 = __importDefault(require("./routes/ai.routes"));
-const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
 const app = (0, express_1.default)();
 // Security Middlewares
 app.use((0, helmet_1.default)({ crossOriginResourcePolicy: false }));
@@ -43,41 +47,47 @@ app.use('/api', limiter);
 app.use((0, morgan_1.default)('dev'));
 app.use(express_1.default.json({ limit: '20mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '20mb' }));
-// Static uploads serving
+// Static uploads serving (temporary local directory)
 app.use('/uploads', express_1.default.static(index_1.config.uploadDir));
 // Static Public Frontend Serving
 const frontendPath = path_1.default.join(__dirname, '../../frontend');
 app.use(express_1.default.static(frontendPath));
 // Health Check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
     res.json({
         status: 'UP',
         service: 'Radio Ninada REST API Server',
+        database: 'PostgreSQL',
         timestamp: new Date().toISOString(),
     });
 });
-// API Routes Mapping
+// REST API Endpoints
 app.use('/api/auth', auth_routes_1.default);
 app.use('/api/users', user_routes_1.default);
 app.use('/api/live', live_routes_1.default);
 app.use('/api/programs', program_routes_1.default);
 app.use('/api/podcasts', podcast_routes_1.default);
+app.use('/api/categories', category_routes_1.default);
+app.use('/api/hosts', host_routes_1.default);
+app.use('/api/rj', rj_routes_1.default);
+app.use('/api/media', media_routes_1.default);
+app.use('/api/upload', media_routes_1.default);
+app.use('/api/contact', contact_routes_1.default);
+app.use('/api/banners', banner_routes_1.default);
+app.use('/api/announcements', announcement_routes_1.default);
+app.use('/api/notifications', notification_routes_1.default);
 app.use('/api/schedule', schedule_routes_1.default);
 app.use('/api/news', news_routes_1.default);
-app.use('/api/rj', rj_routes_1.default);
 app.use('/api/events', event_routes_1.default);
 app.use('/api/gallery', gallery_routes_1.default);
-app.use('/api/notifications', notification_routes_1.default);
 app.use('/api/playlists', playlist_routes_1.default);
-app.use('/api/banners', banner_routes_1.default);
 app.use('/api/sponsors', sponsor_routes_1.default);
 app.use('/api/analytics', analytics_routes_1.default);
 app.use('/api/ai', ai_routes_1.default);
-app.use('/api/upload', upload_routes_1.default);
 // Root route serves the Public Website
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
     res.sendFile(path_1.default.join(frontendPath, 'index.html'));
 });
-// Error Handler
+// Centralized Error Handler
 app.use(error_1.errorHandler);
 exports.default = app;

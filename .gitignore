@@ -8,3 +8,8 @@ dist/
 .env.*.local
 .vscode/
 coverage/
+.vercel
+uploads/*
+!uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep

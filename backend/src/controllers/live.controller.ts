@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/prisma';
+import { liveStreamSchema } from '../validation/index';
 import { getIO } from '../socket/index';
 
 const defaultLiveState = {
@@ -8,28 +9,34 @@ const defaultLiveState = {
   streamUrl: 'https://stream.zeno.fm/f3wvbbqmdg8uv',
   title: 'Radio Ninada 90.4 FM Live',
   currentProgram: 'Ninada Morning Buzz (SDM Ujire)',
-  currentRJ: 'RJ Ananya',
-  currentSong: 'Community Melodies - Live Broadcast',
+  currentHost: 'RJ Ananya',
+  currentSong: 'Community Melodies - Special Broadcast',
   bitrate: 320,
-  quality: 'Ultra HD 320 kbps',
+  quality: 'HD Stereo 44.1kHz',
   status: 'LIVE',
-  liveListeners: 0,
+  liveListeners: 48,
   updatedAt: new Date().toISOString(),
 };
 
 export async function getLiveState(req: Request, res: Response, next: NextFunction) {
   try {
-    let liveState = await prisma.liveRadioState.findUnique({ where: { id: 'live-config' } });
-    if (!liveState) {
+    let live = await prisma.liveStream.findUnique({
+      where: { id: 'live-config' },
+      include: { media: true },
+    });
+
+    if (!live) {
       try {
-        liveState = await prisma.liveRadioState.create({
+        live = await prisma.liveStream.create({
           data: { id: 'live-config' },
+          include: { media: true },
         });
-      } catch (_) {
-        liveState = defaultLiveState as any;
+      } catch {
+        live = defaultLiveState as any;
       }
     }
-    return res.json({ success: true, data: liveState });
+
+    return res.json({ success: true, data: live });
   } catch (error) {
     console.warn('[LiveAPI Warning]:', (error as Error)?.message);
     return res.json({ success: true, data: defaultLiveState });
@@ -38,41 +45,42 @@ export async function getLiveState(req: Request, res: Response, next: NextFuncti
 
 export async function updateLiveState(req: Request, res: Response, next: NextFunction) {
   try {
-    const { isLive, streamUrl, title, currentProgram, currentRJ, currentSong, bitrate, quality, status } = req.body;
+    const data = liveStreamSchema.parse(req.body);
 
-    const updated = await prisma.liveRadioState.upsert({
+    const updated = await prisma.liveStream.upsert({
       where: { id: 'live-config' },
       update: {
-        ...(isLive !== undefined && { isLive }),
-        ...(streamUrl && { streamUrl }),
-        ...(title && { title }),
-        ...(currentProgram && { currentProgram }),
-        ...(currentRJ && { currentRJ }),
-        ...(currentSong && { currentSong }),
-        ...(bitrate && { bitrate }),
-        ...(quality && { quality }),
-        ...(status && { status }),
+        ...(data.isLive !== undefined && { isLive: data.isLive }),
+        ...(data.streamUrl && { streamUrl: data.streamUrl }),
+        ...(data.title && { title: data.title }),
+        ...(data.currentProgram && { currentProgram: data.currentProgram }),
+        ...(data.currentHost && { currentHost: data.currentHost }),
+        ...(data.currentSong && { currentSong: data.currentSong }),
+        ...(data.bitrate && { bitrate: data.bitrate }),
+        ...(data.quality && { quality: data.quality }),
+        ...(data.status && { status: data.status as any }),
+        ...(data.liveListeners !== undefined && { liveListeners: data.liveListeners }),
       },
       create: {
         id: 'live-config',
-        isLive: isLive ?? true,
-        streamUrl: streamUrl || 'https://stream.zeno.fm/f3wvbbqmdg8uv',
-        title: title || 'Radio Ninada 90.4 FM Live',
-        currentProgram: currentProgram || 'Ninada Morning Buzz (SDM Ujire)',
-        currentRJ: currentRJ || 'RJ Ananya',
-        currentSong: currentSong || 'Community Melodies - Live Broadcast',
-        bitrate: bitrate || 320,
-        quality: quality || 'Ultra HD 320 kbps',
-        status: status || 'LIVE',
+        isLive: data.isLive ?? true,
+        streamUrl: data.streamUrl || 'https://stream.zeno.fm/f3wvbbqmdg8uv',
+        title: data.title || 'Radio Ninada 90.4 FM Live',
+        currentProgram: data.currentProgram || 'Ninada Morning Buzz (SDM Ujire)',
+        currentHost: data.currentHost || 'RJ Ananya',
+        currentSong: data.currentSong || 'Community Melodies - Special Broadcast',
+        bitrate: data.bitrate || 320,
+        quality: data.quality || 'HD Stereo 44.1kHz',
+        status: (data.status as any) || 'LIVE',
+        liveListeners: data.liveListeners || 48,
       },
     });
 
-    // Broadcast live status update via Socket.IO
+    // Broadcast to connected listeners via Socket.IO
     try {
-      getIO().emit('live-status-changed', updated);
-    } catch (err) {
-      // Socket emission fallback
-    }
+      const io = getIO();
+      if (io) io.emit('live-state-changed', updated);
+    } catch (_) {}
 
     return res.json({ success: true, message: 'Live radio state updated', data: updated });
   } catch (error) {
@@ -80,29 +88,25 @@ export async function updateLiveState(req: Request, res: Response, next: NextFun
   }
 }
 
-export async function toggleLive(req: Request, res: Response, next: NextFunction) {
+export async function toggleBroadcast(req: Request, res: Response, next: NextFunction) {
   try {
-    const currentState = await prisma.liveRadioState.findUnique({ where: { id: 'live-config' } });
-    const newIsLive = !currentState?.isLive;
-
-    const updated = await prisma.liveRadioState.update({
+    const current = await prisma.liveStream.findUnique({ where: { id: 'live-config' } });
+    const isLive = !(current?.isLive ?? true);
+    const updated = await prisma.liveStream.upsert({
       where: { id: 'live-config' },
-      data: {
-        isLive: newIsLive,
-        status: newIsLive ? 'LIVE' : 'OFFLINE',
-      },
+      update: { isLive, status: isLive ? 'LIVE' : 'OFFLINE' },
+      create: { id: 'live-config', isLive, status: isLive ? 'LIVE' : 'OFFLINE' },
     });
 
     try {
-      getIO().emit('live-status-changed', updated);
-    } catch (err) {}
+      const io = getIO();
+      if (io) io.emit('broadcast-toggled', { isLive });
+    } catch (_) {}
 
-    return res.json({
-      success: true,
-      message: `Live radio broadcast is now ${newIsLive ? 'ON AIR' : 'OFF AIR'}`,
-      data: updated,
-    });
+    return res.json({ success: true, isLive: updated.isLive, status: updated.status });
   } catch (error) {
     next(error);
   }
 }
+
+export const toggleLive = toggleBroadcast;

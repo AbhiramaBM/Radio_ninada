@@ -1,82 +1,97 @@
-import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
-import { config } from '../config/index';
-
-const isConfigured = Boolean(
-  (config.cloudinary.cloudName && config.cloudinary.apiKey && config.cloudinary.apiSecret) ||
-  config.cloudinary.url
-);
-
-if (isConfigured) {
-  if (config.cloudinary.url) {
-    cloudinary.config({
-      cloudinary_url: config.cloudinary.url,
-    });
-  } else {
-    cloudinary.config({
-      cloud_name: config.cloudinary.cloudName,
-      api_key: config.cloudinary.apiKey,
-      api_secret: config.cloudinary.apiSecret,
-      secure: true,
-    });
-  }
-}
-
-export function isCloudinaryReady(): boolean {
-  return isConfigured;
-}
+import { UploadApiResponse } from 'cloudinary';
+import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary';
+import fs from 'fs';
 
 export interface CloudinaryUploadResult {
   url: string;
-  secure_url: string;
-  public_id: string;
+  secureUrl: string;
+  publicId: string;
   format: string;
   bytes: number;
-  resource_type: string;
+  resourceType: string;
+  duration?: number;
+  width?: number;
+  height?: number;
 }
 
+export const CLOUDINARY_FOLDERS = {
+  PODCAST_COVERS: 'radio-ninada/podcasts/covers',
+  PODCAST_EPISODES: 'radio-ninada/podcasts/episodes',
+  PROGRAMS: 'radio-ninada/programs',
+  HOSTS: 'radio-ninada/hosts',
+  BANNERS: 'radio-ninada/banners',
+  GALLERY: 'radio-ninada/gallery',
+  USERS: 'radio-ninada/users',
+  LIVE: 'radio-ninada/live',
+  MEDIA: 'radio-ninada/media',
+} as const;
+
 /**
- * Upload a local file path to Cloudinary under a specific folder (e.g., 'radio-ninada/audio' or 'radio-ninada/images')
+ * Upload local file to Cloudinary with designated folder and publicId prefix.
+ * Automatically cleans up the temporary local file after upload attempt.
  */
 export async function uploadFileToCloudinary(
   filePath: string,
-  folder: string = 'radio-ninada/media',
-  resourceType: 'image' | 'video' | 'raw' | 'auto' = 'auto'
+  folder: string = CLOUDINARY_FOLDERS.MEDIA,
+  resourceType: 'image' | 'video' | 'raw' | 'auto' = 'auto',
+  customPublicId?: string
 ): Promise<CloudinaryUploadResult> {
-  if (!isConfigured) {
-    throw new Error('Cloudinary credentials missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in environment variables.');
+  if (!isCloudinaryConfigured()) {
+    throw new Error('Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.');
   }
 
-  const result: UploadApiResponse = await cloudinary.uploader.upload(filePath, {
-    folder,
-    resource_type: resourceType,
-    use_filename: true,
-    unique_filename: true,
-  });
+  try {
+    const uploadOptions: any = {
+      folder,
+      resource_type: resourceType,
+      use_filename: true,
+      unique_filename: true,
+      overwrite: false,
+    };
 
-  return {
-    url: result.url,
-    secure_url: result.secure_url,
-    public_id: result.public_id,
-    format: result.format || '',
-    bytes: result.bytes || 0,
-    resource_type: result.resource_type || resourceType,
-  };
+    if (customPublicId) {
+      uploadOptions.public_id = customPublicId;
+    }
+
+    const result: UploadApiResponse = await cloudinary.uploader.upload(filePath, uploadOptions);
+
+    return {
+      url: result.url,
+      secureUrl: result.secure_url,
+      publicId: result.public_id,
+      format: result.format || '',
+      bytes: result.bytes || 0,
+      resourceType: result.resource_type || resourceType,
+      duration: result.duration,
+      width: result.width,
+      height: result.height,
+    };
+  } finally {
+    // Always clean up local temporary upload file
+    if (fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (cleanupErr) {
+        console.warn(`[Cloudinary Service] Could not remove temp file ${filePath}:`, cleanupErr);
+      }
+    }
+  }
 }
 
 /**
- * Safely delete an asset from Cloudinary using its public_id.
- * Audio and video files use resource_type: 'video' in Cloudinary.
+ * Safely delete an asset from Cloudinary by public ID.
+ * Audio and video assets use resource_type: 'video'.
  */
 export async function deleteFileFromCloudinary(
   publicId?: string | null,
   resourceType: 'image' | 'video' | 'raw' = 'image'
 ): Promise<{ success: boolean; result?: string; error?: string }> {
   if (!publicId) {
-    return { success: false, error: 'No public_id provided' };
+    return { success: false, error: 'No public ID provided' };
   }
 
-  if (!isConfigured) {
-    console.warn(`[Cloudinary Service Warning] Cannot delete asset '${publicId}': Cloudinary credentials missing.`);
+  if (!isCloudinaryConfigured()) {
+    console.warn(`[Cloudinary Service] Cannot delete '${publicId}': Cloudinary not configured.`);
     return { success: false, error: 'Cloudinary not configured' };
   }
 
@@ -85,39 +100,33 @@ export async function deleteFileFromCloudinary(
       resource_type: resourceType,
       invalidate: true,
     });
-
-    console.log(`[Cloudinary Service] Deleted asset '${publicId}' (${resourceType}):`, res.result);
-    return { success: res.result === 'ok' || res.result === 'not_found', result: res.result };
+    return {
+      success: res.result === 'ok' || res.result === 'not_found',
+      result: res.result,
+    };
   } catch (err: any) {
-    console.error(`[Cloudinary Deletion Error] Failed to delete public_id '${publicId}':`, err?.message || err);
-    return { success: false, error: err?.message || 'Deletion failed' };
+    console.error(`[Cloudinary Service] Failed to destroy asset '${publicId}':`, err?.message || err);
+    return { success: false, error: err?.message || 'Cloudinary asset deletion failed' };
   }
 }
 
 /**
- * Helper to extract Cloudinary public_id from a Cloudinary secure_url if public_id was not explicitly stored
+ * Extract Cloudinary public ID from a URL
  */
-export function extractPublicIdFromUrl(url: string): string | null {
+export function extractPublicIdFromUrl(url?: string | null): string | null {
   if (!url || typeof url !== 'string' || !url.includes('cloudinary.com')) {
     return null;
   }
-
   try {
     const parts = url.split('/upload/');
     if (parts.length < 2) return null;
-
-    // Get everything after /upload/ (v1234567/folder/file.ext)
-    const pathAfterUpload = parts[1];
-    // Remove version tag (v12345678/) if present
-    const pathWithoutVersion = pathAfterUpload.replace(/^v\d+\//, '');
-    // Remove file extension
-    const lastDotIndex = pathWithoutVersion.lastIndexOf('.');
-    if (lastDotIndex === -1) return pathWithoutVersion;
-
-    return pathWithoutVersion.substring(0, lastDotIndex);
+    const pathAfterUpload = parts[1].replace(/^v\d+\//, '');
+    const lastDotIndex = pathAfterUpload.lastIndexOf('.');
+    return lastDotIndex === -1 ? pathAfterUpload : pathAfterUpload.substring(0, lastDotIndex);
   } catch {
     return null;
   }
 }
 
-export { cloudinary };
+export const isCloudinaryReady = isCloudinaryConfigured;
+export { cloudinary, isCloudinaryConfigured };

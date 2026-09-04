@@ -1,239 +1,172 @@
 /**
- * Radio Ninada - Public Web API Connector Client
- * Connects existing HTML/CSS frontend to the backend REST API
+ * Radio Ninada - Clean REST API Client
+ * Connects frontend directly to backend REST endpoints. No Firebase.
  */
-
 (function () {
+  'use strict';
+
   const API_BASE_URL = window.__RADIO_API_BASE__ ||
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:5000/api'
-      : 'https://backend-five-pearl-12.vercel.app/api');
-  const DEFAULT_TIMEOUT_MS = 8000;
+      : '/api');
 
-  async function fetchWithTimeout(resource, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const DEFAULT_TIMEOUT_MS = 10000;
+
+  async function fetchApi(endpoint, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeoutMs);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    };
+
+    // Include auth token if available (for staff/admin actions)
+    const token = localStorage.getItem('radio_token');
+    if (token && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Don't set Content-Type for FormData
+    if (options.body instanceof FormData) {
+      delete headers['Content-Type'];
+    }
+
     try {
-      const response = await fetch(resource, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
+        headers,
         signal: controller.signal,
       });
-      clearTimeout(id);
+      clearTimeout(timer);
+
+      const data = await response.json().catch(() => ({ success: false, message: 'Invalid server response' }));
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
       }
-      return response;
-    } catch (error) {
-      clearTimeout(id);
-      throw error;
+
+      return data;
+    } catch (err) {
+      clearTimeout(timer);
+      console.warn(`[RadioAPI Error] ${endpoint}:`, err.message);
+      return { success: false, error: err.message, message: err.message };
     }
   }
 
-  window.RadioNinadaAPI = {
+  window.RadioAPI = {
+    baseUrl: API_BASE_URL,
+
+    // Public Station APIs (no authentication needed)
     async getLiveState() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/live`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Live state API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/live');
     },
 
     async getPrograms() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/programs`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Programs API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/programs');
     },
 
     async getPodcasts() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/podcasts`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Podcasts API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/podcasts');
+    },
+
+    async getPodcast(idOrSlug) {
+      return await fetchApi(`/podcasts/${idOrSlug}`);
     },
 
     async getSchedule() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/schedule`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Schedule API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/schedule');
     },
 
     async getNews() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/news`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] News API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/news');
     },
 
     async getRJs() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/rj`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] RJs API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/rj');
     },
 
     async getEvents() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/events`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Events API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/events');
     },
 
     async getGallery() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/gallery`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Gallery API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/gallery');
     },
 
     async getBanners() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/banners`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Banners API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/banners');
     },
 
-    // Notifications API
     async getNotifications() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/notifications`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Notifications API warning:', e.message);
-        return { success: false, error: e.message };
-      }
+      return await fetchApi('/notifications');
     },
 
-    async markNotificationRead(id) {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/notifications/${id}/read`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Mark notification read warning:', e.message);
-        return { success: false, error: e.message };
-      }
-    },
-
-    async markAllNotificationsRead() {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/notifications/read-all`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Mark all notifications read warning:', e.message);
-        return { success: false, error: e.message };
-      }
-    },
-
-    // Playlists API
     async getPlaylists() {
+      return await fetchApi('/playlists');
+    },
+
+    async sendContactMessage(payload) {
+      return await fetchApi('/contact', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    },
+
+    // Staff/Admin Auth & Media APIs
+    async staffLogin(email, password) {
+      const res = await fetchApi('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      if (res.success && res.accessToken) {
+        localStorage.setItem('radio_token', res.accessToken);
+        localStorage.setItem('radio_user', JSON.stringify(res.user));
+      }
+      return res;
+    },
+
+    staffLogout() {
+      localStorage.removeItem('radio_token');
+      localStorage.removeItem('radio_user');
+      window.location.reload();
+    },
+
+    getStaffUser() {
       try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists`);
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Playlists API warning:', e.message);
-        return { success: false, error: e.message };
+        const stored = localStorage.getItem('radio_user');
+        return stored ? JSON.parse(stored) : null;
+      } catch {
+        return null;
       }
     },
 
-    async createPlaylist(name, description = '') {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, description }),
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Create playlist warning:', e.message);
-        return { success: false, error: e.message };
-      }
+    isStaffLoggedIn() {
+      return Boolean(localStorage.getItem('radio_token'));
     },
 
-    async updatePlaylist(id, name, description = '') {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, description }),
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Update playlist warning:', e.message);
-        return { success: false, error: e.message };
-      }
+    // Media Library APIs (for Staff/Admin)
+    async listMedia(params = {}) {
+      const query = new URLSearchParams(params).toString();
+      return await fetchApi(`/media${query ? '?' + query : ''}`);
     },
 
-    async deletePlaylist(id) {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists/${id}`, {
-          method: 'DELETE',
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Delete playlist warning:', e.message);
-        return { success: false, error: e.message };
-      }
+    async uploadMedia(formData) {
+      return await fetchApi('/media/upload', {
+        method: 'POST',
+        body: formData,
+      });
     },
 
-    async addPlaylistItem(id, item) {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists/${id}/items`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(item),
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Add playlist item warning:', e.message);
-        return { success: false, error: e.message };
-      }
-    },
-
-    async removePlaylistItem(id, itemId) {
-      try {
-        const res = await fetchWithTimeout(`${API_BASE_URL}/playlists/${id}/items/${itemId}`, {
-          method: 'DELETE',
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('[RadioNinadaAPI] Remove playlist item warning:', e.message);
-        return { success: false, error: e.message };
-      }
+    async deleteMedia(id) {
+      return await fetchApi(`/media/${id}`, {
+        method: 'DELETE',
+      });
     },
   };
 
-  console.log('📡 Radio Ninada API Connector Initialized ->', API_BASE_URL);
+  // Backward-compatibility alias
+  window.RadioNinadaAPI = window.RadioAPI;
+
+  console.log('📻 Radio Ninada Clean API Client initialized ->', API_BASE_URL);
 })();

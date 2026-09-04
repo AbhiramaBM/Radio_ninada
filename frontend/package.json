@@ -1,0 +1,9 @@
+{
+  "name": "radio-ninada-frontend",
+  "version": "1.0.0",
+  "description": "Radio Ninada Public Web Frontend",
+  "scripts": {
+    "dev": "npx serve -l 3000 .",
+    "start": "npx serve -l 3000 ."
+  }
+}

@@ -545,78 +545,14 @@ function resolveServerUrl(url) {
     return url;
 }
 
-// Realtime Firestore Sync Subscriptions
+// Periodic Live Broadcast Sync
 function initRealtimeListeners() {
-    if (typeof firebase === 'undefined' || !firebase.apps.length) return;
-    try {
-        const db = firebase.firestore();
-
-        // 1. Live Radio State Sync
-        db.collection('live').doc('live-config').onSnapshot(snapshot => {
-            if (snapshot.exists) {
-                const data = snapshot.data();
-                if (data && window.RadioPlayer) {
-                    if (data.streamUrl && RadioPlayer.isValidLiveStreamUrl(data.streamUrl)) {
-                        RadioPlayer.currentTrack.url = data.streamUrl;
-                    }
-                    if (data.title) RadioPlayer.currentTrack.title = data.title;
-                    if (data.currentRJ || data.currentProgram) {
-                        RadioPlayer.currentTrack.artist = `${data.currentRJ || 'RJ Ananya'} • ${data.currentProgram || 'Ninada Morning Buzz'}`;
-                    }
-                    RadioPlayer.updateUI();
-
-                    const titleEl = document.getElementById('live-listeners-count-display');
-                    const subEl = document.getElementById('live-broadcast-status-subtitle');
-                    if (titleEl) {
-                        const statusLabel = data.isLive ? 'ON AIR LIVE 🔴' : 'OFF AIR ⚪';
-                        titleEl.innerText = `${data.title || 'Radio Ninada 90.4 FM'} — ${statusLabel}`;
-                    }
-                    if (subEl && (data.currentProgram || data.currentRJ)) {
-                        subEl.innerText = `${data.currentProgram || 'Live Radio Broadcast'} with ${data.currentRJ || 'Station Host'}`;
-                    }
-                }
-            }
-        }, err => console.warn('[RealtimeSync] Live state error:', err));
-
-        // 2. RJs Realtime Sync
-        db.collection('rjs').onSnapshot(snapshot => {
-            const rjs = [];
-            snapshot.forEach(doc => rjs.push({ id: doc.id, ...doc.data() }));
-            if (rjs.length > 0) renderRJsUI(rjs);
-        }, err => console.warn('[RealtimeSync] RJs error:', err));
-
-        // 3. Podcasts Realtime Sync
-        db.collection('podcasts').onSnapshot(snapshot => {
-            const pods = [];
-            snapshot.forEach(doc => pods.push({ id: doc.id, ...doc.data() }));
-            if (pods.length > 0) renderPodcastsUI(pods);
-        }, err => console.warn('[RealtimeSync] Podcasts error:', err));
-
-        // 4. Events Realtime Sync
-        db.collection('events').onSnapshot(snapshot => {
-            const evts = [];
-            snapshot.forEach(doc => evts.push({ id: doc.id, ...doc.data() }));
-            if (evts.length > 0) renderEventsUI(evts);
-        }, err => console.warn('[RealtimeSync] Events error:', err));
-
-        // 5. Gallery Realtime Sync
-        db.collection('gallery').onSnapshot(snapshot => {
-            const items = [];
-            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-            if (items.length > 0) renderGalleryUI(items);
-        }, err => console.warn('[RealtimeSync] Gallery error:', err));
-
-        // 6. News Realtime Sync
-        db.collection('news').onSnapshot(snapshot => {
-            const newsItems = [];
-            snapshot.forEach(doc => newsItems.push({ id: doc.id, ...doc.data() }));
-            if (newsItems.length > 0) renderNewsUI(newsItems);
-        }, err => console.warn('[RealtimeSync] News error:', err));
-
-        console.log('⚡ Firestore Real-time Listeners Activated');
-    } catch (e) {
-        console.warn('[RealtimeSync] Initialization skipped:', e.message);
-    }
+    // Sync live state periodically every 30 seconds
+    setInterval(async () => {
+        if (window.RadioPlayer && typeof window.RadioPlayer.loadLiveConfig === 'function') {
+            await window.RadioPlayer.loadLiveConfig();
+        }
+    }, 30000);
 }
 
 function renderRJsUI(rjList) {
@@ -947,6 +883,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Radio Ninada 90.4 FM Live Stream Player & Config
     if (window.RadioPlayer && typeof window.RadioPlayer.init === 'function') {
         window.RadioPlayer.init();
+    }
+    if (window.RadioMediaLibrary && typeof window.RadioMediaLibrary.init === 'function') {
+        window.RadioMediaLibrary.init();
     }
 
     // Initial render of college news

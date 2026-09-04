@@ -49,7 +49,7 @@ export async function getDashboardStats(req: Request, res: Response, next: NextF
       prisma.event.count({ where: { deletedAt: null } }),
       prisma.news.count({ where: { deletedAt: null } }),
       prisma.rJProfile.count({ where: { deletedAt: null } }),
-      prisma.liveRadioState.findUnique({ where: { id: 'live-config' } }),
+      prisma.liveStream.findUnique({ where: { id: 'live-config' } }),
       prisma.analyticsEvent.count({ where: { timestamp: { gte: startOfToday } } }),
       prisma.auditLog.findMany({ take: 5, orderBy: { createdAt: 'desc' } }),
       prisma.analyticsEvent.findMany({ where: { timestamp: { gte: sevenDaysAgo } } }),
@@ -69,7 +69,7 @@ export async function getDashboardStats(req: Request, res: Response, next: NextF
       };
     });
 
-    recentEvents.forEach((evt) => {
+    recentEvents.forEach((evt: any) => {
       const dateStr = evt.timestamp.toISOString().split('T')[0];
       const dayObj = last7Days.find((d) => d.dateStr === dateStr);
       if (dayObj) {
@@ -86,12 +86,12 @@ export async function getDashboardStats(req: Request, res: Response, next: NextF
       downloads,
     }));
 
-    const totalDeviceEvents = deviceGroup.reduce((acc, curr) => acc + curr._count.device, 0);
+    const totalDeviceEvents = deviceGroup.reduce((acc: number, curr: any) => acc + (curr._count?.device || 0), 0);
     const deviceBreakdown =
       totalDeviceEvents > 0
-        ? deviceGroup.map((item) => ({
+        ? deviceGroup.map((item: any) => ({
             name: item.device || 'Unknown',
-            value: Math.round((item._count.device / totalDeviceEvents) * 100),
+            value: Math.round(((item._count?.device || 0) / totalDeviceEvents) * 100),
           }))
         : [
             { name: 'Mobile', value: 0 },
@@ -140,7 +140,7 @@ export async function exportAnalyticsReport(req: Request, res: Response, next: N
       orderBy: { timestamp: 'desc' },
     });
 
-    const reportData = events.map((e) => ({
+    const reportData = events.map((e: any) => ({
       ID: e.id,
       EventType: e.eventType,
       Path: e.path || '/',

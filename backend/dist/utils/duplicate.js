@@ -15,13 +15,10 @@ async function checkDuplicateProgram(name, excludeId) {
     });
     return existing !== null;
 }
-async function checkDuplicatePodcast(title, episodeNumber, season, excludeId) {
+async function checkDuplicatePodcast(title, excludeId) {
     const existing = await prisma_1.prisma.podcast.findFirst({
         where: {
-            OR: [
-                { title: { equals: title } },
-                { AND: [{ episodeNumber }, { season }] },
-            ],
+            title: { equals: title },
             deletedAt: null,
             NOT: excludeId ? { id: excludeId } : undefined,
         },

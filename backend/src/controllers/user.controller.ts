@@ -6,17 +6,17 @@ import { userCreateSchema } from '../validation/index';
 
 export async function getUsers(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
-    const { search, role, status, page = '1', limit = '10' } = req.query;
+    const { search, role, status, page = '1', limit = '20' } = req.query;
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
 
     const where: any = { deletedAt: null };
-    if (role) where.role = role as string;
-    if (status) where.status = status as string;
+    if (role) where.role = role as any;
+    if (status) where.status = status as any;
     if (search) {
       where.OR = [
-        { name: { contains: search as string } },
-        { email: { contains: search as string } },
+        { name: { contains: search as string, mode: 'insensitive' } },
+        { email: { contains: search as string, mode: 'insensitive' } },
       ];
     }
 
@@ -59,9 +59,13 @@ export async function createUser(req: AuthenticatedRequest, res: Response, next:
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await prisma.user.create({
       data: {
-        ...data,
+        name: data.name,
         email: normalizedEmail,
         password: hashedPassword,
+        role: data.role as any,
+        phone: data.phone,
+        avatar: data.avatar,
+        bio: data.bio,
       },
       select: { id: true, email: true, name: true, role: true, avatar: true, bio: true, status: true, createdAt: true },
     });
@@ -76,13 +80,13 @@ export async function updateUserRole(req: AuthenticatedRequest, res: Response, n
   try {
     const id = req.params.id as string;
     const { role } = req.body;
-    if (!['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'MODERATOR', 'LISTENER'].includes(role)) {
+    if (!['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ', 'USER'].includes(role)) {
       return res.status(400).json({ success: false, message: 'Invalid role' });
     }
 
     const user = await prisma.user.update({
       where: { id },
-      data: { role },
+      data: { role: role as any },
       select: { id: true, email: true, name: true, role: true, status: true },
     });
 
@@ -102,11 +106,11 @@ export async function updateUserStatus(req: AuthenticatedRequest, res: Response,
 
     const user = await prisma.user.update({
       where: { id },
-      data: { status },
+      data: { status: status as any },
       select: { id: true, email: true, name: true, role: true, status: true },
     });
 
-    return res.json({ success: true, message: `User status changed to ${status}`, data: user });
+    return res.json({ success: true, message: `User status updated to ${status}`, data: user });
   } catch (error) {
     next(error);
   }
@@ -119,7 +123,7 @@ export async function deleteUser(req: AuthenticatedRequest, res: Response, next:
       where: { id },
       data: { deletedAt: new Date() },
     });
-    return res.json({ success: true, message: 'User soft-deleted successfully' });
+    return res.json({ success: true, message: 'User deleted successfully' });
   } catch (error) {
     next(error);
   }
