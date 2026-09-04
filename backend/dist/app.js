@@ -34,13 +34,16 @@ const sponsor_routes_1 = __importDefault(require("./routes/sponsor.routes"));
 const analytics_routes_1 = __importDefault(require("./routes/analytics.routes"));
 const ai_routes_1 = __importDefault(require("./routes/ai.routes"));
 const app = (0, express_1.default)();
+// Trust proxy for Vercel / reverse proxies
+app.set('trust proxy', 1);
 // Security Middlewares
 app.use((0, helmet_1.default)({ crossOriginResourcePolicy: false }));
 app.use((0, cors_1.default)({ origin: true, credentials: true }));
-// Rate Limiter (Max 300 requests per 15 mins)
+// Rate Limiter (Max 1000 requests per 15 mins)
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
-    max: 300,
+    max: 1000,
+    validate: { xForwardedForHeader: false, default: false },
     message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use('/api', limiter);

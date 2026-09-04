@@ -1225,8 +1225,9 @@
                 const audioPublicId = audioRes.data.publicId;
                 const duration = audioRes.data.duration ? `${Math.floor(audioRes.data.duration / 60)}:${Math.floor(audioRes.data.duration % 60).toString().padStart(2, '0')}` : '30:00';
 
+                const safeDesc = (description && description.length >= 5) ? description : `${title} - Episode on Radio Ninada 90.4 FM`;
                 const res = await window.RadioAPI.createPodcast({
-                    title, description,
+                    title, description: safeDesc,
                     coverUrl: coverUrl || 'images/radio_ninada_logo.png',
                     coverPublicId, audioUrl, audioPublicId, duration,
                     featured, status: 'PUBLISHED'
@@ -1317,8 +1318,10 @@
                     }
                 }
 
+                const safeDesc = (description && description.length >= 5) ? description : `${name} - Daily show on Radio Ninada 90.4 FM`;
                 const res = await window.RadioAPI.createProgram({
-                    name, description, hostName, schedule,
+                    name, description: safeDesc, hostName: hostName || 'Radio Ninada RJ',
+                    schedule: schedule || 'Mon - Fri • 08:00 AM',
                     banner: banner || 'images/radio_ninada_logo.png',
                     bannerPublicId, duration: '60 min', status: 'PUBLISHED'
                 });
@@ -1470,9 +1473,11 @@
                     if (r?.success && r.data) banner = r.data.secureUrl || r.data.url;
                 }
 
+                const validDate = eventDate ? new Date(eventDate).toISOString() : new Date(Date.now() + 86400000).toISOString();
+                const safeDesc = (description && description.length >= 5) ? description : `${title} - Live event at Radio Ninada 90.4 FM`;
                 const res = await window.RadioAPI.createEvent({
-                    title, description, eventDate: new Date(eventDate).toISOString(),
-                    location, banner: banner || 'images/radio_ninada_logo.png',
+                    title, description: safeDesc, eventDate: validDate,
+                    location: location || 'Radio Ninada Studio', banner: banner || 'images/radio_ninada_logo.png',
                     registrationRequired: true
                 });
 
@@ -1675,9 +1680,10 @@
                     }
                 }
 
+                const safeBio = (bio && bio.length >= 5) ? bio : `Station presenter and RJ host at Radio Ninada 90.4 FM`;
                 const res = await window.RadioAPI.createHost({
-                    name, designation, bio,
-                    photoUrl: photoUrl || 'images/radio_ninada_logo.png',
+                    name, designation: designation || 'Radio Host / RJ', bio: safeBio,
+                    photoUrl: photoUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
                     publicId, status: 'ACTIVE'
                 });
 
@@ -1738,16 +1744,25 @@
             const targetUrl = document.getElementById('banner-url').value.trim();
             const file = document.getElementById('banner-file').files[0];
 
-            if (!file) return;
+            if (!file) {
+                showToast('Please select a banner image file', true);
+                return;
+            }
             btn.disabled = true;
+            btn.innerHTML = `Uploading to Cloudinary...`;
 
             try {
-                const formData = new FormData();
-                formData.append('title', title);
-                if (targetUrl) formData.append('targetUrl', targetUrl);
-                formData.append('image', file);
+                showToast('Uploading banner to Cloudinary...');
+                const r = await window.RadioAPI.uploadMedia(file, 'radio-ninada/banners');
+                if (!r?.success || !r.data) throw new Error(r?.message || 'Banner upload failed');
 
-                const res = await window.RadioAPI.createBanner(formData);
+                const imageUrl = r.data.secureUrl || r.data.url;
+                const publicId = r.data.publicId;
+
+                const res = await window.RadioAPI.createBanner({
+                    title, targetUrl: targetUrl || '#', imageUrl, publicId, type: 'HOMEPAGE', priority: 1, status: 'ACTIVE'
+                });
+
                 if (res?.success) {
                     showToast('Banner uploaded and active!');
                     document.getElementById('banner-form').reset();
@@ -1759,6 +1774,7 @@
                 showToast(err.message, true);
             } finally {
                 btn.disabled = false;
+                btn.innerHTML = `Add Banner`;
             }
         }
 

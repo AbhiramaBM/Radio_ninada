@@ -540,7 +540,9 @@ function closeMediaLightbox() {
 function resolveServerUrl(url) {
     if (!url) return '';
     if (url.startsWith('/uploads/')) {
-        return 'http://localhost:5000' + url;
+        const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        const origin = isLocal ? 'http://localhost:5000' : (typeof window !== 'undefined' && window.location ? window.location.origin : '');
+        return origin + url;
     }
     return url;
 }
@@ -561,38 +563,58 @@ function renderRJsUI(rjList) {
     for (const k in rjData) {
         if (k.startsWith('dyn_')) delete rjData[k];
     }
-    if (rjList.length === 0) {
-        container.innerHTML = `<div class="text-xs text-on-surface-variant italic py-4 col-span-full">No RJ hosts listed at this moment.</div>`;
+    
+    // If database returned hosts, render them
+    if (Array.isArray(rjList) && rjList.length > 0) {
+        container.innerHTML = rjList.map(rj => {
+            const rjKey = 'dyn_' + rj.id;
+            const photoUrl = resolveServerUrl(rj.photo || rj.photoUrl) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80';
+            rjData[rjKey] = {
+                name: rj.name,
+                show: rj.designation || 'On-Air Host',
+                timing: rj.status === 'ACTIVE' ? 'On Air Active' : 'Station Host',
+                img: photoUrl,
+                bio: rj.bio || 'Station Presenter at Radio Ninada 90.4 FM.',
+                genre: rj.achievements || 'Pop, Classical, Regional Beats'
+            };
+            return `
+                <div onclick="openRjModal('${rjKey}')" class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
+                    <div class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
+                        <img class="w-full h-full object-cover rounded-full" src="${photoUrl}" alt="${rj.name}" />
+                    </div>
+                    <span class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight truncate w-full">${rj.name}</span>
+                    <span class="text-[11px] text-on-surface-variant truncate w-full">${rj.designation || 'Host'}</span>
+                </div>
+            `;
+        }).join('');
         return;
     }
-    container.innerHTML = rjList.map(rj => {
-        const rjKey = 'dyn_' + rj.id;
-        const photoUrl = resolveServerUrl(rj.photo) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80';
-        rjData[rjKey] = {
-            name: rj.name,
-            show: rj.designation || 'On-Air Host',
-            timing: rj.status === 'ACTIVE' ? 'On Air Active' : 'Station Host',
-            img: photoUrl,
-            bio: rj.bio || 'Station Presenter at Radio Ninada.',
-            genre: rj.achievements || 'Pop, Classical, Regional Beats'
-        };
-        return `
-            <div onclick="openRjModal('${rjKey}')" class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
-                <div class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
-                    <img class="w-full h-full object-cover rounded-full" src="${photoUrl}" alt="${rj.name}" />
-                </div>
-                <span class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight truncate w-full">${rj.name}</span>
-                <span class="text-[11px] text-on-surface-variant truncate w-full">${rj.designation || 'Host'}</span>
+
+    // Default station RJs fallback
+    const defaultRJs = [
+        { key: 'rj1', name: 'RJ Ananya', desig: 'Morning Buzz', photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80' },
+        { key: 'rj2', name: 'RJ Vikram', desig: 'Campus Beats', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80' }
+    ];
+    container.innerHTML = defaultRJs.map(rj => `
+        <div onclick="openRjModal('${rj.key}')" class="flex flex-col items-center group cursor-pointer shrink-0 w-28 text-center">
+            <div class="w-20 h-20 rounded-full p-1 border-2 border-primary/40 group-hover:border-primary group-hover:scale-110 transition-all shadow-md overflow-hidden bg-white mb-xs">
+                <img class="w-full h-full object-cover rounded-full" src="${rj.photo}" alt="${rj.name}" />
             </div>
-        `;
-    }).join('');
+            <span class="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight truncate w-full">${rj.name}</span>
+            <span class="text-[11px] text-on-surface-variant truncate w-full">${rj.desig}</span>
+        </div>
+    `).join('');
 }
 
 function renderPodcastsUI(podList) {
     const podGrid = document.getElementById('podcast-grid');
     if (!podGrid) return;
-    if (podList.length === 0) {
-        podGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No podcast episodes published yet. Tune in soon for fresh shows!</div>`;
+    if (!Array.isArray(podList) || podList.length === 0) {
+        podGrid.innerHTML = `
+            <div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md border border-dashed border-outline-variant/40 rounded-2xl">
+                No podcast episodes published yet. Tune in soon for fresh shows or upload episodes from the admin dashboard!
+            </div>
+        `;
         return;
     }
     podGrid.innerHTML = podList.map((pod) => {
@@ -662,11 +684,33 @@ function addToCalendar(title, description, location, dateStr) {
 function renderEventsUI(evtList) {
     const eventsContainer = document.getElementById('events-grid') || document.querySelector('#events .grid');
     if (!eventsContainer) return;
-    if (!Array.isArray(evtList) || evtList.length === 0) {
-        eventsContainer.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No upcoming events scheduled at this time. Check back soon!</div>`;
-        return;
-    }
-    eventsContainer.innerHTML = evtList.map(evt => {
+
+    // Use events from backend or station defaults
+    const items = (Array.isArray(evtList) && evtList.length > 0) ? evtList : [
+        {
+            title: "Annual SDM Media Fest & Live RJ Contest",
+            description: "A flagship inter-collegiate festival celebrating radio production, news reporting, voice acting, and student broadcasting talents.",
+            location: "SDM Campus Auditorium, Ujire",
+            eventDate: new Date(Date.now() + 7 * 86400000).toISOString(),
+            banner: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80"
+        },
+        {
+            title: "Ninada Musical Eve - Live Classical & Folk",
+            description: "An open-air evening celebrating regional Yakshagana melodies, Carnatic classical fusions, and local acoustic bands broadcast live on 90.4 FM.",
+            location: "Radio Ninada Amphitheatre",
+            eventDate: new Date(Date.now() + 14 * 86400000).toISOString(),
+            banner: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80"
+        },
+        {
+            title: "Community Radio Workshop & Voice Modulation",
+            description: "Interactive masterclass conducted by Senior Station RJs on audio editing, podcast storytelling, and microphone presence.",
+            location: "Studio 1, SDM Campus",
+            eventDate: new Date(Date.now() + 21 * 86400000).toISOString(),
+            banner: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80"
+        }
+    ];
+
+    eventsContainer.innerHTML = items.map(evt => {
         const bannerUrl = resolveServerUrl(evt.banner) || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80';
         const dateObj = evt.eventDate ? new Date(evt.eventDate) : null;
         const dateStr = dateObj ? dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'UPCOMING';
@@ -703,15 +747,37 @@ function renderEventsUI(evtList) {
 function renderGalleryUI(galList) {
     const galGrid = document.getElementById('gallery-grid');
     if (!galGrid) return;
-    if (galList.length === 0) {
-        galGrid.innerHTML = `<div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md">No media items or BTS shorts uploaded yet. Admin can upload media from the dashboard.</div>`;
-        return;
-    }
-    galGrid.innerHTML = galList.map(item => {
+
+    // Use items from backend or station defaults
+    const items = (Array.isArray(galList) && galList.length > 0) ? galList : [
+        {
+            title: "Studio 1 Live Broadcast Booth",
+            description: "High-definition sound engineering desk and live on-air booth at SDM Ujire.",
+            mediaUrl: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80",
+            type: "PHOTO",
+            duration: "Studio"
+        },
+        {
+            title: "Behind The Mic: RJ Live Banter",
+            description: "Catch the spontaneous jokes and lively atmosphere between program segments.",
+            mediaUrl: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80",
+            type: "PHOTO",
+            duration: "On-Air"
+        },
+        {
+            title: "Field Reporting & Village Outreach",
+            description: "Radio Ninada recording folk songs and agricultural stories across Belthangady taluk.",
+            mediaUrl: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=600&q=80",
+            type: "PHOTO",
+            duration: "Community"
+        }
+    ];
+
+    galGrid.innerHTML = items.map(item => {
         const isVideo = item.type === 'VIDEO' || item.category === 'BTS Shorts' || (item.mediaUrl && item.mediaUrl.match(/\.(mp4|webm|mov|mkv)$/i));
         const itemClass = isVideo ? 'bts' : 'photos';
         const displayThumb = resolveServerUrl(item.thumbnail || item.mediaUrl);
-        const durationTag = item.duration || (isVideo ? 'Shorts' : '');
+        const durationTag = item.duration || (isVideo ? 'Shorts' : 'Photo');
         const desc = item.description || (isVideo ? 'Watch studio bloopers & Behind the mic moments' : 'Behind the mic photo');
 
         return `
@@ -735,26 +801,36 @@ function renderGalleryUI(galList) {
 }
 
 function renderNewsUI(newsItems) {
+    if (!Array.isArray(newsItems) || newsItems.length === 0) {
+        // Retain default rich fallback news items
+        const activeTabBtn = document.querySelector('#news .tab-btn.active');
+        const activeCategory = activeTabBtn ? activeTabBtn.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || 'college' : 'college';
+        renderNews(activeCategory);
+        return;
+    }
+
     newsData.college = [];
     newsData.local = [];
     newsData.karnataka = [];
     newsData.india = [];
     newsData.international = [];
 
-    if (Array.isArray(newsItems)) {
-        newsItems.forEach(item => {
-            const catKey = normalizeNewsCategory(item.category);
-            const coverImage = resolveServerUrl(item.featuredImage) || '';
-            const formattedItem = {
-                title: item.title,
-                date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
-                desc: item.content || item.description || '',
-                tag: item.category || 'News',
-                image: coverImage,
-            };
+    newsItems.forEach(item => {
+        const catKey = normalizeNewsCategory(item.category);
+        const coverImage = resolveServerUrl(item.featuredImage) || '';
+        const formattedItem = {
+            title: item.title,
+            date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
+            desc: item.content || item.description || '',
+            tag: item.category || 'News',
+            image: coverImage,
+        };
+        if (newsData[catKey]) {
             newsData[catKey].push(formattedItem);
-        });
-    }
+        } else {
+            newsData.college.push(formattedItem);
+        }
+    });
 
     // Default tab to active or college
     const activeTabBtn = document.querySelector('#news .tab-btn.active');
@@ -762,72 +838,100 @@ function renderNewsUI(newsItems) {
     renderNews(activeCategory);
 }
 
-function renderScheduleUI(scheduleList) {
+function renderScheduleUI(scheduleList = [], programList = []) {
     const scheduleContainer = document.getElementById('schedule-grid') || document.querySelector('#schedule .grid');
     if (!scheduleContainer) return;
-
-    if (!Array.isArray(scheduleList) || scheduleList.length === 0) {
-        scheduleContainer.innerHTML = `
-            <div class="col-span-full py-12 text-center text-on-surface-variant italic font-body-md border border-dashed border-outline-variant/40 rounded-2xl">
-                No broadcast schedule configured in admin dashboard yet. 24/7 Live Stream active!
-            </div>
-        `;
-        return;
-    }
 
     const now = new Date();
     const currentDay = now.getDay();
     const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    let todaySlots = scheduleList.filter(s => s.dayOfWeek === currentDay);
-    if (todaySlots.length === 0) {
-        todaySlots = scheduleList;
-    }
+    // Case 1: Specific Timetable Schedule Slots exist
+    if (Array.isArray(scheduleList) && scheduleList.length > 0) {
+        let todaySlots = scheduleList.filter(s => s.dayOfWeek === currentDay);
+        if (todaySlots.length === 0) todaySlots = scheduleList;
 
-    scheduleContainer.innerHTML = todaySlots.map(slot => {
-        const title = slot.program?.name || 'Radio Show';
-        const host = slot.program?.hostName || 'RJ Host';
-        const category = slot.program?.category || 'Music';
-        const startTime = slot.startTime || '00:00';
-        const endTime = slot.endTime || '00:00';
-        const imgUrl = resolveServerUrl(slot.program?.thumbnail) || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=400&q=80';
+        scheduleContainer.innerHTML = todaySlots.map(slot => {
+            const title = slot.program?.name || 'Radio Show';
+            const host = slot.program?.hostName || 'RJ Host';
+            const category = slot.program?.category || 'Music';
+            const startTime = slot.startTime || '00:00';
+            const endTime = slot.endTime || '00:00';
+            const imgUrl = resolveServerUrl(slot.program?.thumbnail || slot.program?.banner) || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=400&q=80';
+            const isLiveNow = (slot.dayOfWeek === currentDay) && (currentTimeStr >= startTime && currentTimeStr <= endTime);
 
-        const isLiveNow = (slot.dayOfWeek === currentDay) && (currentTimeStr >= startTime && currentTimeStr <= endTime);
-
-        if (isLiveNow) {
             return `
-                <div class="bg-white rounded-2xl p-md active-glow flex gap-md relative scale-105 z-10 shadow-lg">
+                <div class="bg-white rounded-2xl p-md ${isLiveNow ? 'active-glow scale-105 z-10 shadow-lg' : 'hover:shadow-xl'} border border-outline-variant/30 transition-all flex gap-md relative">
                     <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
                         <img class="w-full h-full object-cover" src="${imgUrl}" alt="${title}" />
-                        <div class="absolute inset-0 bg-primary/20 animate-pulse"></div>
+                        ${isLiveNow ? '<div class="absolute inset-0 bg-primary/20 animate-pulse"></div>' : ''}
                     </div>
                     <div class="flex-grow min-w-0">
                         <div class="flex justify-between items-start">
                             <span class="text-primary font-bold font-label-sm text-[12px] block mb-xs">${startTime} - ${endTime}</span>
-                            <span class="material-symbols-outlined text-primary text-[18px] animate-bounce">graphic_eq</span>
+                            ${isLiveNow ? '<span class="material-symbols-outlined text-primary text-[18px] animate-bounce">graphic_eq</span>' : ''}
                         </div>
-                        <h3 class="font-headline-md text-headline-md !text-[18px] leading-tight mb-xs truncate">${title}</h3>
-                        <p class="text-on-surface-variant font-body-md text-[14px] truncate">${host}</p>
-                        <span class="mt-base inline-block bg-primary text-on-primary px-sm py-1 rounded-full text-[10px] font-bold uppercase">${category}</span>
-                    </div>
-                </div>
-            `;
-        } else {
-            return `
-                <div class="bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all flex gap-md relative">
-                    <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden">
-                        <img class="w-full h-full object-cover" src="${imgUrl}" alt="${title}" />
-                    </div>
-                    <div class="min-w-0">
-                        <span class="text-on-secondary-container font-label-sm text-[12px] block mb-xs">${startTime} - ${endTime}</span>
-                        <h3 class="font-headline-md text-headline-md !text-[18px] leading-tight mb-xs truncate">${title}</h3>
-                        <p class="text-on-surface-variant font-body-md text-[14px] truncate">${host}</p>
+                        <h3 class="font-headline-md text-[18px] font-bold leading-tight mb-xs truncate">${title}</h3>
+                        <p class="text-on-surface-variant text-[14px] truncate">${host}</p>
                         <span class="mt-base inline-block bg-secondary-container text-on-secondary-container px-sm py-1 rounded-full text-[10px] font-bold uppercase">${category}</span>
                     </div>
                 </div>
             `;
-        }
-    }).join('');
+        }).join('');
+        return;
+    }
+
+    // Case 2: Programs from Database exist (created by admin)
+    if (Array.isArray(programList) && programList.length > 0) {
+        scheduleContainer.innerHTML = programList.map((prog, idx) => {
+            const title = prog.name || 'Station Show';
+            const host = prog.hostName || prog.host?.name || 'RJ Presenter';
+            const category = prog.categoryName || prog.category?.name || 'Community';
+            const scheduleTime = prog.schedule || 'Daily • 08:00 AM - 09:00 AM';
+            const imgUrl = resolveServerUrl(prog.thumbnail || prog.banner) || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=400&q=80';
+            const isFeatured = idx === 0;
+
+            return `
+                <div class="bg-white rounded-2xl p-md ${isFeatured ? 'active-glow z-10 shadow-lg' : 'hover:shadow-xl'} border border-outline-variant/30 transition-all flex gap-md relative">
+                    <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
+                        <img class="w-full h-full object-cover" src="${imgUrl}" alt="${title}" />
+                        ${isFeatured ? '<div class="absolute inset-0 bg-primary/20 animate-pulse"></div>' : ''}
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <div class="flex justify-between items-start">
+                            <span class="text-primary font-bold font-label-sm text-[12px] block mb-xs">${scheduleTime}</span>
+                            ${isFeatured ? '<span class="material-symbols-outlined text-primary text-[18px] animate-bounce">graphic_eq</span>' : ''}
+                        </div>
+                        <h3 class="font-headline-md text-[18px] font-bold leading-tight mb-xs truncate">${title}</h3>
+                        <p class="text-on-surface-variant text-[14px] truncate">${host}</p>
+                        <span class="mt-base inline-block bg-secondary-container text-on-secondary-container px-sm py-1 rounded-full text-[10px] font-bold uppercase">${category}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        return;
+    }
+
+    // Case 3: Default station schedule showcase
+    const defaultShows = [
+        { time: "07:00 AM - 09:00 AM", title: "Ninada Morning Buzz", host: "RJ Ananya", cat: "Morning Vibes", img: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=400&q=80" },
+        { time: "12:00 PM - 01:30 PM", title: "Campus Pulse & SDM News", host: "Student Media Team", cat: "Talk Show", img: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=400&q=80" },
+        { time: "05:00 PM - 06:30 PM", title: "Youth Junction & Beats", host: "RJ Vikram", cat: "Indie Beats", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80" }
+    ];
+
+    scheduleContainer.innerHTML = defaultShows.map((s, i) => `
+        <div class="bg-white rounded-2xl p-md ${i === 0 ? 'active-glow shadow-md' : 'hover:shadow-xl'} border border-outline-variant/30 transition-all flex gap-md relative">
+            <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
+                <img class="w-full h-full object-cover" src="${s.img}" alt="${s.title}" />
+            </div>
+            <div class="flex-grow min-w-0">
+                <span class="text-primary font-bold font-label-sm text-[12px] block mb-xs">${s.time}</span>
+                <h3 class="font-headline-md text-[18px] font-bold leading-tight mb-xs truncate">${s.title}</h3>
+                <p class="text-on-surface-variant text-[14px] truncate">${s.host}</p>
+                <span class="mt-base inline-block bg-secondary-container text-on-secondary-container px-sm py-1 rounded-full text-[10px] font-bold uppercase">${s.cat}</span>
+            </div>
+        </div>
+    `).join('');
 }
 
 // Global Dynamic Data Synchronizer
@@ -835,18 +939,29 @@ async function loadDynamicData() {
     if (!window.RadioNinadaAPI) return;
 
     try {
-        const schedRes = await window.RadioNinadaAPI.getSchedule();
-        if (schedRes && schedRes.success && Array.isArray(schedRes.data)) {
-            renderScheduleUI(schedRes.data);
-        }
-    } catch (e) { console.warn('[loadDynamicData] Schedule fetch fallback:', e); }
+        const [schedRes, progRes] = await Promise.all([
+            window.RadioNinadaAPI.getSchedule().catch(e => ({ success: false, data: [] })),
+            window.RadioNinadaAPI.getPrograms().catch(e => ({ success: false, data: [] }))
+        ]);
+        const schedData = (schedRes && schedRes.success && Array.isArray(schedRes.data)) ? schedRes.data : [];
+        const progData = (progRes && progRes.success && Array.isArray(progRes.data)) ? progRes.data : [];
+        renderScheduleUI(schedData, progData);
+    } catch (e) {
+        console.warn('[loadDynamicData] Schedule/Programs fetch fallback:', e);
+        renderScheduleUI([], []);
+    }
 
     try {
         const rjRes = await window.RadioNinadaAPI.getRJs();
         if (rjRes && rjRes.success && Array.isArray(rjRes.data)) {
             renderRJsUI(rjRes.data);
+        } else {
+            renderRJsUI([]);
         }
-    } catch (e) { console.warn('[loadDynamicData] RJs fetch fallback:', e); }
+    } catch (e) {
+        console.warn('[loadDynamicData] RJs fetch fallback:', e);
+        renderRJsUI([]);
+    }
 
     try {
         const podRes = await window.RadioNinadaAPI.getPodcasts();
@@ -866,15 +981,25 @@ async function loadDynamicData() {
         const evtRes = await window.RadioNinadaAPI.getEvents();
         if (evtRes && evtRes.success && Array.isArray(evtRes.data)) {
             renderEventsUI(evtRes.data);
+        } else {
+            renderEventsUI([]);
         }
-    } catch (e) { console.warn('[loadDynamicData] Events fetch fallback:', e); }
+    } catch (e) {
+        console.warn('[loadDynamicData] Events fetch fallback:', e);
+        renderEventsUI([]);
+    }
 
     try {
         const galRes = await window.RadioNinadaAPI.getGallery();
         if (galRes && galRes.success && Array.isArray(galRes.data)) {
             renderGalleryUI(galRes.data);
+        } else {
+            renderGalleryUI([]);
         }
-    } catch (e) { console.warn('[loadDynamicData] Gallery fetch fallback:', e); }
+    } catch (e) {
+        console.warn('[loadDynamicData] Gallery fetch fallback:', e);
+        renderGalleryUI([]);
+    }
 
     // Fetch initial notifications and playlists
     fetchAndRenderNotifications();

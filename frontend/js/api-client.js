@@ -287,6 +287,10 @@
       });
     },
 
+    async getHosts() {
+      return await fetchApi('/hosts');
+    },
+
     async createHost(data) {
       return await fetchApi('/hosts', {
         method: 'POST',
@@ -300,10 +304,11 @@
       });
     },
 
-    async createBanner(formData) {
+    async createBanner(dataOrFormData) {
+      const isFormData = typeof FormData !== 'undefined' && dataOrFormData instanceof FormData;
       return await fetchApi('/banners', {
         method: 'POST',
-        body: formData,
+        body: isFormData ? dataOrFormData : JSON.stringify(dataOrFormData),
       });
     },
 
