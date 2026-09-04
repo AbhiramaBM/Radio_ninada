@@ -95,6 +95,11 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
+// Admin Dashboard Route
+app.get(['/admin', '/admin.html'], (_req, res) => {
+  res.sendFile(path.join(frontendPath, 'admin.html'));
+});
+
 // Centralized Error Handler
 app.use(errorHandler);
 

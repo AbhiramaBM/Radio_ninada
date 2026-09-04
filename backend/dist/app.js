@@ -88,6 +88,10 @@ app.use('/api/ai', ai_routes_1.default);
 app.get('/', (_req, res) => {
     res.sendFile(path_1.default.join(frontendPath, 'index.html'));
 });
+// Admin Dashboard Route
+app.get(['/admin', '/admin.html'], (_req, res) => {
+    res.sendFile(path_1.default.join(frontendPath, 'admin.html'));
+});
 // Centralized Error Handler
 app.use(error_1.errorHandler);
 exports.default = app;
