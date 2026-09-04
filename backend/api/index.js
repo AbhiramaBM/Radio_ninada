@@ -31,5 +31,8 @@ try {
 }
 
 module.exports = async (req, res) => {
+  if (req.url && !req.url.startsWith('/api')) {
+    req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+  }
   return await handler(req, res);
 };
