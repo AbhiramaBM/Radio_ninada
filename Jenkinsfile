@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent any
 
@@ -10,6 +11,10 @@ pipeline {
 
     stages {
 
+        // ==========================================
+        // CLONE
+        // ==========================================
+
         stage('Clone Repository') {
             steps {
                 echo 'Cloning Radio Ninada repository...'
@@ -19,34 +24,47 @@ pipeline {
             }
         }
 
+        // ==========================================
+        // ENVIRONMENT CHECK
+        // ==========================================
+
         stage('Environment Check') {
             steps {
                 bat '''
-                    echo "======================================"
-                    echo "RADIO NINADA CI/CD"
-                    echo "======================================"
+                    echo ======================================
+                    echo RADIO NINADA CI/CD
+                    echo ======================================
 
-                    echo "Node version:"
+                    echo Node version:
                     node --version
 
-                    echo "NPM version:"
+                    echo NPM version:
                     npm --version
 
-                    echo "Current directory:"
-                    pwd
+                    echo Current directory:
+                    cd
 
-                    echo "Repository files:"
-                    ls -la
+                    echo Repository files:
+                    dir
                 '''
             }
         }
+
+        // ==========================================
+        // BACKEND
+        // ==========================================
 
         stage('Backend - Install Dependencies') {
             steps {
                 dir("${BACKEND_DIR}") {
                     bat '''
-                        echo "Installing backend dependencies..."
-                        npm ci
+                        echo Installing backend dependencies...
+                        call npm ci
+
+                        if errorlevel 1 (
+                            echo Backend dependency installation failed.
+                            exit /b 1
+                        )
                     '''
                 }
             }
@@ -56,8 +74,13 @@ pipeline {
             steps {
                 dir("${BACKEND_DIR}") {
                     bat '''
-                        echo "Generating Prisma Client..."
-                        npx prisma generate
+                        echo Generating Prisma Client...
+                        call npx prisma generate
+
+                        if errorlevel 1 (
+                            echo Prisma Client generation failed.
+                            exit /b 1
+                        )
                     '''
                 }
             }
@@ -67,8 +90,13 @@ pipeline {
             steps {
                 dir("${BACKEND_DIR}") {
                     bat '''
-                        echo "Running TypeScript check..."
-                        npx tsc --noEmit
+                        echo Running TypeScript check...
+                        call npx tsc --noEmit
+
+                        if errorlevel 1 (
+                            echo TypeScript check failed.
+                            exit /b 1
+                        )
                     '''
                 }
             }
@@ -77,15 +105,27 @@ pipeline {
         stage('Backend - Test') {
             steps {
                 dir("${BACKEND_DIR}") {
-                    bat '''
-                        echo "Running backend tests..."
+                    script {
+                        def hasTestScript = bat(
+                            script: 'node -e "const p=require(\\'./package.json\\'); process.exit(p.scripts && p.scripts.test ? 0 : 1)"',
+                            returnStatus: true
+                        )
 
-                        if npm run | grep -q "test"; then
-                            npm test
-                        else
-                            echo "No test script found. Skipping tests."
-                        fi
-                    '''
+                        if (hasTestScript == 0) {
+                            echo 'Test script found. Running backend tests...'
+
+                            bat '''
+                                call npm test
+
+                                if errorlevel 1 (
+                                    echo Backend tests failed.
+                                    exit /b 1
+                                )
+                            '''
+                        } else {
+                            echo 'No test script found. Skipping backend tests.'
+                        }
+                    }
                 }
             }
         }
@@ -93,25 +133,46 @@ pipeline {
         stage('Backend - Build') {
             steps {
                 dir("${BACKEND_DIR}") {
-                    bat '''
-                        echo "Building backend..."
+                    script {
+                        def hasBuildScript = bat(
+                            script: 'node -e "const p=require(\\'./package.json\\'); process.exit(p.scripts && p.scripts.build ? 0 : 1)"',
+                            returnStatus: true
+                        )
 
-                        if npm run | grep -q "build"; then
-                            npm run build
-                        else
-                            echo "No build script found."
-                        fi
-                    '''
+                        if (hasBuildScript == 0) {
+                            echo 'Build script found. Building backend...'
+
+                            bat '''
+                                call npm run build
+
+                                if errorlevel 1 (
+                                    echo Backend build failed.
+                                    exit /b 1
+                                )
+                            '''
+                        } else {
+                            echo 'No build script found. Skipping backend build.'
+                        }
+                    }
                 }
             }
         }
+
+        // ==========================================
+        // FRONTEND
+        // ==========================================
 
         stage('Frontend - Install Dependencies') {
             steps {
                 dir("${FRONTEND_DIR}") {
                     bat '''
-                        echo "Installing frontend dependencies..."
-                        npm ci
+                        echo Installing frontend dependencies...
+                        call npm ci
+
+                        if errorlevel 1 (
+                            echo Frontend dependency installation failed.
+                            exit /b 1
+                        )
                     '''
                 }
             }
@@ -120,15 +181,27 @@ pipeline {
         stage('Frontend - Validate') {
             steps {
                 dir("${FRONTEND_DIR}") {
-                    bat '''
-                        echo "Validating frontend..."
+                    script {
+                        def hasLintScript = bat(
+                            script: 'node -e "const p=require(\\'./package.json\\'); process.exit(p.scripts && p.scripts.lint ? 0 : 1)"',
+                            returnStatus: true
+                        )
 
-                        if npm run | grep -q "lint"; then
-                            npm run lint
-                        else
-                            echo "No lint script found. Skipping lint."
-                        fi
-                    '''
+                        if (hasLintScript == 0) {
+                            echo 'Lint script found. Running frontend lint...'
+
+                            bat '''
+                                call npm run lint
+
+                                if errorlevel 1 (
+                                    echo Frontend lint failed.
+                                    exit /b 1
+                                )
+                            '''
+                        } else {
+                            echo 'No lint script found. Skipping lint.'
+                        }
+                    }
                 }
             }
         }
@@ -136,67 +209,108 @@ pipeline {
         stage('Frontend - Build') {
             steps {
                 dir("${FRONTEND_DIR}") {
-                    bat '''
-                        echo "Checking frontend build..."
+                    script {
+                        def hasBuildScript = bat(
+                            script: 'node -e "const p=require(\\'./package.json\\'); process.exit(p.scripts && p.scripts.build ? 0 : 1)"',
+                            returnStatus: true
+                        )
 
-                        if npm run | grep -q "build"; then
-                            npm run build
-                        else
-                            echo "Static frontend detected."
-                            echo "No frontend build required."
-                        fi
-                    '''
+                        if (hasBuildScript == 0) {
+                            echo 'Build script found. Building frontend...'
+
+                            bat '''
+                                call npm run build
+
+                                if errorlevel 1 (
+                                    echo Frontend build failed.
+                                    exit /b 1
+                                )
+                            '''
+                        } else {
+                            echo 'No frontend build script found.'
+                            echo 'Skipping frontend build.'
+                        }
+                    }
                 }
             }
         }
+
+        // ==========================================
+        // DATABASE
+        // ==========================================
 
         stage('Database Migration') {
             steps {
                 dir("${BACKEND_DIR}") {
-                    bat '''
-                        echo "Checking database configuration..."
+                    script {
+                        if (env.DATABASE_URL?.trim()) {
 
-                        if [ -n "$DATABASE_URL" ]; then
-                            echo "Running Prisma migrations..."
-                            npx prisma migrate deploy
-                        else
-                            echo "DATABASE_URL not configured."
-                            echo "Skipping database migration."
-                        fi
-                    '''
+                            echo 'DATABASE_URL detected.'
+                            echo 'Running Prisma migrations...'
+
+                            bat '''
+                                call npx prisma migrate deploy
+
+                                if errorlevel 1 (
+                                    echo Prisma database migration failed.
+                                    exit /b 1
+                                )
+                            '''
+
+                        } else {
+                            echo 'DATABASE_URL not configured.'
+                            echo 'Skipping database migration.'
+                        }
+                    }
                 }
             }
         }
+
+        // ==========================================
+        // DEPLOY BACKEND
+        // ==========================================
 
         stage('Deploy Backend') {
             steps {
                 echo 'Deploying Radio Ninada Backend...'
 
                 bat '''
-                    # Uncomment when PM2 is configured:
+                    echo Backend deployment started.
 
-                    # cd backend
-                    # pm2 restart radio-ninada-backend || \
-                    # pm2 start dist/server.js --name radio-ninada-backend
-                    # pm2 save
+                    REM If PM2 is installed and configured, use:
+                    REM cd backend
+                    REM pm2 restart radio-ninada-backend
+                    REM if errorlevel 1 pm2 start dist/server.js --name radio-ninada-backend
+                    REM pm2 save
 
-                    echo "Backend deployment stage completed."
+                    echo Backend deployment stage completed.
                 '''
             }
         }
+
+        // ==========================================
+        // DEPLOY FRONTEND
+        // ==========================================
 
         stage('Deploy Frontend') {
             steps {
                 echo 'Deploying Radio Ninada Frontend...'
 
                 bat '''
-                    # Add your frontend deployment command here.
+                    echo Frontend deployment started.
 
-                    echo "Frontend deployment stage completed."
+                    REM Add your Windows-compatible frontend
+                    REM deployment command here.
+
+                    echo Frontend deployment stage completed.
                 '''
             }
         }
     }
+
+    // ==========================================
+    // POST ACTIONS
+    // ==========================================
 
     post {
 
@@ -233,3 +347,4 @@ pipeline {
         }
     }
 }
+```
