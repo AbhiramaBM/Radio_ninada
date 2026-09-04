@@ -1,12 +1,23 @@
 import { Router } from 'express';
-import { uploadMedia, listMedia, getMediaById, deleteMedia } from '../controllers/media.controller';
+import { uploadMedia, listMedia, getMediaById, deleteMedia, getUploadSignature, recordUploadedMedia } from '../controllers/media.controller';
 import { upload } from '../middlewares/upload';
 import { authenticate, requireRole } from '../middlewares/auth';
 import { auditLog } from '../middlewares/audit';
 
 const router = Router();
 
-// Upload media asset to Cloudinary (Staff/Admin)
+// Signed direct Cloudinary upload credentials
+router.get('/signature', getUploadSignature);
+
+// Record direct Cloudinary upload in database
+router.post(
+  '/record',
+  authenticate,
+  requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ']),
+  recordUploadedMedia
+);
+
+// Upload media asset via server proxy to Cloudinary (Staff/Admin)
 router.post(
   '/upload',
   authenticate,

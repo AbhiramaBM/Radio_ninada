@@ -597,28 +597,31 @@ function renderPodcastsUI(podList) {
     }
     podGrid.innerHTML = podList.map((pod) => {
         const coverUrl = resolveServerUrl(pod.coverUrl) || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=600&q=80';
-        const audioUrl = resolveServerUrl(pod.audioUrl) || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-        const catClass = pod.category ? pod.category.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'talk-show';
+        const audioUrl = resolveServerUrl(pod.audioUrl || (pod.episodes && pod.episodes[0]?.audioUrl)) || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+        const catName = (typeof pod.category === 'object' && pod.category?.name) ? pod.category.name : (typeof pod.category === 'string' ? pod.category : 'Podcast');
+        const catClass = catName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        const epNum = (pod.episodes && pod.episodes[0]?.episodeNumber) || pod.episodeNumber || 1;
+        const seasonNum = (pod.episodes && pod.episodes[0]?.season) || pod.season || 1;
 
         return `
             <div class="podcast-card popular recently-added ${catClass} bg-white rounded-2xl p-md border border-outline-variant/30 hover:shadow-xl transition-all group flex flex-col justify-between">
                 <div>
                     <div class="relative aspect-video rounded-xl overflow-hidden mb-md">
                         <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="${coverUrl}" alt="${pod.title}" />
-                        <span class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">${pod.category || 'Podcast'}</span>
-                        <button onclick="RadioPlayer.playTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', 'S${pod.season || 1} E${pod.episodeNumber || 1}', '${coverUrl.replace(/'/g, "\\'")}')"
+                        <span class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-sm py-0.5 rounded-full uppercase">${catName}</span>
+                        <button onclick="RadioPlayer.playTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', 'S${seasonNum} E${epNum}', '${coverUrl.replace(/'/g, "\\'")}')"
                             class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all cursor-pointer">
                             <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
                         </button>
                     </div>
                     <h3 class="font-headline-md text-[18px] font-bold leading-snug mb-xs group-hover:text-primary transition-colors">${pod.title}</h3>
-                    <p class="text-on-surface-variant text-xs mb-sm">S${pod.season || 1} E${pod.episodeNumber || 1} • ${pod.duration || '30:00'}</p>
+                    <p class="text-on-surface-variant text-xs mb-sm">S${seasonNum} E${epNum} • ${pod.duration || '30:00'}</p>
                     <p class="text-on-surface-variant text-sm line-clamp-2">${pod.description || ''}</p>
                 </div>
                 <div class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
                     <span>${pod.downloads || 0} Downloads</span>
                     <div class="flex items-center gap-2">
-                        <button onclick="addTrackToPlaylistPrompt('${pod.title.replace(/'/g, "\\'")}', '${(pod.category || 'Podcast').replace(/'/g, "\\'")}', '${audioUrl.replace(/'/g, "\\'")}', '${coverUrl.replace(/'/g, "\\'")}', '${pod.duration || '30:00'}')"
+                        <button onclick="addTrackToPlaylistPrompt('${pod.title.replace(/'/g, "\\'")}', '${catName.replace(/'/g, "\\'")}', '${audioUrl.replace(/'/g, "\\'")}', '${coverUrl.replace(/'/g, "\\'")}', '${pod.duration || '30:00'}')"
                             class="text-primary hover:underline text-[11px] font-semibold flex items-center gap-0.5 cursor-pointer" title="Add episode to playlist">
                             <span class="material-symbols-outlined text-sm">playlist_add</span>
                             <span>Add</span>

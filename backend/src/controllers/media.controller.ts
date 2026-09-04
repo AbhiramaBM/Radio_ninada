@@ -3,7 +3,88 @@ import { prisma } from '../config/prisma';
 import { uploadFileToCloudinary, deleteFileFromCloudinary, CLOUDINARY_FOLDERS } from '../services/cloudinary.service';
 import { mediaQuerySchema } from '../validation/index';
 import { AuthenticatedRequest } from '../middlewares/auth';
+import { cloudinary } from '../config/cloudinary';
+import { config } from '../config/index';
 import path from 'path';
+
+/**
+ * Generate signed upload signature for direct browser -> Cloudinary uploads
+ * GET /api/media/signature
+ */
+export async function getUploadSignature(req: Request, res: Response, next: NextFunction) {
+  try {
+    const folder = (req.query.folder as string) || CLOUDINARY_FOLDERS.MEDIA;
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const signature = cloudinary.utils.api_sign_request(
+      { timestamp, folder },
+      config.cloudinary.apiSecret
+    );
+
+    return res.json({
+      success: true,
+      data: {
+        signature,
+        timestamp,
+        cloudName: config.cloudinary.cloudName,
+        apiKey: config.cloudinary.apiKey,
+        folder,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Record direct Cloudinary upload into PostgreSQL
+ * POST /api/media/record
+ */
+export async function recordUploadedMedia(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const {
+      originalName,
+      cloudinaryPublicId,
+      cloudinaryUrl,
+      resourceType,
+      format,
+      mimeType,
+      fileSize,
+      duration,
+      width,
+      height,
+      folder,
+    } = req.body;
+
+    if (!cloudinaryPublicId || !cloudinaryUrl) {
+      return res.status(400).json({ success: false, message: 'Missing cloudinaryPublicId or cloudinaryUrl' });
+    }
+
+    const mediaRecord = await prisma.media.create({
+      data: {
+        originalName: originalName || 'file',
+        cloudinaryPublicId,
+        cloudinaryUrl,
+        resourceType: resourceType || 'image',
+        format: format || null,
+        mimeType: mimeType || null,
+        fileSize: fileSize ? parseInt(fileSize.toString(), 10) : null,
+        duration: duration ? parseFloat(duration.toString()) : null,
+        width: width ? parseInt(width.toString(), 10) : null,
+        height: height ? parseInt(height.toString(), 10) : null,
+        folder: folder || CLOUDINARY_FOLDERS.MEDIA,
+        userId: req.user?.userId || null,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Direct Cloudinary upload recorded successfully',
+      data: mediaRecord,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 /**
  * Upload single media file to Cloudinary & record in PostgreSQL

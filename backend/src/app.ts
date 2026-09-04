@@ -33,14 +33,18 @@ import aiRoutes from './routes/ai.routes';
 
 const app = express();
 
+// Trust proxy for Vercel / reverse proxies
+app.set('trust proxy', 1);
+
 // Security Middlewares
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: true, credentials: true }));
 
-// Rate Limiter (Max 300 requests per 15 mins)
+// Rate Limiter (Max 1000 requests per 15 mins)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: 1000,
+  validate: { xForwardedForHeader: false, default: false },
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use('/api', limiter);

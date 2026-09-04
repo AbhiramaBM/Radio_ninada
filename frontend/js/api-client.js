@@ -170,6 +170,76 @@
     },
 
     async uploadMedia(fileOrFormData, folder = 'radio-ninada/media') {
+      let file;
+      if (fileOrFormData instanceof FormData) {
+        file = fileOrFormData.get('file');
+        folder = fileOrFormData.get('folder') || folder;
+      } else {
+        file = fileOrFormData;
+      }
+
+      // 1. Direct Cloudinary Signed Upload (Supports any size, bypasses Vercel 4.5MB limit!)
+      if (file && (file instanceof File || file instanceof Blob)) {
+        try {
+          const sigRes = await fetchApi(`/media/signature?folder=${encodeURIComponent(folder)}`);
+          if (sigRes && sigRes.success && sigRes.data) {
+            const { signature, timestamp, cloudName, apiKey } = sigRes.data;
+            const isAudio = file.type && (file.type.startsWith('audio/') || file.type.startsWith('video/'));
+            const resourceType = isAudio ? 'video' : 'image';
+
+            const directFormData = new FormData();
+            directFormData.append('file', file);
+            directFormData.append('api_key', apiKey);
+            directFormData.append('timestamp', timestamp);
+            directFormData.append('signature', signature);
+            directFormData.append('folder', folder);
+
+            const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
+              method: 'POST',
+              body: directFormData,
+            });
+
+            const cloudData = await cloudRes.json();
+            if (cloudRes.ok && cloudData.secure_url) {
+              // Record directly uploaded asset into database
+              const recordRes = await fetchApi('/media/record', {
+                method: 'POST',
+                body: JSON.stringify({
+                  originalName: file.name || 'file',
+                  cloudinaryPublicId: cloudData.public_id,
+                  cloudinaryUrl: cloudData.secure_url,
+                  resourceType: cloudData.resource_type || resourceType,
+                  format: cloudData.format,
+                  fileSize: cloudData.bytes,
+                  duration: cloudData.duration,
+                  width: cloudData.width,
+                  height: cloudData.height,
+                  folder: folder,
+                }),
+              });
+
+              return {
+                success: true,
+                data: {
+                  id: recordRes?.data?.id || cloudData.public_id,
+                  url: cloudData.secure_url,
+                  secureUrl: cloudData.secure_url,
+                  publicId: cloudData.public_id,
+                  resourceType: cloudData.resource_type || resourceType,
+                  format: cloudData.format,
+                  bytes: cloudData.bytes,
+                  duration: cloudData.duration,
+                  folder: folder,
+                },
+              };
+            }
+          }
+        } catch (directErr) {
+          console.warn('[uploadMedia] Direct upload fallback to proxy:', directErr.message);
+        }
+      }
+
+      // 2. Server proxy fallback
       let body;
       if (fileOrFormData instanceof FormData) {
         body = fileOrFormData;
@@ -181,7 +251,7 @@
       return await fetchApi('/media/upload', {
         method: 'POST',
         body,
-      }, 120000);
+      }, 180000);
     },
 
     async deleteMedia(id) {
