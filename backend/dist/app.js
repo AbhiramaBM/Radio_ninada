@@ -9,6 +9,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const index_1 = require("./config/index");
 const error_1 = require("./middlewares/error");
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
@@ -45,12 +46,30 @@ const limiter = (0, express_rate_limit_1.default)({
 app.use('/api', limiter);
 // Logging & Parsing
 app.use((0, morgan_1.default)('dev'));
-app.use(express_1.default.json({ limit: '20mb' }));
-app.use(express_1.default.urlencoded({ extended: true, limit: '20mb' }));
+app.use(express_1.default.json({ limit: '100mb' }));
+app.use(express_1.default.urlencoded({ extended: true, limit: '100mb' }));
 // Static uploads serving (temporary local directory)
 app.use('/uploads', express_1.default.static(index_1.config.uploadDir));
-// Static Public Frontend Serving
-const frontendPath = path_1.default.join(__dirname, '../../frontend');
+// Static Public Frontend Serving (detects local dev, compiled dist, Docker, or custom FRONTEND_DIR)
+const resolveFrontendPath = () => {
+    if (process.env.FRONTEND_DIR && fs_1.default.existsSync(process.env.FRONTEND_DIR)) {
+        return process.env.FRONTEND_DIR;
+    }
+    const potentialPaths = [
+        path_1.default.resolve(__dirname, '../../frontend'),
+        path_1.default.resolve(__dirname, '../frontend'),
+        path_1.default.resolve(__dirname, './frontend'),
+        path_1.default.resolve(process.cwd(), 'frontend'),
+        path_1.default.resolve(process.cwd(), '../frontend'),
+    ];
+    for (const candidate of potentialPaths) {
+        if (fs_1.default.existsSync(candidate) && fs_1.default.existsSync(path_1.default.join(candidate, 'index.html'))) {
+            return candidate;
+        }
+    }
+    return path_1.default.resolve(process.cwd(), 'frontend');
+};
+const frontendPath = resolveFrontendPath();
 app.use(express_1.default.static(frontendPath));
 // Health Check
 app.get('/api/health', (_req, res) => {
@@ -84,13 +103,24 @@ app.use('/api/playlists', playlist_routes_1.default);
 app.use('/api/sponsors', sponsor_routes_1.default);
 app.use('/api/analytics', analytics_routes_1.default);
 app.use('/api/ai', ai_routes_1.default);
-// Root route serves the Public Website
-app.get('/', (_req, res) => {
+// Public Website Route
+app.get(['/', '/index.html'], (_req, res) => {
     res.sendFile(path_1.default.join(frontendPath, 'index.html'));
 });
 // Admin Dashboard Route
 app.get(['/admin', '/admin.html'], (_req, res) => {
     res.sendFile(path_1.default.join(frontendPath, 'admin.html'));
+});
+// Fallback: Serve static assets if they exist, else index.html (excluding /api routes)
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+        return next();
+    }
+    const potentialFile = path_1.default.join(frontendPath, req.path);
+    if (fs_1.default.existsSync(potentialFile) && fs_1.default.statSync(potentialFile).isFile()) {
+        return res.sendFile(potentialFile);
+    }
+    res.sendFile(path_1.default.join(frontendPath, 'index.html'));
 });
 // Centralized Error Handler
 app.use(error_1.errorHandler);

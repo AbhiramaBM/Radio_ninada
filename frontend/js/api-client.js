@@ -5,9 +5,23 @@
 (function () {
   'use strict';
 
-  const API_BASE_URL = window.__RADIO_API_BASE__ ||
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:5000/api'
+  // Resolve API Base URL flexibly across all deployment modes:
+  let dynamicBase = '';
+  try {
+    if (typeof window !== 'undefined' && window.location) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryBase = urlParams.get('api_base');
+      if (queryBase) {
+        localStorage.setItem('radio_api_base', queryBase);
+      }
+      dynamicBase = localStorage.getItem('radio_api_base') || '';
+    }
+  } catch (_) {}
+
+  const API_BASE_URL = (typeof window !== 'undefined' && window.__RADIO_API_BASE__) ||
+    dynamicBase ||
+    (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? (window.location.port === '5000' ? '/api' : 'http://localhost:5000/api')
       : '/api');
 
   const DEFAULT_TIMEOUT_MS = 10000;
@@ -318,8 +332,30 @@
       return await fetchApi('/contact');
     },
 
+    async changePassword(currentPassword, newPassword) {
+      return await fetchApi('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+    },
+
     async getCurrentStaff() {
       return await fetchApi('/auth/me');
+    },
+
+    getBaseUrl() {
+      return API_BASE_URL;
+    },
+
+    setBaseUrl(url) {
+      if (!url) {
+        localStorage.removeItem('radio_api_base');
+      } else {
+        localStorage.setItem('radio_api_base', url.trim());
+      }
+      if (typeof window !== 'undefined' && window.location) {
+        window.location.reload();
+      }
     },
   };
 

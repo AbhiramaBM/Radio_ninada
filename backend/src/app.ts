@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
+import fs from 'fs';
 
 import { config } from './config/index';
 import { errorHandler } from './middlewares/error';
@@ -52,8 +53,27 @@ app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 // Static uploads serving (temporary local directory)
 app.use('/uploads', express.static(config.uploadDir));
 
-// Static Public Frontend Serving
-const frontendPath = path.join(__dirname, '../../frontend');
+// Static Public Frontend Serving (detects local dev, compiled dist, Docker, or custom FRONTEND_DIR)
+const resolveFrontendPath = (): string => {
+  if (process.env.FRONTEND_DIR && fs.existsSync(process.env.FRONTEND_DIR)) {
+    return process.env.FRONTEND_DIR;
+  }
+  const potentialPaths = [
+    path.resolve(__dirname, '../../frontend'),
+    path.resolve(__dirname, '../frontend'),
+    path.resolve(__dirname, './frontend'),
+    path.resolve(process.cwd(), 'frontend'),
+    path.resolve(process.cwd(), '../frontend'),
+  ];
+  for (const candidate of potentialPaths) {
+    if (fs.existsSync(candidate) && fs.existsSync(path.join(candidate, 'index.html'))) {
+      return candidate;
+    }
+  }
+  return path.resolve(process.cwd(), 'frontend');
+};
+
+const frontendPath = resolveFrontendPath();
 app.use(express.static(frontendPath));
 
 // Health Check
@@ -90,14 +110,26 @@ app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ai', aiRoutes);
 
-// Root route serves the Public Website
-app.get('/', (_req, res) => {
+// Public Website Route
+app.get(['/', '/index.html'], (_req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // Admin Dashboard Route
 app.get(['/admin', '/admin.html'], (_req, res) => {
   res.sendFile(path.join(frontendPath, 'admin.html'));
+});
+
+// Fallback: Serve static assets if they exist, else index.html (excluding /api routes)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return next();
+  }
+  const potentialFile = path.join(frontendPath, req.path);
+  if (fs.existsSync(potentialFile) && fs.statSync(potentialFile).isFile()) {
+    return res.sendFile(potentialFile);
+  }
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // Centralized Error Handler

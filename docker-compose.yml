@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  radio-ninada:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: radio_ninada_app
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - backend/.env
+    environment:
+      - PORT=5000
+      - NODE_ENV=production

@@ -21,6 +21,10 @@
       "dest": "backend/api/index.js"
     },
     {
+      "src": "/admin",
+      "dest": "frontend/admin.html"
+    },
+    {
       "handle": "filesystem"
     },
     {
