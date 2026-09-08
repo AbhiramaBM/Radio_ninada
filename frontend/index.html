@@ -764,12 +764,18 @@
 
     <!-- Global Persistent Audio Player Bar (Single Shared Instance) -->
     <div id="global-audio-player"
-        class="fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-2xl border-t border-outline-variant/30 shadow-2xl px-4 py-3 transition-all duration-350 transform translate-y-full opacity-0 pointer-events-none">
+        class="fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-2xl border-t border-outline-variant/30 shadow-2xl px-4 py-3 transition-all duration-350 transform translate-y-0 opacity-100">
         <!-- Circular Dismiss (✕) Button -->
-        <button onclick="hideAudioPlayer()" aria-label="Close audio player"
-            class="absolute -top-3 right-3 sm:right-6 w-7 h-7 rounded-full bg-white text-primary shadow-md hover:scale-110 hover:bg-rose-100 transition-all duration-200 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0 border border-outline-variant/30">
+        <div class="absolute -top-3 right-3 sm:right-6 flex items-center gap-2">
+            <button onclick="minimizeAudioPlayer()" aria-label="Minimize audio player"
+                class="w-7 h-7 rounded-full bg-white text-primary shadow-md hover:scale-110 hover:bg-rose-100 transition-all duration-200 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0 border border-outline-variant/30">
+                <span class="material-symbols-outlined text-sm font-bold">expand_more</span>
+            </button>
+            <button onclick="closeAudioPlayer()" aria-label="Close audio player"
+                class="w-7 h-7 rounded-full bg-white text-primary shadow-md hover:scale-110 hover:bg-rose-100 transition-all duration-200 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0 border border-outline-variant/30">
             <span class="material-symbols-outlined text-sm font-bold">close</span>
-        </button>
+            </button>
+        </div>
 
         <div class="max-w-container-max mx-auto flex items-center justify-between gap-4">
             <!-- Track Cover & Details -->
@@ -832,6 +838,13 @@
             </div>
         </div>
     </div>
+
+    <button id="floating-radio-player" onclick="showAudioPlayer()" aria-label="Open radio player"
+        class="floating-radio-player" aria-hidden="true" tabindex="-1">
+        <span class="material-symbols-outlined floating-radio-icon"
+            style="font-variation-settings: 'FILL' 1;">radio</span>
+        <span class="floating-radio-live"><span></span> LIVE</span>
+    </button>
 
     <footer class="w-full py-xl bg-surface-container-lowest border-t border-outline-variant pb-28">
         <div class="max-w-container-max mx-auto px-md lg:px-xl grid grid-cols-1 md:grid-cols-4 gap-gutter">

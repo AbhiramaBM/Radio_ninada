@@ -3,6 +3,7 @@ window.RadioPlayer = {
     audio: null,
     isPlaying: false,
     isDismissed: false,
+    isMinimized: false,
     liveConfigPromise: null,
     liveStreamReady: false,
     currentTrack: {
@@ -72,30 +73,43 @@ window.RadioPlayer = {
         }
     },
 
-    hideAudioPlayer: function () {
-        this.isDismissed = true;
-
-        if (this.audio && !this.audio.paused) {
-            this.audio.pause();
-            this.isPlaying = false;
-            this.updateUI();
-        }
-
+    minimizeAudioPlayer: function () {
+        this.isMinimized = true;
         const globalPlayer = document.getElementById('global-audio-player');
         if (globalPlayer) {
             globalPlayer.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
             globalPlayer.classList.remove('opacity-100', 'translate-y-0');
         }
+        this.updateFloatingPlayer();
     },
 
     showAudioPlayer: function () {
         this.isDismissed = false;
+        this.isMinimized = false;
 
         const globalPlayer = document.getElementById('global-audio-player');
         if (globalPlayer) {
             globalPlayer.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
             globalPlayer.classList.add('opacity-100', 'translate-y-0');
         }
+        this.updateFloatingPlayer();
+    },
+
+    closeAudioPlayer: function () {
+        this.isDismissed = true;
+        this.isMinimized = false;
+
+        if (this.audio && !this.audio.paused) {
+            this.audio.pause();
+        }
+        this.isPlaying = false;
+
+        const globalPlayer = document.getElementById('global-audio-player');
+        if (globalPlayer) {
+            globalPlayer.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+            globalPlayer.classList.remove('opacity-100', 'translate-y-0');
+        }
+        this.updateUI();
     },
 
     togglePlay: async function (url, title, artist, cover, isLive = true) {
@@ -211,8 +225,9 @@ window.RadioPlayer = {
         });
 
         const globalPlayer = document.getElementById('global-audio-player');
-        if (globalPlayer && !this.isDismissed && this.currentTrack.title) {
+        if (globalPlayer && !this.isDismissed && !this.isMinimized && this.currentTrack.title) {
             globalPlayer.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+            globalPlayer.classList.add('opacity-100', 'translate-y-0');
         }
 
         const titleEl = document.getElementById('global-player-title');
@@ -234,12 +249,25 @@ window.RadioPlayer = {
             }
         }
 
+        this.updateFloatingPlayer();
+
         document.querySelectorAll('[data-live-title]').forEach((element) => {
             element.textContent = this.currentTrack.title;
         });
         document.querySelectorAll('[data-live-description]').forEach((element) => {
             element.textContent = this.currentTrack.artist;
         });
+    },
+
+    updateFloatingPlayer: function () {
+        const floatingPlayer = document.getElementById('floating-radio-player');
+        if (!floatingPlayer) return;
+
+        const shouldShow = this.isMinimized && !this.isDismissed;
+        floatingPlayer.classList.toggle('is-visible', shouldShow);
+        floatingPlayer.classList.toggle('is-playing', this.isPlaying);
+        floatingPlayer.setAttribute('aria-hidden', String(!shouldShow));
+        floatingPlayer.tabIndex = shouldShow ? 0 : -1;
     },
 
     updateTimeProgress: function () {
@@ -274,7 +302,7 @@ window.RadioPlayer = {
 };
 
 function hideAudioPlayer() {
-    RadioPlayer.hideAudioPlayer();
+    RadioPlayer.minimizeAudioPlayer();
 }
 
 function showAudioPlayer() {
@@ -282,7 +310,15 @@ function showAudioPlayer() {
 }
 
 function closePlayer() {
-    RadioPlayer.hideAudioPlayer();
+    RadioPlayer.closeAudioPlayer();
+}
+
+function minimizeAudioPlayer() {
+    RadioPlayer.minimizeAudioPlayer();
+}
+
+function closeAudioPlayer() {
+    RadioPlayer.closeAudioPlayer();
 }
 
 function toggleAudioPlay() {
@@ -1490,6 +1526,4 @@ function playActivePlaylist() {
     playPlaylistItem(first.audioUrl, first.title, first.artist || active.name, first.coverUrl);
     showToast(`▶ Playing playlist: ${active.name}`);
 }
-
-
 
