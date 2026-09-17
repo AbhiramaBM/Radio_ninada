@@ -927,6 +927,44 @@
         </div>
     </div>
 
+    <!-- ============================================================== -->
+    <!-- UNIVERSAL EDIT MODAL -->
+    <!-- ============================================================== -->
+    <div id="edit-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4" onclick="handleEditModalBackdrop(event)">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-border flex flex-col max-h-[90vh]">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-5 border-b border-border shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-xl">edit</span>
+                    </div>
+                    <div>
+                        <h3 id="edit-modal-title" class="text-sm font-bold text-slate-900">Edit Item</h3>
+                        <p class="text-[11px] text-text-muted">Update details and save changes</p>
+                    </div>
+                </div>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+
+            <!-- Modal Body (dynamic) -->
+            <div id="edit-modal-body" class="overflow-y-auto p-5 space-y-4 flex-1 custom-scroll"></div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-end gap-3 p-5 border-t border-border shrink-0">
+                <button onclick="closeEditModal()" class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer">
+                    Cancel
+                </button>
+                <button id="edit-save-btn" onclick="saveEditChanges()"
+                    class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">save</span>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Client Scripts -->
     <script src="js/config.js"></script>
     <script src="js/api-client.js"></script>
@@ -1275,6 +1313,7 @@
                     <div class="flex items-center gap-3">
                         ${audio ? `<audio controls class="h-8 w-48"><source src="${audio}" type="audio/mpeg"></audio>` : ''}
                         <button onclick="copyUrl('${audio || p.coverUrl}')" class="p-1.5 rounded-lg border border-border text-slate-600 hover:bg-slate-50 cursor-pointer" title="Copy CDN Link"><span class="material-symbols-outlined text-sm">content_copy</span></button>
+                        <button onclick="openEditModal('podcast', '${p.id}')" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer" title="Edit Podcast"><span class="material-symbols-outlined text-sm">edit</span></button>
                         <button onclick="deletePodcastItem('${p.id}')" class="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
                     </div>
                 </div>`;
@@ -1360,7 +1399,10 @@
                             <span class="text-[10px] text-primary font-bold">${p.schedule || ''}</span>
                         </div>
                     </div>
-                    <button onclick="deleteProgramItem('${p.id}')" class="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openEditModal('program', '${p.id}')" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer" title="Edit Program"><span class="material-symbols-outlined text-sm">edit</span></button>
+                        <button onclick="deleteProgramItem('${p.id}')" class="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -1436,7 +1478,10 @@
                             <p class="text-[11px] text-text-muted line-clamp-2 mt-1">${n.content}</p>
                         </div>
                     </div>
-                    <button onclick="deleteNewsItem('${n.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer shrink-0"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openEditModal('news', '${n.id}')" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer" title="Edit News"><span class="material-symbols-outlined text-sm">edit</span></button>
+                        <button onclick="deleteNewsItem('${n.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -1513,7 +1558,10 @@
                             <p class="text-[11px] text-purple-700 font-semibold mt-0.5">📅 ${new Date(ev.eventDate).toLocaleDateString()} | 📍 ${ev.location}</p>
                         </div>
                     </div>
-                    <button onclick="deleteEventItem('${ev.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openEditModal('event', '${ev.id}')" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer" title="Edit Event"><span class="material-symbols-outlined text-sm">edit</span></button>
+                        <button onclick="deleteEventItem('${ev.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -1582,7 +1630,10 @@
                         <span class="text-[10px] font-bold truncate">${g.title}</span>
                         <div class="flex items-center justify-between">
                             <button onclick="copyUrl('${g.mediaUrl}')" class="p-1 rounded bg-white/20 hover:bg-white/40 cursor-pointer"><span class="material-symbols-outlined text-xs">content_copy</span></button>
-                            <button onclick="deleteGalleryPhoto('${g.id}')" class="p-1 rounded bg-red-600/80 hover:bg-red-600 cursor-pointer"><span class="material-symbols-outlined text-xs">delete</span></button>
+                            <div class="flex gap-1">
+                                <button onclick="openEditModal('gallery', '${g.id}')" class="p-1 rounded bg-blue-600/80 hover:bg-blue-600 cursor-pointer" title="Edit"><span class="material-symbols-outlined text-xs">edit</span></button>
+                                <button onclick="deleteGalleryPhoto('${g.id}')" class="p-1 rounded bg-red-600/80 hover:bg-red-600 cursor-pointer"><span class="material-symbols-outlined text-xs">delete</span></button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1641,7 +1692,10 @@
                         <h6 class="font-bold text-xs">${a.title}</h6>
                         <p class="text-[11px] text-text-muted mt-0.5">${a.message}</p>
                     </div>
-                    <button onclick="deleteAnnouncementItem('${a.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openEditModal('announcement', '${a.id}')" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer" title="Edit Alert"><span class="material-symbols-outlined text-sm">edit</span></button>
+                        <button onclick="deleteAnnouncementItem('${a.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -1719,7 +1773,10 @@
                             <p class="text-[10px] text-primary font-semibold">${h.designation || 'Presenter'}</p>
                         </div>
                     </div>
-                    <button onclick="deleteHostItem('${h.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openEditModal('host', '${h.id}')" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer" title="Edit Presenter"><span class="material-symbols-outlined text-sm">edit</span></button>
+                        <button onclick="deleteHostItem('${h.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -1789,9 +1846,12 @@
             c.innerHTML = res.data.map(b => `
                 <div class="bg-slate-50/70 p-3.5 rounded-2xl border border-border">
                     <img src="${b.imageUrl}" class="w-full h-32 object-cover rounded-xl border border-border mb-2" />
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between gap-2">
                         <h6 class="font-bold text-xs truncate">${b.title}</h6>
-                        <button onclick="deleteBannerItem('${b.id}')" class="p-1 rounded text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                        <div class="flex gap-1 shrink-0">
+                            <button onclick="openEditModal('banner', '${b.id}')" class="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer" title="Edit Banner"><span class="material-symbols-outlined text-sm">edit</span></button>
+                            <button onclick="deleteBannerItem('${b.id}')" class="p-1 rounded text-red-600 hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -1915,6 +1975,332 @@
             }).catch(() => {
                 showToast('Could not copy URL', true);
             });
+        }
+
+        // ==========================================
+        // UNIVERSAL EDIT MODAL
+        // ==========================================
+        let editState = { type: null, id: null, item: null, newFile: null };
+
+        // In-memory cache so we don't refetch on every edit click
+        let dataCache = {};
+
+        function handleEditModalBackdrop(e) {
+            if (e.target === document.getElementById('edit-modal')) closeEditModal();
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            editState = { type: null, id: null, item: null, newFile: null };
+        }
+
+        async function openEditModal(type, id) {
+            editState = { type, id, item: null, newFile: null };
+            const modal = document.getElementById('edit-modal');
+            const body = document.getElementById('edit-modal-body');
+            const titleEl = document.getElementById('edit-modal-title');
+
+            body.innerHTML = `<div class="py-8 text-center text-text-muted text-xs"><span class="inline-block animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></span><p class="mt-2">Loading...</p></div>`;
+            modal.classList.remove('hidden');
+
+            try {
+                let item = null;
+                if (type === 'host') {
+                    const res = await window.RadioAPI.getHosts();
+                    item = res?.data?.find(x => x.id === id);
+                    titleEl.textContent = 'Edit RJ Presenter';
+                } else if (type === 'podcast') {
+                    const res = await window.RadioAPI.getPodcasts();
+                    item = res?.data?.find(x => x.id === id);
+                    titleEl.textContent = 'Edit Podcast';
+                } else if (type === 'program') {
+                    const res = await window.RadioAPI.getPrograms();
+                    item = res?.data?.find(x => x.id === id);
+                    titleEl.textContent = 'Edit Show / Program';
+                } else if (type === 'news') {
+                    const res = await window.RadioAPI.getNews();
+                    item = res?.data?.find(x => x.id === id);
+                    titleEl.textContent = 'Edit News Bulletin';
+                } else if (type === 'event') {
+                    const res = await window.RadioAPI.getEvents();
+                    item = res?.data?.find(x => x.id === id);
+                    titleEl.textContent = 'Edit Event';
+                } else if (type === 'gallery') {
+                    const res = await window.RadioAPI.getGallery();
+                    item = res?.data?.find(x => x.id === id);
+                    titleEl.textContent = 'Edit Gallery Photo';
+                } else if (type === 'announcement') {
+                    const res = await window.RadioAPI.getAnnouncements();
+                    item = res?.data?.find(x => x.id === id);
+                    titleEl.textContent = 'Edit Ticker Alert';
+                } else if (type === 'banner') {
+                    const res = await window.RadioAPI.getBanners();
+                    item = res?.data?.find(x => x.id === id);
+                    titleEl.textContent = 'Edit Banner';
+                }
+
+                if (!item) {
+                    body.innerHTML = `<div class="py-8 text-center text-red-600 text-xs font-bold">Could not load item. Please try again.</div>`;
+                    return;
+                }
+
+                editState.item = item;
+                body.innerHTML = buildEditForm(type, item);
+
+                // Wire file input preview
+                const fileInput = document.getElementById('edit-file-input');
+                if (fileInput) {
+                    fileInput.addEventListener('change', (e) => {
+                        editState.newFile = e.target.files[0] || null;
+                        const preview = document.getElementById('edit-file-preview');
+                        if (preview && editState.newFile) {
+                            const url = URL.createObjectURL(editState.newFile);
+                            if (editState.newFile.type.startsWith('image/')) {
+                                preview.innerHTML = `<img src="${url}" class="w-24 h-24 rounded-xl object-cover border border-border mt-2" />`;
+                            } else {
+                                preview.innerHTML = `<audio controls class="mt-2 w-full"><source src="${url}"></audio>`;
+                            }
+                        }
+                    });
+                }
+
+            } catch (err) {
+                body.innerHTML = `<div class="py-8 text-center text-red-600 text-xs font-bold">Error: ${err.message}</div>`;
+            }
+        }
+
+        function buildEditForm(type, item) {
+            const inp = (id, label, value, type='text', placeholder='') =>
+                `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><input type="${type}" id="edit-${id}" value="${escHtml(value || '')}" placeholder="${placeholder}" class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary"></div>`;
+            const ta = (id, label, value, rows=3) =>
+                `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><textarea id="edit-${id}" rows="${rows}" class="w-full px-3.5 py-2 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">${escHtml(value || '')}</textarea></div>`;
+            const sel = (id, label, options, current) =>
+                `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><select id="edit-${id}" class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary">${options.map(o => `<option value="${o.v}" ${current===o.v?'selected':''}>${o.l}</option>`).join('')}</select></div>`;
+
+            const fileSection = (label, currentUrl, accept='image/*', folder='') => {
+                const isAudio = accept.includes('audio');
+                const preview = currentUrl
+                    ? (isAudio
+                        ? `<audio controls class="w-full h-8"><source src="${currentUrl}"></audio>`
+                        : `<img src="${currentUrl}" class="w-24 h-24 rounded-xl object-cover border border-border" />`)
+                    : '';
+                return `<div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">${label} <span class="text-text-muted font-normal">(leave blank to keep current)</span></label>
+                    ${preview ? `<div class="mb-2">${preview}</div>` : ''}
+                    <input type="file" id="edit-file-input" accept="${accept}" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:bg-blue-600 file:text-white cursor-pointer">
+                    <div id="edit-file-preview"></div>
+                </div>`;
+            };
+
+            if (type === 'host') {
+                return [
+                    inp('name', 'RJ Name *', item.name, 'text', 'RJ Rashmi'),
+                    inp('designation', 'Designation', item.designation, 'text', 'Senior Radio Presenter'),
+                    ta('bio', 'Bio *', item.bio),
+                    fileSection('Profile Photograph', item.photoUrl || item.photo, 'image/*', 'radio-ninada/hosts'),
+                ].join('');
+            } else if (type === 'podcast') {
+                const catOptions = [
+                    {v:'Music',l:'🎵 Music & Melody'},{v:'Culture',l:'🏛️ Culture & Heritage'},
+                    {v:'Interviews',l:'🎙️ Talk Show & Interviews'},{v:'Education',l:'🎓 Student Special / Education'},
+                    {v:'Devotional',l:'🙏 Devotional'}
+                ];
+                return [
+                    inp('title', 'Title *', item.title, 'text', 'Podcast title'),
+                    sel('category', 'Category', catOptions, item.categoryName || item.category),
+                    ta('description', 'Description *', item.description),
+                    `<label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer"><input type="checkbox" id="edit-featured" class="rounded border-border text-primary w-4 h-4" ${item.featured?'checked':''}><span>Featured on Homepage</span></label>`,
+                    fileSection('Replace Cover Image', item.coverUrl, 'image/*', 'radio-ninada/podcasts/covers'),
+                ].join('');
+            } else if (type === 'program') {
+                return [
+                    inp('name', 'Show Name *', item.name, 'text', 'Morning Melody'),
+                    inp('hostName', 'Presenter / RJ *', item.hostName, 'text', 'RJ Chethan'),
+                    inp('schedule', 'Broadcast Slot *', item.schedule, 'text', 'Mon - Fri | 08:00 AM - 09:30 AM'),
+                    ta('description', 'Description *', item.description),
+                    fileSection('Replace Show Poster', item.banner, 'image/*', 'radio-ninada/programs'),
+                ].join('');
+            } else if (type === 'news') {
+                const catOptions = [
+                    {v:'College',l:'🎓 College'},{v:'Local',l:'📍 Local / Community'},
+                    {v:'State',l:'🏛️ State'},{v:'National',l:'🇮🇳 National'}
+                ];
+                return [
+                    inp('title', 'Headline *', item.title, 'text', 'News headline'),
+                    sel('category', 'Category', catOptions, item.category),
+                    ta('content', 'Content *', item.content, 4),
+                    fileSection('Replace Featured Image', item.featuredImage || item.imageUrl, 'image/*', 'radio-ninada/media'),
+                ].join('');
+            } else if (type === 'event') {
+                const localDatetime = item.eventDate ? new Date(item.eventDate).toISOString().slice(0,16) : '';
+                return [
+                    inp('title', 'Event Title *', item.title, 'text', 'Radio RJ Hunt 2026'),
+                    `<div><label class="block text-xs font-bold text-slate-600 mb-1">Date &amp; Time *</label><input type="datetime-local" id="edit-date" value="${localDatetime}" class="w-full px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-xs focus:outline-none focus:border-primary"></div>`,
+                    inp('location', 'Venue / Location *', item.location, 'text', 'SDM College Auditorium'),
+                    ta('description', 'Description *', item.description),
+                    fileSection('Replace Event Poster', item.banner, 'image/*', 'radio-ninada/banners'),
+                ].join('');
+            } else if (type === 'gallery') {
+                return [
+                    inp('title', 'Caption / Title *', item.title, 'text', 'Live in the recording studio'),
+                    inp('album', 'Album / Category', item.album, 'text', 'Behind The Mic'),
+                    fileSection('Replace Photograph', item.mediaUrl, 'image/*', 'radio-ninada/gallery'),
+                ].join('');
+            } else if (type === 'announcement') {
+                return [
+                    inp('title', 'Alert Headline *', item.title, 'text', 'Breaking News or Live Program Alert'),
+                    inp('message', 'Message Text *', item.message, 'text', 'Tune in today at 4 PM!'),
+                ].join('');
+            } else if (type === 'banner') {
+                return [
+                    inp('title', 'Banner Title *', item.title, 'text', 'SDM Golden Jubilee Broadcast'),
+                    inp('targetUrl', 'Destination URL', item.targetUrl, 'url', 'https://sdmcujire.in'),
+                    fileSection('Replace Banner Image', item.imageUrl, 'image/*', 'radio-ninada/banners'),
+                ].join('');
+            }
+            return '<div class="text-xs text-text-muted">Unknown item type.</div>';
+        }
+
+        function escHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        async function saveEditChanges() {
+            const { type, id, item, newFile } = editState;
+            if (!type || !id || !item) return;
+
+            const btn = document.getElementById('edit-save-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span><span>Saving...</span>`;
+
+            try {
+                // Helper to get field value
+                const v = (fieldId) => {
+                    const el = document.getElementById(`edit-${fieldId}`);
+                    return el ? el.value.trim() : undefined;
+                };
+
+                let uploadedUrl = null;
+                let uploadedPublicId = null;
+
+                // Upload new file to Cloudinary if provided
+                if (newFile) {
+                    let folder = 'radio-ninada/media';
+                    if (type === 'host') folder = 'radio-ninada/hosts';
+                    else if (type === 'podcast') folder = 'radio-ninada/podcasts/covers';
+                    else if (type === 'program') folder = 'radio-ninada/programs';
+                    else if (type === 'gallery') folder = 'radio-ninada/gallery';
+                    else if (type === 'banner' || type === 'event') folder = 'radio-ninada/banners';
+
+                    showToast('Uploading new file to Cloudinary...');
+                    const uploadRes = await window.RadioAPI.uploadMedia(newFile, folder);
+                    if (!uploadRes?.success || !uploadRes.data) {
+                        throw new Error(uploadRes?.message || 'File upload failed');
+                    }
+                    uploadedUrl = uploadRes.data.secureUrl || uploadRes.data.url;
+                    uploadedPublicId = uploadRes.data.publicId;
+                }
+
+                let res;
+                if (type === 'host') {
+                    res = await window.RadioAPI.updateHost(id, {
+                        name: v('name') || item.name,
+                        designation: v('designation') || item.designation,
+                        bio: v('bio') || item.bio,
+                        photoUrl: uploadedUrl || item.photoUrl || item.photo,
+                        publicId: uploadedPublicId || item.publicId,
+                        status: item.status,
+                    });
+                } else if (type === 'podcast') {
+                    const featured = document.getElementById('edit-featured')?.checked ?? item.featured;
+                    res = await window.RadioAPI.updatePodcast(id, {
+                        title: v('title') || item.title,
+                        description: v('description') || item.description,
+                        categoryName: v('category') || item.categoryName || item.category,
+                        featured,
+                        coverUrl: uploadedUrl || item.coverUrl,
+                        coverPublicId: uploadedPublicId || item.coverPublicId,
+                        audioUrl: item.audioUrl,
+                        audioPublicId: item.audioPublicId,
+                        duration: item.duration,
+                    });
+                } else if (type === 'program') {
+                    res = await window.RadioAPI.updateProgram(id, {
+                        name: v('name') || item.name,
+                        hostName: v('hostName') || item.hostName,
+                        schedule: v('schedule') || item.schedule,
+                        description: v('description') || item.description,
+                        banner: uploadedUrl || item.banner,
+                        bannerPublicId: uploadedPublicId || item.bannerPublicId,
+                        status: item.status,
+                    });
+                } else if (type === 'news') {
+                    res = await window.RadioAPI.updateNews(id, {
+                        title: v('title') || item.title,
+                        category: v('category') || item.category,
+                        content: v('content') || item.content,
+                        featuredImage: uploadedUrl || item.featuredImage || item.imageUrl,
+                        publicId: uploadedPublicId || item.publicId,
+                        status: item.status,
+                    });
+                } else if (type === 'event') {
+                    const rawDate = document.getElementById('edit-date')?.value;
+                    const eventDate = rawDate ? new Date(rawDate).toISOString() : item.eventDate;
+                    res = await window.RadioAPI.updateEvent(id, {
+                        title: v('title') || item.title,
+                        description: v('description') || item.description,
+                        eventDate,
+                        location: v('location') || item.location,
+                        banner: uploadedUrl || item.banner,
+                        registrationRequired: item.registrationRequired ?? true,
+                    });
+                } else if (type === 'gallery') {
+                    res = await window.RadioAPI.updateGalleryItem(id, {
+                        title: v('title') || item.title,
+                        album: v('album') || item.album,
+                        mediaUrl: uploadedUrl || item.mediaUrl,
+                        publicId: uploadedPublicId || item.publicId,
+                    });
+                } else if (type === 'announcement') {
+                    res = await window.RadioAPI.updateAnnouncement(id, {
+                        title: v('title') || item.title,
+                        message: v('message') || item.message,
+                        audience: item.audience || 'ALL',
+                        status: item.status || 'PUBLISHED',
+                    });
+                } else if (type === 'banner') {
+                    res = await window.RadioAPI.updateBanner(id, {
+                        title: v('title') || item.title,
+                        targetUrl: v('targetUrl') || item.targetUrl,
+                        imageUrl: uploadedUrl || item.imageUrl,
+                        publicId: uploadedPublicId || item.publicId,
+                        type: item.type || 'HOMEPAGE',
+                        priority: item.priority || 1,
+                        status: item.status || 'ACTIVE',
+                    });
+                }
+
+                if (res?.success) {
+                    showToast('✅ Changes saved successfully!');
+                    closeEditModal();
+                    // Refresh the relevant list
+                    if (type === 'host') { fetchHostsList(); loadStudioData(); }
+                    else if (type === 'podcast') { fetchPodcastsList(); loadStudioData(); }
+                    else if (type === 'program') { fetchProgramsList(); loadStudioData(); }
+                    else if (type === 'news') fetchNewsList();
+                    else if (type === 'event') fetchEventsList();
+                    else if (type === 'gallery') fetchGalleryList();
+                    else if (type === 'announcement') fetchAnnouncementsList();
+                    else if (type === 'banner') fetchBannersList();
+                } else {
+                    throw new Error(res?.message || 'Save failed. Please try again.');
+                }
+            } catch (err) {
+                showToast(err.message || 'Save failed', true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="material-symbols-outlined text-base">save</span><span>Save Changes</span>`;
+            }
         }
     </script>
 </body>

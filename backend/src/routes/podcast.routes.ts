@@ -3,6 +3,7 @@ import {
   getPodcasts,
   getPodcastBySlug,
   createPodcast,
+  updatePodcast,
   addEpisode,
   incrementDownload,
   deletePodcast,
@@ -24,6 +25,14 @@ router.post(
   requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ']),
   auditLog('CREATE', 'Podcast'),
   createPodcast
+);
+
+router.put(
+  '/:id',
+  authenticate,
+  requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ']),
+  auditLog('UPDATE', 'Podcast'),
+  updatePodcast
 );
 
 router.post(

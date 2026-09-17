@@ -164,3 +164,95 @@ export async function deleteProgram(req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
+
+export async function updateProgram(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id as string;
+    const existing = await prisma.program.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Program not found' });
+    }
+
+    const {
+      name,
+      description,
+      hostId,
+      hostName,
+      categoryId,
+      categoryName,
+      thumbnail,
+      thumbnailPublicId,
+      banner,
+      bannerPublicId,
+      duration,
+      language,
+      tags,
+      schedule,
+      featured,
+      status,
+    } = req.body;
+
+    if (name && name !== existing.name) {
+      const isDup = await checkDuplicateProgram(name, id);
+      if (isDup) {
+        return res.status(400).json({
+          success: false,
+          message: `A program with the name "${name}" already exists.`,
+        });
+      }
+    }
+
+    if (bannerPublicId && existing.bannerPublicId && existing.bannerPublicId !== bannerPublicId) {
+      try {
+        await deleteFileFromCloudinary(existing.bannerPublicId, 'image');
+      } catch (e) {
+        console.warn('Old program banner cleanup warning:', e);
+      }
+    }
+    if (thumbnailPublicId && existing.thumbnailPublicId && existing.thumbnailPublicId !== thumbnailPublicId) {
+      try {
+        await deleteFileFromCloudinary(existing.thumbnailPublicId, 'image');
+      } catch (e) {
+        console.warn('Old program thumbnail cleanup warning:', e);
+      }
+    }
+
+    const updated = await prisma.program.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(hostId !== undefined && { hostId }),
+        ...(hostName !== undefined && { hostName }),
+        ...(categoryId !== undefined && { categoryId }),
+        ...(categoryName !== undefined && { categoryName }),
+        ...(thumbnail !== undefined && { thumbnail }),
+        ...(thumbnailPublicId !== undefined && { thumbnailPublicId }),
+        ...(banner !== undefined && { banner }),
+        ...(bannerPublicId !== undefined && { bannerPublicId }),
+        ...(duration !== undefined && { duration }),
+        ...(language !== undefined && { language }),
+        ...(tags !== undefined && { tags }),
+        ...(schedule !== undefined && { schedule }),
+        ...(featured !== undefined && { featured }),
+        ...(status !== undefined && { status }),
+      },
+      include: {
+        host: true,
+        category: true,
+        schedules: true,
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: 'Program updated successfully',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

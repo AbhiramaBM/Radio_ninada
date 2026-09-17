@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { getGallery, createGalleryItem, deleteGalleryItem } from '../controllers/gallery.controller';
+import { getGallery, createGalleryItem, updateGalleryItem, deleteGalleryItem } from '../controllers/gallery.controller';
 import { authenticate, requireRole } from '../middlewares/auth';
 import { upload } from '../middlewares/upload';
 import { auditLog } from '../middlewares/audit';
@@ -25,6 +25,7 @@ const handleFileUpload = (req: Request, res: Response, next: NextFunction) => {
 
 router.get('/', getGallery);
 router.post('/', authenticate, requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), handleFileUpload, auditLog('CREATE', 'GalleryItem'), createGalleryItem);
+router.put('/:id', authenticate, requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), handleFileUpload, auditLog('UPDATE', 'GalleryItem'), updateGalleryItem);
 router.delete('/:id', authenticate, requireRole(['SUPER_ADMIN', 'ADMIN']), auditLog('DELETE', 'GalleryItem'), deleteGalleryItem);
 
 export default router;

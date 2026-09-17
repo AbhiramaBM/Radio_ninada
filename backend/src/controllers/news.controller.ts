@@ -94,29 +94,42 @@ export async function createNews(req: Request, res: Response, next: NextFunction
 export async function updateNews(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string;
-    const data = req.body;
+    const existing = await prisma.news.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'News article not found' });
+    }
 
-    if (data.title) {
-      const isDup = await checkDuplicateNews(data.title as string, id);
+    const { title, content, category, featuredImage, publicId, status, publishedAt } = req.body;
+
+    if (title && title !== existing.title) {
+      const isDup = await checkDuplicateNews(title as string, id);
       if (isDup) {
         return res.status(400).json({
           success: false,
-          message: `Duplicate Warning: News article with headline "${data.title}" already exists.`,
+          message: `Duplicate Warning: News article with headline "${title}" already exists.`,
         });
       }
     }
 
-    let publicId = data.publicId || data.cloudinaryPublicId;
-    if (!publicId && data.featuredImage) {
-      publicId = extractPublicIdFromUrl(data.featuredImage);
+    let finalPublicId = publicId || (featuredImage ? extractPublicIdFromUrl(featuredImage) : undefined);
+    if (finalPublicId && existing.publicId && existing.publicId !== finalPublicId) {
+      try {
+        await deleteFileFromCloudinary(existing.publicId, 'image');
+      } catch (e) {
+        console.warn('Old news image cleanup warning:', e);
+      }
     }
 
     const updated = await prisma.news.update({
       where: { id },
       data: {
-        ...data,
-        ...(publicId && { publicId }),
-        ...(data.publishedAt && { publishedAt: new Date(data.publishedAt) }),
+        ...(title !== undefined && { title }),
+        ...(content !== undefined && { content }),
+        ...(category !== undefined && { category }),
+        ...(featuredImage !== undefined && { featuredImage }),
+        ...(finalPublicId !== undefined && { publicId: finalPublicId }),
+        ...(status !== undefined && { status }),
+        ...(publishedAt !== undefined && { publishedAt: new Date(publishedAt) }),
       },
     });
 

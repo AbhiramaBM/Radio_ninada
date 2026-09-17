@@ -158,3 +158,41 @@ export async function deleteEvent(req: Request, res: Response, next: NextFunctio
     next(error);
   }
 }
+
+export async function updateEvent(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id as string;
+    const existing = await prisma.event.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+
+    const { title, description, banner, eventDate, location, registrationRequired } = req.body;
+
+    if (title && title !== existing.title) {
+      const isDup = await checkDuplicateEvent(title, eventDate ? new Date(eventDate) : existing.eventDate, id);
+      if (isDup) {
+        return res.status(400).json({
+          success: false,
+          message: `Duplicate Warning: An event with the title "${title}" is already scheduled.`,
+        });
+      }
+    }
+
+    const updated = await prisma.event.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(description !== undefined && { description }),
+        ...(banner !== undefined && { banner }),
+        ...(eventDate !== undefined && { eventDate: new Date(eventDate) }),
+        ...(location !== undefined && { location }),
+        ...(registrationRequired !== undefined && { registrationRequired }),
+      },
+    });
+
+    return res.json({ success: true, message: 'Event updated successfully', data: updated });
+  } catch (error) {
+    next(error);
+  }
+}

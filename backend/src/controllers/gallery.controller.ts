@@ -89,3 +89,58 @@ export async function deleteGalleryItem(req: Request, res: Response, next: NextF
   }
 }
 
+export async function updateGalleryItem(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id as string;
+    const existing = await prisma.galleryItem.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Gallery item not found' });
+    }
+
+    const file = req.file;
+    let mediaUrl = req.body.mediaUrl;
+    let publicId = req.body.publicId || req.body.cloudinaryPublicId || null;
+
+    if (file) {
+      mediaUrl = file.path && (file.path.startsWith('http://') || file.path.startsWith('https://')) ? file.path : `/uploads/${file.filename}`;
+      publicId = (file as any).public_id || extractPublicIdFromUrl(mediaUrl);
+    }
+
+    if (!publicId && mediaUrl) {
+      publicId = extractPublicIdFromUrl(mediaUrl);
+    }
+
+    if (publicId && existing.publicId && existing.publicId !== publicId) {
+      try {
+        const resourceType = existing.type === 'VIDEO' ? 'video' : 'image';
+        await deleteFileFromCloudinary(existing.publicId, resourceType);
+      } catch (e) {
+        console.warn('Old gallery photo cleanup warning:', e);
+      }
+    }
+
+    const { title, description, type, thumbnail, duration, album, category } = req.body;
+    let thumbnailPublicId = req.body.thumbnailPublicId || (thumbnail ? extractPublicIdFromUrl(thumbnail) : undefined);
+
+    const updated = await prisma.galleryItem.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(description !== undefined && { description }),
+        ...(type !== undefined && { type }),
+        ...(mediaUrl !== undefined && { mediaUrl }),
+        ...(publicId !== undefined && { publicId }),
+        ...(thumbnail !== undefined && { thumbnail }),
+        ...(thumbnailPublicId !== undefined && { thumbnailPublicId }),
+        ...(duration !== undefined && { duration }),
+        ...(album !== undefined && { album }),
+        ...(category !== undefined && { category }),
+      },
+    });
+
+    return res.json({ success: true, message: 'Gallery item updated successfully', data: updated });
+  } catch (error) {
+    next(error);
+  }
+}
+

@@ -47,3 +47,21 @@ export async function listContactMessages(req: Request, res: Response, next: Nex
     next(error);
   }
 }
+
+/**
+ * Update contact message status (Admin/Staff only)
+ * PATCH /api/contact/:id
+ */
+export async function updateContactMessageStatus(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id as string;
+    const { status } = req.body;
+    const updated = await prisma.contactMessage.update({
+      where: { id },
+      data: { status: status || 'READ' },
+    });
+    return res.json({ success: true, message: 'Message status updated', data: updated });
+  } catch (error) {
+    next(error);
+  }
+}

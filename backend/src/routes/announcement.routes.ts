@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getAnnouncements,
   createAnnouncement,
+  updateAnnouncement,
   markAnnouncementRead,
   deleteAnnouncement,
 } from '../controllers/announcement.controller';
@@ -13,6 +14,7 @@ const router = Router();
 router.get('/', getAnnouncements);
 router.patch('/:id/read', markAnnouncementRead);
 router.post('/', authenticate, requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), auditLog('CREATE', 'Announcement'), createAnnouncement);
+router.put('/:id', authenticate, requireRole(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), auditLog('UPDATE', 'Announcement'), updateAnnouncement);
 router.delete('/:id', authenticate, requireRole(['SUPER_ADMIN', 'ADMIN']), auditLog('DELETE', 'Announcement'), deleteAnnouncement);
 
 export default router;

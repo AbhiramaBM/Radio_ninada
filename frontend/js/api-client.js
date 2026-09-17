@@ -403,6 +403,62 @@
       });
     },
 
+    async updateHost(id, data) {
+      return await fetchApi(`/hosts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async updatePodcast(id, data) {
+      return await fetchApi(`/podcasts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async updateProgram(id, data) {
+      return await fetchApi(`/programs/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async updateNews(id, data) {
+      return await fetchApi(`/news/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async updateEvent(id, data) {
+      return await fetchApi(`/events/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async updateGalleryItem(id, data) {
+      return await fetchApi(`/gallery/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async updateAnnouncement(id, data) {
+      return await fetchApi(`/announcements/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    async updateBanner(id, data) {
+      return await fetchApi(`/banners/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
     async getContactMessages() {
       return await fetchApi('/contact');
     },

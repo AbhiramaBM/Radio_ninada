@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/prisma';
 import { generateSlug } from '../utils/slug';
+import { checkDuplicatePodcast } from '../utils/duplicate';
 import { podcastSchema, episodeSchema } from '../validation/index';
 import { deleteFileFromCloudinary } from '../services/cloudinary.service';
 
@@ -249,6 +250,109 @@ export async function deletePodcast(req: Request, res: Response, next: NextFunct
     return res.json({
       success: true,
       message: 'Podcast and associated episodes deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Update podcast and sync default episode
+ * PUT /api/podcasts/:id
+ */
+export async function updatePodcast(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id as string;
+    const existing = await prisma.podcast.findUnique({
+      where: { id },
+      include: { episodes: true },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Podcast not found' });
+    }
+
+    const {
+      title,
+      description,
+      coverUrl,
+      coverPublicId,
+      audioUrl,
+      audioPublicId,
+      duration,
+      categoryId,
+      hostId,
+      featured,
+      status,
+    } = req.body;
+
+    if (title && title !== existing.title) {
+      const isDup = await checkDuplicatePodcast(title, id);
+      if (isDup) {
+        return res.status(400).json({
+          success: false,
+          message: `A podcast with the title "${title}" already exists.`,
+        });
+      }
+    }
+
+    if (coverPublicId && existing.coverPublicId && existing.coverPublicId !== coverPublicId) {
+      try {
+        await deleteFileFromCloudinary(existing.coverPublicId, 'image');
+      } catch (e) {
+        console.warn('Old podcast cover cleanup warning:', e);
+      }
+    }
+    if (audioPublicId && existing.audioPublicId && existing.audioPublicId !== audioPublicId) {
+      try {
+        await deleteFileFromCloudinary(existing.audioPublicId, 'video');
+      } catch (e) {
+        console.warn('Old podcast audio cleanup warning:', e);
+      }
+    }
+
+    const updated = await prisma.podcast.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(description !== undefined && { description }),
+        ...(coverUrl !== undefined && { coverUrl }),
+        ...(coverPublicId !== undefined && { coverPublicId }),
+        ...(audioUrl !== undefined && { audioUrl }),
+        ...(audioPublicId !== undefined && { audioPublicId }),
+        ...(duration !== undefined && { duration }),
+        ...(categoryId !== undefined && { categoryId }),
+        ...(hostId !== undefined && { hostId }),
+        ...(featured !== undefined && { featured }),
+        ...(status !== undefined && { status }),
+      },
+      include: {
+        category: true,
+        host: true,
+        episodes: true,
+      },
+    });
+
+    if (existing.episodes && existing.episodes.length > 0) {
+      const firstEp = existing.episodes[0];
+      await prisma.podcastEpisode.update({
+        where: { id: firstEp.id },
+        data: {
+          ...(title !== undefined && { title }),
+          ...(description !== undefined && { description }),
+          ...(audioUrl !== undefined && { audioUrl }),
+          ...(audioPublicId !== undefined && { audioPublicId }),
+          ...(coverUrl !== undefined && { coverUrl }),
+          ...(coverPublicId !== undefined && { coverPublicId }),
+          ...(duration !== undefined && { duration }),
+        },
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Podcast updated successfully',
+      data: updated,
     });
   } catch (error) {
     next(error);

@@ -75,3 +75,41 @@ export async function deleteHost(req: Request, res: Response, next: NextFunction
     next(error);
   }
 }
+
+export async function updateHost(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id as string;
+    const existing = await prisma.host.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Host not found' });
+    }
+
+    const { name, designation, bio, photoUrl, publicId, socialMedia, achievements, status } = req.body;
+
+    if (publicId && existing.publicId && existing.publicId !== publicId) {
+      try {
+        await deleteFileFromCloudinary(existing.publicId, 'image');
+      } catch (e) {
+        console.warn('Old host photo cleanup warning:', e);
+      }
+    }
+
+    const updated = await prisma.host.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(designation !== undefined && { designation }),
+        ...(bio !== undefined && { bio }),
+        ...(photoUrl !== undefined && { photoUrl }),
+        ...(publicId !== undefined && { publicId }),
+        ...(socialMedia !== undefined && { socialMedia }),
+        ...(achievements !== undefined && { achievements }),
+        ...(status !== undefined && { status }),
+      },
+    });
+
+    return res.json({ success: true, message: 'Host profile updated successfully', data: updated });
+  } catch (error) {
+    next(error);
+  }
+}

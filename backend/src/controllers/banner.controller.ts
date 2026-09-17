@@ -74,3 +74,54 @@ export async function deleteBanner(req: Request, res: Response, next: NextFuncti
   }
 }
 
+export async function updateBanner(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id as string;
+    const existing = await prisma.banner.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Banner not found' });
+    }
+
+    const file = req.file;
+    let imageUrl = req.body.imageUrl;
+    let publicId = req.body.publicId || req.body.cloudinaryPublicId || null;
+
+    if (file) {
+      imageUrl = file.path && (file.path.startsWith('http://') || file.path.startsWith('https://')) ? file.path : `/uploads/${file.filename}`;
+      publicId = (file as any).public_id || extractPublicIdFromUrl(imageUrl);
+    }
+
+    if (!publicId && imageUrl) {
+      publicId = extractPublicIdFromUrl(imageUrl);
+    }
+
+    if (publicId && existing.publicId && existing.publicId !== publicId) {
+      try {
+        await deleteFileFromCloudinary(existing.publicId, 'image');
+      } catch (e) {
+        console.warn('Old banner cleanup warning:', e);
+      }
+    }
+
+    const { title, targetUrl, type, priority, expiryDate, status } = req.body;
+
+    const updated = await prisma.banner.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(imageUrl !== undefined && { imageUrl }),
+        ...(publicId !== undefined && { publicId }),
+        ...(targetUrl !== undefined && { targetUrl }),
+        ...(type !== undefined && { type }),
+        ...(priority !== undefined && { priority: parseInt(priority, 10) }),
+        ...(expiryDate !== undefined && { expiryDate: expiryDate ? new Date(expiryDate) : null }),
+        ...(status !== undefined && { status }),
+      },
+    });
+
+    return res.json({ success: true, message: 'Banner updated successfully', data: updated });
+  } catch (error) {
+    next(error);
+  }
+}
+

@@ -55,3 +55,29 @@ export async function deleteAnnouncement(req: Request, res: Response, next: Next
     next(error);
   }
 }
+
+export async function updateAnnouncement(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id as string;
+    const existing = await prisma.announcement.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Announcement not found' });
+    }
+
+    const { title, message, audience, status } = req.body;
+
+    const updated = await prisma.announcement.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(message !== undefined && { message }),
+        ...(audience !== undefined && { audience }),
+        ...(status !== undefined && { status }),
+      },
+    });
+
+    return res.json({ success: true, message: 'Announcement updated successfully', data: updated });
+  } catch (error) {
+    next(error);
+  }
+}
