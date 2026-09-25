@@ -90,7 +90,7 @@ window.RadioPlayer = {
         const globalPlayer = document.getElementById('global-audio-player');
         if (globalPlayer) {
             globalPlayer.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
-            globalPlayer.classList.add('opacity-100', 'translate-y-0');
+            globalPlayer.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
         }
         this.updateFloatingPlayer();
     },
@@ -223,12 +223,6 @@ window.RadioPlayer = {
                 bar.classList.remove('active');
             }
         });
-
-        const globalPlayer = document.getElementById('global-audio-player');
-        if (globalPlayer && !this.isDismissed && !this.isMinimized && this.currentTrack.title) {
-            globalPlayer.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
-            globalPlayer.classList.add('opacity-100', 'translate-y-0');
-        }
 
         const titleEl = document.getElementById('global-player-title');
         if (titleEl) titleEl.innerText = this.currentTrack.title;
@@ -1653,4 +1647,3 @@ window.toggleMobileMenu = toggleMobileMenu;
 window.handleMobileNavClick = handleMobileNavClick;
 window.handleMobilePlaylistClick = handleMobilePlaylistClick;
 window.handleMobileListenLive = handleMobileListenLive;
-

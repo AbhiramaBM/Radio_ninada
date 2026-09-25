@@ -149,7 +149,7 @@
       const playerBar = document.getElementById('global-audio-player');
       if (playerBar) {
         playerBar.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
-        playerBar.classList.add('opacity-100', 'translate-y-0');
+        playerBar.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
       }
     },
 
