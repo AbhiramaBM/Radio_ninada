@@ -1527,3 +1527,130 @@ function playActivePlaylist() {
     showToast(`▶ Playing playlist: ${active.name}`);
 }
 
+// ==========================================
+// Mobile Navigation Drawer System
+// ==========================================
+function openMobileMenu() {
+    const drawer = document.getElementById('mobile-nav-drawer');
+    const overlay = document.getElementById('mobile-menu-overlay');
+    const brandLogos = document.getElementById('header-brand-logos');
+
+    // Close notification panel if open
+    if (typeof closeNotificationPanel === 'function') {
+        closeNotificationPanel();
+    }
+
+    if (drawer) {
+        drawer.classList.remove('translate-x-full');
+        drawer.classList.add('translate-x-0');
+    }
+    if (overlay) {
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        overlay.classList.add('opacity-100', 'pointer-events-auto');
+    }
+    if (brandLogos) {
+        brandLogos.classList.add('opacity-30', 'pointer-events-none');
+    }
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMobileMenu() {
+    const drawer = document.getElementById('mobile-nav-drawer');
+    const overlay = document.getElementById('mobile-menu-overlay');
+    const brandLogos = document.getElementById('header-brand-logos');
+
+    if (drawer) {
+        drawer.classList.remove('translate-x-0');
+        drawer.classList.add('translate-x-full');
+    }
+    if (overlay) {
+        overlay.classList.remove('opacity-100', 'pointer-events-auto');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+    }
+    if (brandLogos) {
+        brandLogos.classList.remove('opacity-30', 'pointer-events-none');
+    }
+    document.body.style.overflow = '';
+}
+
+function toggleMobileMenu() {
+    const drawer = document.getElementById('mobile-nav-drawer');
+    if (drawer && drawer.classList.contains('translate-x-0')) {
+        closeMobileMenu();
+    } else {
+        openMobileMenu();
+    }
+}
+
+function handleMobileNavClick(event, targetSelector) {
+    if (event) event.preventDefault();
+    closeMobileMenu();
+
+    // Update active highlight on mobile nav items
+    // Update active highlight on mobile nav items
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+        link.classList.remove('active', 'text-primary', 'bg-primary/10', 'font-semibold');
+        link.classList.add('text-gray-700', 'font-medium');
+    });
+
+    if (event && event.currentTarget) {
+        const targetLink = event.currentTarget;
+        targetLink.classList.add('active', 'text-primary', 'bg-primary/10', 'font-semibold');
+        targetLink.classList.remove('text-gray-700', 'font-medium');
+    }
+
+    if (targetSelector) {
+        const targetEl = document.querySelector(targetSelector);
+        if (targetEl) {
+            targetEl.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+}
+
+function handleMobilePlaylistClick() {
+    closeMobileMenu();
+    if (typeof openPlaylistModal === 'function') {
+        openPlaylistModal();
+    }
+}
+
+function handleMobileListenLive() {
+    closeMobileMenu();
+    if (window.RadioPlayer) {
+        if (!window.RadioPlayer.isPlaying) {
+            window.RadioPlayer.togglePlay();
+        } else if (typeof window.RadioPlayer.showAudioPlayer === 'function') {
+            window.RadioPlayer.showAudioPlayer();
+        }
+    }
+    const homeEl = document.getElementById('home');
+    if (homeEl) {
+        homeEl.scrollIntoView({ behavior: 'smooth' });
+    }
+    if (typeof showToast === 'function') {
+        showToast('▶ Live Broadcast: Radio Ninada 90.4 FM');
+    }
+}
+
+// Global keyboard listener for Escape key
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        closeMobileMenu();
+    }
+});
+
+// Auto-close mobile drawer when returning to desktop screen size
+window.addEventListener('resize', function () {
+    if (window.innerWidth >= 1280) {
+        closeMobileMenu();
+    }
+});
+
+// Expose functions globally
+window.openMobileMenu = openMobileMenu;
+window.closeMobileMenu = closeMobileMenu;
+window.toggleMobileMenu = toggleMobileMenu;
+window.handleMobileNavClick = handleMobileNavClick;
+window.handleMobilePlaylistClick = handleMobilePlaylistClick;
+window.handleMobileListenLive = handleMobileListenLive;
+

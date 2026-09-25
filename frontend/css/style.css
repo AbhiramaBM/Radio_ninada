@@ -1,6 +1,21 @@
 /* Modern FM - Core Stylesheet */
 
+/* Material Symbols font is loaded via <link> in HTML head */
 .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
@@ -219,4 +234,50 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #e0bfbf;
     border-radius: 10px;
+}
+
+/* Mobile Navigation Drawer Styles */
+#mobile-nav-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    height: 100dvh;
+    background-color: #ffffff !important;
+    z-index: 100 !important;
+    box-shadow: -8px 0 32px rgba(37, 24, 25, 0.25);
+    transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 90 !important;
+    transition: opacity 300ms ease;
+}
+
+.mobile-nav-link {
+    transition: all 0.2s ease-in-out;
+}
+
+.mobile-nav-link.active {
+    background-color: rgba(174, 38, 60, 0.08);
+    color: #ae263c;
+    font-weight: 600;
+}
+
+/* Ensure mobile menu and drawer are hidden on desktop screens */
+@media (min-width: 1280px) {
+    #mobile-menu-btn {
+        display: none !important;
+    }
+    #mobile-nav-drawer {
+        display: none !important;
+    }
+    #mobile-menu-overlay {
+        display: none !important;
+    }
 }
