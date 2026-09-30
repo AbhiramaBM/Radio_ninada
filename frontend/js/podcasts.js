@@ -80,6 +80,18 @@
                 <p class="text-xs text-primary font-medium mb-2">${hostName} • ${episodesCount} Episode${episodesCount > 1 ? 's' : ''}</p>
                 <p class="text-sm text-on-surface-variant line-clamp-2">${desc}</p>
               </div>
+              <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                <button onclick="if(window.downloadAudioTrack) window.downloadAudioTrack('${audioUrl.replace(/'/g, "\\'")}', '${title.replace(/'/g, "\\'")}', '${firstEpisode?.id || podcast.id || ''}')"
+                  class="text-primary hover:text-primary-container text-xs font-semibold flex items-center gap-1 cursor-pointer bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-all" title="Download Audio">
+                  <span class="material-symbols-outlined text-sm">download</span>
+                  <span>Download</span>
+                </button>
+                <button onclick="if(window.shareAudioTrack) window.shareAudioTrack('${audioUrl.replace(/'/g, "\\'")}', '${title.replace(/'/g, "\\'")}', '${hostName.replace(/'/g, "\\'")}')"
+                  class="text-gray-500 hover:text-primary text-xs font-semibold flex items-center gap-1 cursor-pointer hover:bg-gray-100 px-2.5 py-1 rounded-lg transition-all" title="Share Audio">
+                  <span class="material-symbols-outlined text-sm">share</span>
+                  <span>Share</span>
+                </button>
+              </div>
             </div>
           </div>`;
       }).join('');

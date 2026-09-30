@@ -7,6 +7,7 @@ const audit_1 = require("../middlewares/audit");
 const router = (0, express_1.Router)();
 router.get('/', event_controller_1.getEvents);
 router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), (0, audit_1.auditLog)('CREATE', 'Event'), event_controller_1.createEvent);
+router.put('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), (0, audit_1.auditLog)('UPDATE', 'Event'), event_controller_1.updateEvent);
 router.post('/:eventId/register', event_controller_1.registerParticipant);
 router.get('/:id/export-csv', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'MODERATOR']), event_controller_1.exportParticipantsCSV);
 router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Event'), event_controller_1.deleteEvent);

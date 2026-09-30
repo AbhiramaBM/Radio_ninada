@@ -175,5 +175,28 @@
         });
       }
     },
+
+    shareCurrentTrack() {
+      const track = this.currentTrack || {};
+      const title = track.title || 'Radio Ninada 90.4 FM';
+      const artist = track.artist || 'Live Broadcast';
+      const url = this.isLiveStream ? window.location.href : (track.url || window.location.href);
+      if (window.shareAudioTrack) {
+        window.shareAudioTrack(url, title, artist);
+      }
+    },
+
+    downloadCurrentTrack() {
+      const track = this.currentTrack || {};
+      if (this.isLiveStream) {
+        if (window.showToast) window.showToast('ℹ Live radio broadcast streams in real-time. Choose any podcast episode below to download offline!');
+        const podSec = document.getElementById('podcasts');
+        if (podSec) podSec.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      if (window.downloadAudioTrack) {
+        window.downloadAudioTrack(track.url, track.title, track.id || '');
+      }
+    },
   };
 })();

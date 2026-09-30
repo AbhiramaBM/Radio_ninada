@@ -8,5 +8,6 @@ const router = (0, express_1.Router)();
 router.get('/', program_controller_1.getPrograms);
 router.get('/:slug', program_controller_1.getProgramBySlug);
 router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ']), (0, audit_1.auditLog)('CREATE', 'Program'), program_controller_1.createProgram);
+router.put('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'RJ']), (0, audit_1.auditLog)('UPDATE', 'Program'), program_controller_1.updateProgram);
 router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Program'), program_controller_1.deleteProgram);
 exports.default = router;

@@ -14,6 +14,8 @@ window.RadioPlayer = {
         isLive: true
     },
     volume: 0.8,
+    currentPlaylist: null,
+    currentPlaylistIndex: 0,
 
     init: function () {
         if (!this.audio) {
@@ -23,7 +25,12 @@ window.RadioPlayer = {
 
             this.audio.addEventListener('play', () => this.onPlayStateChange(true));
             this.audio.addEventListener('pause', () => this.onPlayStateChange(false));
-            this.audio.addEventListener('ended', () => this.onPlayStateChange(false));
+            this.audio.addEventListener('ended', () => {
+                this.onPlayStateChange(false);
+                if (this.currentPlaylist && this.currentPlaylist.length > 0) {
+                    this.playNextInPlaylist();
+                }
+            });
             this.audio.addEventListener('timeupdate', () => this.updateTimeProgress());
             this.audio.addEventListener('error', () => {
                 this.isPlaying = false;
@@ -162,10 +169,64 @@ window.RadioPlayer = {
         }
     },
 
-    playTrack: function (url, title, artist, cover) {
-        this.togglePlay(url, title, artist, cover, false);
+    playTrack: async function (url, title, artist, cover) {
+        if (typeof url === 'object' && url !== null) {
+            const obj = url;
+            url = obj.url || obj.audioUrl;
+            title = obj.title;
+            artist = obj.artist;
+            cover = obj.cover || obj.coverUrl;
+        }
+        await this.init();
+        this.showAudioPlayer();
+
+        const trackUrl = url || 'https://stream.zeno.fm/f3wvbbqmdg8uv';
+        this.currentTrack = {
+            url: trackUrl,
+            title: title || 'Radio Ninada 90.4 FM',
+            artist: artist || 'Radio Ninada Show',
+            cover: cover || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=400&q=80',
+            isLive: false
+        };
+
+        this.audio.src = trackUrl;
+        try {
+            await this.audio.play();
+            this.isPlaying = true;
+            this.updateUI();
+            showToast(`▶ Playing: ${this.currentTrack.title}`);
+        } catch (err) {
+            console.warn('[RadioPlayer] playTrack initial play error, attempting load retry:', err);
+            try {
+                this.audio.load();
+                await this.audio.play();
+                this.isPlaying = true;
+                this.updateUI();
+                showToast(`▶ Playing: ${this.currentTrack.title}`);
+            } catch (loadErr) {
+                this.isPlaying = false;
+                this.updateUI();
+                showToast('Playback error. Tap play to retry.');
+            }
+        }
+
         if (window.RadioAuth && typeof window.RadioAuth.recordListeningHistory === 'function') {
-            window.RadioAuth.recordListeningHistory({ title, artist, cover, url });
+            window.RadioAuth.recordListeningHistory({ title, artist, cover, url: trackUrl });
+        }
+    },
+
+    playNextInPlaylist: function () {
+        if (!this.currentPlaylist || this.currentPlaylist.length === 0) return;
+        this.currentPlaylistIndex = (this.currentPlaylistIndex || 0) + 1;
+        if (this.currentPlaylistIndex < this.currentPlaylist.length) {
+            const nextTrack = this.currentPlaylist[this.currentPlaylistIndex];
+            const cover = nextTrack.coverUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=400&q=80';
+            this.playTrack(nextTrack.audioUrl, nextTrack.title, nextTrack.artist || 'Radio Ninada Show', cover);
+            showToast(`▶ Playing: ${nextTrack.title} (${this.currentPlaylistIndex + 1}/${this.currentPlaylist.length})`);
+        } else {
+            this.currentPlaylist = null;
+            this.currentPlaylistIndex = 0;
+            showToast('Finished playlist playback.');
         }
     },
 
@@ -292,6 +353,29 @@ window.RadioPlayer = {
         const m = Math.floor(secs / 60);
         const s = Math.floor(secs % 60);
         return `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+    },
+
+    shareCurrentTrack: function () {
+        const track = this.currentTrack || {};
+        const title = track.title || 'Radio Ninada 90.4 FM';
+        const artist = track.artist || 'Radio Ninada Live';
+        const url = track.isLive ? window.location.href : (track.url || window.location.href);
+        if (typeof window.shareAudioTrack === 'function') {
+            window.shareAudioTrack(url, title, artist);
+        }
+    },
+
+    downloadCurrentTrack: function () {
+        const track = this.currentTrack || {};
+        if (track.isLive) {
+            showToast('ℹ Live broadcast streams in real-time. You can download podcast episodes anytime below!');
+            const podSec = document.getElementById('podcasts');
+            if (podSec) podSec.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+        if (typeof window.downloadAudioTrack === 'function') {
+            window.downloadAudioTrack(track.url, track.title, track.id || '');
+        }
     }
 };
 
@@ -670,15 +754,25 @@ function renderPodcastsUI(podList) {
                     <p class="text-on-surface-variant text-xs mb-sm">S${seasonNum} E${epNum} • ${pod.duration || '30:00'}</p>
                     <p class="text-on-surface-variant text-sm line-clamp-2">${pod.description || ''}</p>
                 </div>
-                <div class="mt-md pt-sm border-t border-outline-variant/20 flex justify-between items-center text-xs text-on-surface-variant">
-                    <span>${pod.downloads || 0} Downloads</span>
-                    <div class="flex items-center gap-2">
-                        <button onclick="addTrackToPlaylistPrompt('${pod.title.replace(/'/g, "\\'")}', '${catName.replace(/'/g, "\\'")}', '${audioUrl.replace(/'/g, "\\'")}', '${coverUrl.replace(/'/g, "\\'")}', '${pod.duration || '30:00'}')"
-                            class="text-primary hover:underline text-[11px] font-semibold flex items-center gap-0.5 cursor-pointer" title="Add episode to playlist">
-                            <span class="material-symbols-outlined text-sm">playlist_add</span>
-                            <span>Add</span>
+                <div class="mt-md pt-sm border-t border-outline-variant/20 flex flex-wrap gap-2 justify-between items-center text-xs text-on-surface-variant">
+                    <span id="podcast-downloads-${pod.id || ''}">${pod.downloads || 0} Downloads</span>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <button onclick="downloadAudioTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', '${(pod.episodes && pod.episodes[0]?.id) || pod.id || ''}')"
+                            class="text-primary hover:text-white bg-primary/10 hover:bg-primary px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-xs" title="Download Episode Audio">
+                            <span class="material-symbols-outlined text-sm">download</span>
+                            <span>Download</span>
                         </button>
-                        <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer" onclick="showToast('Episode bookmarked!')">bookmark</span>
+                        <button onclick="shareAudioTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', '${catName.replace(/'/g, "\\'")}')"
+                            class="text-on-surface-variant hover:text-primary hover:bg-surface-container px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all" title="Share Episode">
+                            <span class="material-symbols-outlined text-sm">share</span>
+                            <span>Share</span>
+                        </button>
+                        <button onclick="addTrackToPlaylistPrompt('${pod.title.replace(/'/g, "\\'")}', '${catName.replace(/'/g, "\\'")}', '${audioUrl.replace(/'/g, "\\'")}', '${coverUrl.replace(/'/g, "\\'")}', '${pod.duration || '30:00'}')"
+                            class="text-on-surface-variant hover:text-primary hover:bg-surface-container px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all active:scale-95" title="Add to playlist">
+                            <span class="material-symbols-outlined text-sm text-primary">playlist_add</span>
+                            <span>Playlist</span>
+                        </button>
+                        <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer p-1" onclick="showToast('Episode bookmarked!')" title="Bookmark episode">bookmark</span>
                     </div>
                 </div>
             </div>
@@ -1034,6 +1128,9 @@ async function loadDynamicData() {
     // Fetch initial notifications and playlists
     fetchAndRenderNotifications();
     fetchAndRenderPlaylists();
+    setTimeout(() => {
+        if (typeof prewarmSearchCatalog === 'function') prewarmSearchCatalog();
+    }, 200);
 }
 
 // Global Event Listeners & Initialization
@@ -1070,6 +1167,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === playlistModal) {
             closePlaylistModal();
         }
+        const createPlaylistModal = document.getElementById('create-playlist-modal');
+        if (e.target === createPlaylistModal) {
+            closeCreatePlaylistModal();
+        }
+        const addToPlaylistModal = document.getElementById('add-to-playlist-modal');
+        if (e.target === addToPlaylistModal) {
+            closeAddToPlaylistModal();
+        }
         const newsModal = document.getElementById('news-modal');
         if (e.target === newsModal) {
             closeNewsModal();
@@ -1093,6 +1198,7 @@ function openGlobalSearchModal() {
             input.value = '';
             input.focus();
         }
+        prewarmSearchCatalog();
         performGlobalSearch();
     }
 }
@@ -1105,7 +1211,85 @@ function closeGlobalSearchModal() {
     }
 }
 
-async function performGlobalSearch() {
+let _globalSearchDebounce = null;
+let _globalSearchCatalog = null;
+let _globalSearchCatalogLoading = false;
+
+async function prewarmSearchCatalog() {
+    if (_globalSearchCatalogLoading || _globalSearchCatalog) return;
+    _globalSearchCatalogLoading = true;
+    try {
+        const catalog = [];
+        if (window.RadioNinadaAPI) {
+            const [pods, newsRes, evts, rjs] = await Promise.allSettled([
+                window.RadioNinadaAPI.getPodcasts(),
+                window.RadioNinadaAPI.getNews(),
+                window.RadioNinadaAPI.getEvents(),
+                window.RadioNinadaAPI.getRJs()
+            ]);
+            if (pods.status === 'fulfilled' && pods.value && pods.value.success && Array.isArray(pods.value.data)) {
+                pods.value.data.forEach(p => {
+                    catalog.push({
+                        type: 'PODCAST',
+                        title: p.title || 'Podcast',
+                        description: p.description || '',
+                        subtitle: `Podcast • ${p.category || 'Audio'}`,
+                        icon: 'podcasts',
+                        action: `RadioPlayer.playTrack('${p.audioUrl || ''}', '${(p.title || '').replace(/'/g, "\\'")}', 'Podcast', '${p.coverUrl || ''}'); closeGlobalSearchModal();`
+                    });
+                });
+            }
+            if (newsRes.status === 'fulfilled' && newsRes.value && newsRes.value.success && Array.isArray(newsRes.value.data)) {
+                newsRes.value.data.forEach(n => {
+                    catalog.push({
+                        type: 'NEWS',
+                        title: n.title || 'News',
+                        description: n.content || '',
+                        subtitle: `News Bulletin • ${n.category || 'Local'}`,
+                        icon: 'newspaper',
+                        action: `const el = document.getElementById('news'); if (el) el.scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();`
+                    });
+                });
+            }
+            if (evts.status === 'fulfilled' && evts.value && evts.value.success && Array.isArray(evts.value.data)) {
+                evts.value.data.forEach(e => {
+                    catalog.push({
+                        type: 'EVENT',
+                        title: e.title || 'Event',
+                        description: e.description || '',
+                        subtitle: `Event • ${e.location || 'Radio Studio'}`,
+                        icon: 'event',
+                        action: `const el = document.getElementById('events'); if (el) el.scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();`
+                    });
+                });
+            }
+            if (rjs.status === 'fulfilled' && rjs.value && rjs.value.success && Array.isArray(rjs.value.data)) {
+                rjs.value.data.forEach(r => {
+                    catalog.push({
+                        type: 'RJ',
+                        title: r.name || 'RJ',
+                        description: r.bio || '',
+                        subtitle: `RJ Host • ${r.designation || 'Presenter'}`,
+                        icon: 'mic',
+                        action: `const el = document.getElementById('rj-team'); if (el) el.scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();`
+                    });
+                });
+            }
+        }
+        _globalSearchCatalog = catalog;
+    } catch (err) {
+        console.warn('Search prewarm error:', err);
+    } finally {
+        _globalSearchCatalogLoading = false;
+    }
+}
+
+function performGlobalSearch() {
+    if (_globalSearchDebounce) clearTimeout(_globalSearchDebounce);
+    _globalSearchDebounce = setTimeout(executeGlobalSearch, 100);
+}
+
+async function executeGlobalSearch() {
     const input = document.getElementById('global-search-input');
     const container = document.getElementById('global-search-results');
     if (!container) return;
@@ -1116,66 +1300,23 @@ async function performGlobalSearch() {
         return;
     }
 
-    container.innerHTML = `<p class="text-xs text-center text-primary py-6 flex items-center justify-center gap-2"><span class="material-symbols-outlined animate-spin text-sm">sync</span> Searching live catalog...</p>`;
-
-    const results = [];
-
-    // Search Podcasts
-    if (window.RadioNinadaAPI) {
-        try {
-            const pods = await window.RadioNinadaAPI.getPodcasts();
-            if (pods && pods.success && Array.isArray(pods.data)) {
-                pods.data.forEach(p => {
-                    if (p.title.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query))) {
-                        results.push({ type: 'PODCAST', title: p.title, subtitle: `Podcast • ${p.category || 'Audio'}`, icon: 'podcasts', action: `RadioPlayer.playTrack('${p.audioUrl}', '${p.title}', 'Podcast', '${p.coverUrl || ''}'); closeGlobalSearchModal();` });
-                    }
-                });
-            }
-        } catch (_) {}
-
-        // Search News
-        try {
-            const newsRes = await window.RadioNinadaAPI.getNews();
-            if (newsRes && newsRes.success && Array.isArray(newsRes.data)) {
-                newsRes.data.forEach(n => {
-                    if (n.title.toLowerCase().includes(query) || (n.content && n.content.toLowerCase().includes(query))) {
-                        results.push({ type: 'NEWS', title: n.title, subtitle: `News Bulletin • ${n.category || 'Local'}`, icon: 'newspaper', action: `document.getElementById('news').scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();` });
-                    }
-                });
-            }
-        } catch (_) {}
-
-        // Search Events
-        try {
-            const evts = await window.RadioNinadaAPI.getEvents();
-            if (evts && evts.success && Array.isArray(evts.data)) {
-                evts.data.forEach(e => {
-                    if (e.title.toLowerCase().includes(query) || (e.description && e.description.toLowerCase().includes(query))) {
-                        results.push({ type: 'EVENT', title: e.title, subtitle: `Event • ${e.location || 'Radio Studio'}`, icon: 'event', action: `document.getElementById('events').scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();` });
-                    }
-                });
-            }
-        } catch (_) {}
-
-        // Search RJs
-        try {
-            const rjs = await window.RadioNinadaAPI.getRJs();
-            if (rjs && rjs.success && Array.isArray(rjs.data)) {
-                rjs.data.forEach(r => {
-                    if (r.name.toLowerCase().includes(query) || (r.bio && r.bio.toLowerCase().includes(query))) {
-                        results.push({ type: 'RJ', title: r.name, subtitle: `RJ Host • ${r.designation || 'Presenter'}`, icon: 'mic', action: `document.getElementById('rj-team').scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();` });
-                    }
-                });
-            }
-        } catch (_) {}
+    if (!_globalSearchCatalog) {
+        await prewarmSearchCatalog();
     }
+
+    const source = _globalSearchCatalog || [];
+    const results = source.filter(item => 
+        (item.title && item.title.toLowerCase().includes(query)) ||
+        (item.description && item.description.toLowerCase().includes(query)) ||
+        (item.subtitle && item.subtitle.toLowerCase().includes(query))
+    );
 
     if (results.length === 0) {
         container.innerHTML = `<p class="text-xs text-center text-gray-500 py-6">No matching broadcasts, podcasts, or events found for "${query}".</p>`;
         return;
     }
 
-    container.innerHTML = results.map(item => `
+    container.innerHTML = results.slice(0, 15).map(item => `
         <div onclick="${item.action}" class="p-3 bg-gray-50 dark:bg-gray-800 hover:bg-primary/10 dark:hover:bg-primary/20 rounded-2xl cursor-pointer transition-all flex items-center justify-between group">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -1194,71 +1335,142 @@ async function performGlobalSearch() {
 // ==========================================
 // Phase 11: Real Notifications System Implementation
 // ==========================================
+const DEFAULT_NOTIFICATIONS = [
+    {
+        id: 'notif-1',
+        title: '🎙️ Welcome to Radio Ninada 90.4 FM',
+        message: 'Broadcasting live from SDM College Ujire. Enjoy community voices, cultural heritage, and campus buzz.',
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+    },
+    {
+        id: 'notif-2',
+        title: '⚡ Yakshagana & Cultural Showcase Tonight',
+        message: 'Tune in at 8:00 PM for an exclusive folk theatre and live heritage stream with RJ Vikram.',
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 95).toISOString(),
+    },
+    {
+        id: 'notif-3',
+        title: '🎧 Campus Buzz & Youth Beat Episode 14',
+        message: 'The new on-demand episode featuring college achievements and innovations is now streaming.',
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
+    },
+    {
+        id: 'notif-4',
+        title: '📡 Crystal-Clear HD Audio Active',
+        message: 'Radio Ninada 90.4 FM 320kbps high-fidelity live stream is running on all mobile and desktop devices.',
+        isRead: true,
+        createdAt: new Date(Date.now() - 1000 * 60 * 1440).toISOString(),
+    }
+];
+
 let notificationItems = [];
+
+function saveLocalNotifications() {
+    try {
+        localStorage.setItem('radio_notifications', JSON.stringify(notificationItems));
+    } catch (_) {}
+}
 
 async function fetchAndRenderNotifications() {
     const listEl = document.getElementById('notification-list');
-    const badgeEl = document.getElementById('unread-notification-badge');
     if (!listEl) return;
 
-    if (!window.RadioNinadaAPI || typeof window.RadioNinadaAPI.getNotifications !== 'function') {
-        listEl.innerHTML = `<div class="p-6 text-center text-gray-400 text-xs">Notifications API unavailable</div>`;
+    // 1. Initial immediate render from cache or defaults
+    if (!notificationItems || notificationItems.length === 0) {
+        try {
+            const cached = localStorage.getItem('radio_notifications');
+            if (cached) {
+                notificationItems = JSON.parse(cached);
+            }
+        } catch (_) {}
+        if (!notificationItems || notificationItems.length === 0) {
+            notificationItems = JSON.parse(JSON.stringify(DEFAULT_NOTIFICATIONS));
+            saveLocalNotifications();
+        }
+        renderNotificationListUI();
+    }
+
+    // 2. Fetch fresh updates from API
+    if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.getNotifications === 'function') {
+        try {
+            const res = await window.RadioNinadaAPI.getNotifications();
+            if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+                const localMap = {};
+                (notificationItems || []).forEach(n => {
+                    if (n.id) localMap[n.id] = n.isRead;
+                });
+                notificationItems = res.data.map(item => ({
+                    ...item,
+                    isRead: localMap[item.id] !== undefined ? localMap[item.id] : Boolean(item.isRead)
+                }));
+                saveLocalNotifications();
+                renderNotificationListUI();
+                return;
+            }
+        } catch (err) {
+            console.warn('[Notifications] Error fetching from API, using cached data:', err);
+        }
+    }
+
+    renderNotificationListUI();
+}
+
+function updateNotificationBadges(unreadCount) {
+    const desktopBadge = document.getElementById('unread-notification-badge');
+    const mobileBadge = document.getElementById('mobile-unread-notification-badge');
+
+    [desktopBadge, mobileBadge].forEach(badge => {
+        if (!badge) return;
+        if (unreadCount > 0) {
+            badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    });
+}
+
+function renderNotificationListUI() {
+    const listEl = document.getElementById('notification-list');
+    if (!listEl) return;
+
+    const unreadCount = (notificationItems || []).filter(n => !n.isRead).length;
+    updateNotificationBadges(unreadCount);
+
+    if (!notificationItems || notificationItems.length === 0) {
+        listEl.innerHTML = `
+            <div class="p-8 text-center text-gray-400 text-xs space-y-2">
+                <span class="material-symbols-outlined text-3xl text-gray-300">notifications_off</span>
+                <p class="font-medium text-gray-600 dark:text-gray-400">No notifications yet</p>
+                <p class="text-[11px]">Station announcements and live event alerts will appear here.</p>
+            </div>
+        `;
         return;
     }
 
-    try {
-        const res = await window.RadioNinadaAPI.getNotifications();
-        if (res && res.success && Array.isArray(res.data)) {
-            notificationItems = res.data;
-            const unreadCount = notificationItems.filter(n => !n.isRead).length;
-
-            if (badgeEl) {
-                if (unreadCount > 0) {
-                    badgeEl.innerText = unreadCount > 9 ? '9+' : unreadCount;
-                    badgeEl.classList.remove('hidden');
-                } else {
-                    badgeEl.classList.add('hidden');
-                }
-            }
-
-            if (notificationItems.length === 0) {
-                listEl.innerHTML = `
-                    <div class="p-8 text-center text-gray-400 text-xs space-y-2">
-                        <span class="material-symbols-outlined text-3xl text-gray-300">notifications_off</span>
-                        <p class="font-medium text-gray-600 dark:text-gray-400">No notifications yet</p>
-                        <p class="text-[11px]">Station announcements and live event alerts will appear here.</p>
+    listEl.innerHTML = notificationItems.map(n => {
+        const timeStr = n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const isUnread = !n.isRead;
+        return `
+            <div class="p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-start justify-between gap-3 ${isUnread ? 'bg-primary/5' : ''}">
+                <div class="space-y-0.5 flex-1">
+                    <div class="flex items-center gap-2">
+                        ${isUnread ? '<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>' : ''}
+                        <h4 class="font-bold text-xs text-gray-900 dark:text-white">${n.title}</h4>
                     </div>
-                `;
-                return;
-            }
-
-            listEl.innerHTML = notificationItems.map(n => {
-                const timeStr = n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-                const isUnread = !n.isRead;
-                return `
-                    <div class="p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-start justify-between gap-3 ${isUnread ? 'bg-primary/5' : ''}">
-                        <div class="space-y-0.5 flex-1">
-                            <div class="flex items-center gap-2">
-                                ${isUnread ? '<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>' : ''}
-                                <h4 class="font-bold text-xs text-gray-900 dark:text-white">${n.title}</h4>
-                            </div>
-                            <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">${n.message}</p>
-                            <p class="text-[10px] text-gray-400 font-medium">${timeStr}</p>
-                        </div>
-                        ${isUnread ? `
-                            <button onclick="markNotificationAsRead('${n.id}')"
-                                class="text-[11px] font-semibold text-primary hover:underline shrink-0 cursor-pointer">Read</button>
-                        ` : ''}
-                    </div>
-                `;
-            }).join('');
-        } else {
-            listEl.innerHTML = `<div class="p-6 text-center text-gray-400 text-xs">Failed to load notifications.</div>`;
-        }
-    } catch (err) {
-        console.warn('[Notifications] Error fetching:', err);
-        listEl.innerHTML = `<div class="p-6 text-center text-red-400 text-xs">Error connecting to notifications server.</div>`;
-    }
+                    <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">${n.message}</p>
+                    <p class="text-[10px] text-gray-400 font-medium">${timeStr}</p>
+                </div>
+                ${isUnread ? `
+                    <button onclick="markNotificationAsRead('${n.id}')"
+                        class="text-[11px] font-semibold text-primary hover:underline shrink-0 cursor-pointer">Read</button>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
 }
 
 function toggleNotificationPanel() {
@@ -1278,41 +1490,126 @@ function closeNotificationPanel() {
 }
 
 async function markNotificationAsRead(id) {
+    const item = (notificationItems || []).find(n => n.id === id);
+    if (item) {
+        item.isRead = true;
+        saveLocalNotifications();
+        renderNotificationListUI();
+    }
+
     if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.markNotificationRead === 'function') {
-        await window.RadioNinadaAPI.markNotificationRead(id);
-        fetchAndRenderNotifications();
+        try {
+            await window.RadioNinadaAPI.markNotificationRead(id);
+        } catch (err) {
+            console.warn('[Notifications] Error calling API markNotificationRead:', err);
+        }
     }
 }
 
 async function markAllNotificationsAsRead() {
+    (notificationItems || []).forEach(n => {
+        n.isRead = true;
+    });
+    saveLocalNotifications();
+    renderNotificationListUI();
+    showToast('All notifications marked as read');
+
     if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.markAllNotificationsRead === 'function') {
-        await window.RadioNinadaAPI.markAllNotificationsRead();
-        fetchAndRenderNotifications();
-        showToast('All notifications marked as read');
+        try {
+            await window.RadioNinadaAPI.markAllNotificationsRead();
+        } catch (err) {
+            console.warn('[Notifications] Error calling API markAllNotificationsRead:', err);
+        }
     }
 }
 
 // ==========================================
 // Phase 12: Real Playlists System Implementation
 // ==========================================
+const DEFAULT_PLAYLISTS = [
+    {
+        id: 'pl-favorites',
+        name: 'Radio Ninada Favorites',
+        description: 'Curated mix of station highlights, podcasts, and popular shows broadcast from SDM Ujire.',
+        items: [
+            {
+                id: 'track-1',
+                title: 'College Campus Buzz Special',
+                artist: 'RJ Ananya',
+                audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                coverUrl: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=400&q=80',
+                duration: '45:00',
+            },
+            {
+                id: 'track-2',
+                title: 'Yakshagana & Heritage Melodies',
+                artist: 'RJ Vikram',
+                audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+                coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80',
+                duration: '32:15',
+            },
+        ],
+    },
+    {
+        id: 'pl-morning',
+        name: 'Morning Energy & Devotional',
+        description: 'Peaceful morning ragas, daily inspirations, and cultural insights.',
+        items: [
+            {
+                id: 'track-3',
+                title: 'Suprabhata & Shloka Chants',
+                artist: 'Radio Ninada Heritage',
+                audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+                coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=400&q=80',
+                duration: '28:10',
+            }
+        ]
+    }
+];
+
 let userPlaylists = [];
 let activePlaylistId = null;
 
-async function fetchAndRenderPlaylists() {
-    if (!window.RadioNinadaAPI || typeof window.RadioNinadaAPI.getPlaylists !== 'function') return;
-
+function saveLocalPlaylists() {
     try {
-        const res = await window.RadioNinadaAPI.getPlaylists();
-        if (res && res.success && Array.isArray(res.data)) {
-            userPlaylists = res.data;
-            if (!activePlaylistId && userPlaylists.length > 0) {
-                activePlaylistId = userPlaylists[0].id;
+        localStorage.setItem('radio_playlists', JSON.stringify(userPlaylists));
+    } catch (err) {
+        console.warn('[Playlists] Error saving to localStorage:', err);
+    }
+}
+
+function loadLocalPlaylists() {
+    try {
+        const cached = localStorage.getItem('radio_playlists');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed;
             }
-            renderPlaylistUI();
         }
     } catch (err) {
-        console.warn('[Playlists] Error loading:', err);
+        console.warn('[Playlists] Error reading from localStorage:', err);
     }
+    return null;
+}
+
+function fetchAndRenderPlaylists() {
+    // 100% stored in local storage on the client device
+    if (!userPlaylists || userPlaylists.length === 0) {
+        const local = loadLocalPlaylists();
+        if (local && local.length > 0) {
+            userPlaylists = local;
+        } else {
+            userPlaylists = JSON.parse(JSON.stringify(DEFAULT_PLAYLISTS));
+            saveLocalPlaylists();
+        }
+    }
+
+    if (!activePlaylistId || !userPlaylists.find(p => p.id === activePlaylistId)) {
+        activePlaylistId = userPlaylists.length > 0 ? userPlaylists[0].id : null;
+    }
+
+    renderPlaylistUI();
 }
 
 function openPlaylistModal() {
@@ -1340,7 +1637,7 @@ function renderPlaylistUI() {
 
     if (!selectorContainer || !itemsContainer) return;
 
-    if (userPlaylists.length === 0) {
+    if (!userPlaylists || userPlaylists.length === 0) {
         selectorContainer.innerHTML = `<p class="text-xs text-gray-400">No playlists found.</p>`;
         itemsContainer.innerHTML = `
             <div class="p-8 text-center text-gray-400 text-xs space-y-2">
@@ -1359,7 +1656,7 @@ function renderPlaylistUI() {
         const isActive = pl.id === activePlaylistId;
         return `
             <button onclick="selectPlaylist('${pl.id}')"
-                class="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${isActive ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}">
+                class="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer active:scale-95 ${isActive ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}">
                 ${pl.name} (${(pl.items || []).length})
             </button>
         `;
@@ -1369,7 +1666,7 @@ function renderPlaylistUI() {
     activePlaylistId = activePlaylist.id;
 
     if (nameEl) nameEl.innerText = activePlaylist.name;
-    if (descEl) descEl.innerText = activePlaylist.description || `${(activePlaylist.items || []).length} items in playlist`;
+    if (descEl) descEl.innerText = activePlaylist.description || `${(activePlaylist.items || []).length} tracks in playlist`;
 
     const items = activePlaylist.items || [];
     if (items.length === 0) {
@@ -1377,7 +1674,7 @@ function renderPlaylistUI() {
             <div class="p-8 text-center text-gray-400 text-xs space-y-2 border border-dashed border-gray-200 dark:border-gray-800 rounded-2xl">
                 <span class="material-symbols-outlined text-3xl text-gray-300">music_off</span>
                 <p class="font-semibold text-gray-600 dark:text-gray-300">This playlist is empty</p>
-                <p class="text-[11px]">Browse podcasts or programs on the station homepage and click "Add to Playlist".</p>
+                <p class="text-[11px]">Browse podcasts or programs on the homepage and tap "Playlist" to save episodes here.</p>
             </div>
         `;
         return;
@@ -1387,21 +1684,21 @@ function renderPlaylistUI() {
         const cover = item.coverUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=120&q=80';
         return `
             <div class="p-3 bg-gray-50 dark:bg-gray-800/40 hover:bg-primary/5 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3 group transition-all">
-                <div class="flex items-center gap-3 overflow-hidden">
+                <div class="flex items-center gap-3 overflow-hidden min-w-0">
                     <span class="text-xs font-bold text-gray-400 w-4 text-center shrink-0">${idx + 1}</span>
                     <img src="${cover}" class="w-10 h-10 rounded-xl object-cover shrink-0 shadow-xs" alt="${item.title}" />
-                    <div class="truncate">
+                    <div class="truncate min-w-0">
                         <h5 class="font-bold text-sm text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">${item.title}</h5>
                         <p class="text-xs text-gray-500 truncate">${item.artist || 'Radio Ninada Show'} • ${item.duration || '3:30'}</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-1 shrink-0">
-                    <button onclick="playPlaylistItem('${item.audioUrl.replace(/'/g, "\\'")}', '${item.title.replace(/'/g, "\\'")}', '${(item.artist || 'Radio Ninada').replace(/'/g, "\\'")}', '${cover.replace(/'/g, "\\'")}')"
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button onclick="playPlaylistItem('${(item.audioUrl || '').replace(/'/g, "\\'")}', '${(item.title || '').replace(/'/g, "\\'")}', '${((item.artist || 'Radio Ninada')).replace(/'/g, "\\'")}', '${cover.replace(/'/g, "\\'")}')"
                         class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-xs hover:scale-105 active:scale-95 transition-transform cursor-pointer" title="Play">
                         <span class="material-symbols-outlined text-lg">play_arrow</span>
                     </button>
                     <button onclick="removePlaylistItem('${activePlaylist.id}', '${item.id}')"
-                        class="p-1.5 text-gray-400 hover:text-red-500 transition-colors cursor-pointer" title="Remove track">
+                        class="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" title="Remove track">
                         <span class="material-symbols-outlined text-base">close</span>
                     </button>
                 </div>
@@ -1415,98 +1712,244 @@ function selectPlaylist(id) {
     renderPlaylistUI();
 }
 
-async function openCreatePlaylistPrompt() {
-    const name = prompt("Enter new playlist name:");
-    if (!name || !name.trim()) return;
-    const description = prompt("Enter optional description:") || "";
+let _pendingAddTrack = null;
 
-    if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.createPlaylist === 'function') {
-        const res = await window.RadioNinadaAPI.createPlaylist(name.trim(), description.trim());
-        if (res && res.success) {
-            showToast(`Playlist "${name}" created!`);
-            await fetchAndRenderPlaylists();
-            activePlaylistId = res.data.id;
-            renderPlaylistUI();
-        }
+function openCreatePlaylistPrompt() {
+    const modal = document.getElementById('create-playlist-modal');
+    const title = document.getElementById('create-playlist-modal-title');
+    const targetIdInput = document.getElementById('edit-playlist-target-id');
+    const nameInput = document.getElementById('playlist-name-input');
+    const descInput = document.getElementById('playlist-desc-input');
+
+    if (title) title.innerText = 'New Playlist';
+    if (targetIdInput) targetIdInput.value = '';
+    if (nameInput) nameInput.value = '';
+    if (descInput) descInput.value = '';
+
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            if (nameInput) nameInput.focus();
+        }, 120);
     }
 }
 
-async function openRenamePlaylistPrompt() {
+function openRenamePlaylistPrompt() {
     const active = userPlaylists.find(p => p.id === activePlaylistId);
     if (!active) return;
-    const newName = prompt("Rename playlist:", active.name);
-    if (!newName || !newName.trim()) return;
 
-    if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.updatePlaylist === 'function') {
-        const res = await window.RadioNinadaAPI.updatePlaylist(active.id, newName.trim(), active.description || "");
-        if (res && res.success) {
-            showToast('Playlist renamed!');
-            await fetchAndRenderPlaylists();
-        }
+    const modal = document.getElementById('create-playlist-modal');
+    const title = document.getElementById('create-playlist-modal-title');
+    const targetIdInput = document.getElementById('edit-playlist-target-id');
+    const nameInput = document.getElementById('playlist-name-input');
+    const descInput = document.getElementById('playlist-desc-input');
+
+    if (title) title.innerText = 'Rename Playlist';
+    if (targetIdInput) targetIdInput.value = active.id;
+    if (nameInput) {
+        nameInput.value = active.name;
+    }
+    if (descInput) descInput.value = active.description || '';
+
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            if (nameInput) nameInput.focus();
+        }, 120);
     }
 }
 
-async function deleteActivePlaylist() {
+function closeCreatePlaylistModal() {
+    const modal = document.getElementById('create-playlist-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function handleCreatePlaylistSubmit(event) {
+    if (event) {
+        event.preventDefault();
+        if (event.stopPropagation) event.stopPropagation();
+    }
+    const targetIdInput = document.getElementById('edit-playlist-target-id');
+    const nameInput = document.getElementById('playlist-name-input');
+    const descInput = document.getElementById('playlist-desc-input');
+
+    const targetId = targetIdInput ? targetIdInput.value.trim() : '';
+    const name = nameInput ? nameInput.value.trim() : '';
+    const description = descInput ? descInput.value.trim() : '';
+
+    if (!name) {
+        showToast('Please enter a playlist name');
+        if (nameInput) nameInput.focus();
+        return false;
+    }
+
+    if (targetId) {
+        // Edit / Rename existing playlist locally
+        const existing = userPlaylists.find(p => p.id === targetId);
+        if (existing) {
+            existing.name = name;
+            existing.description = description;
+            saveLocalPlaylists();
+            renderPlaylistUI();
+            showToast(`Playlist renamed to "${name}"`);
+        }
+    } else {
+        // Create new playlist stored in local storage
+        const newPlaylist = {
+            id: 'pl-' + Date.now(),
+            name: name,
+            description: description,
+            createdAt: new Date().toISOString(),
+            items: []
+        };
+
+        userPlaylists.unshift(newPlaylist);
+        activePlaylistId = newPlaylist.id;
+        saveLocalPlaylists();
+        renderPlaylistUI();
+        showToast(`Playlist "${name}" created!`);
+
+        // If a track was pending addition, add it now
+        if (_pendingAddTrack) {
+            executeAddTrackToPlaylist(newPlaylist.id, _pendingAddTrack);
+            _pendingAddTrack = null;
+        }
+    }
+
+    closeCreatePlaylistModal();
+
+    // Ensure the playlist modal is open and showing the new playlist
+    const pModal = document.getElementById('playlist-modal');
+    if (pModal && pModal.classList.contains('hidden')) {
+        openPlaylistModal();
+    }
+
+    return false;
+}
+
+function deleteActivePlaylist() {
     const active = userPlaylists.find(p => p.id === activePlaylistId);
     if (!active) return;
     if (!confirm(`Are you sure you want to delete playlist "${active.name}"?`)) return;
 
-    if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.deletePlaylist === 'function') {
-        const res = await window.RadioNinadaAPI.deletePlaylist(active.id);
-        if (res && res.success) {
-            showToast('Playlist deleted.');
-            activePlaylistId = null;
-            await fetchAndRenderPlaylists();
-        }
-    }
+    const deletedId = active.id;
+    userPlaylists = userPlaylists.filter(p => p.id !== deletedId);
+    activePlaylistId = userPlaylists.length > 0 ? userPlaylists[0].id : null;
+    saveLocalPlaylists();
+    renderPlaylistUI();
+    showToast('Playlist deleted from device.');
 }
 
-async function addTrackToPlaylistPrompt(title, artist, audioUrl, coverUrl, duration) {
-    await fetchAndRenderPlaylists();
-    if (userPlaylists.length === 0) {
-        showToast('Please create a playlist first!');
-        openPlaylistModal();
+function addTrackToPlaylistPrompt(title, artist, audioUrl, coverUrl, duration) {
+    fetchAndRenderPlaylists();
+
+    const trackObj = {
+        id: 'track-' + Date.now(),
+        title: title || 'Untitled Track',
+        artist: artist || 'Radio Ninada Show',
+        audioUrl: audioUrl || '',
+        coverUrl: coverUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=400&q=80',
+        duration: duration || '30:00'
+    };
+
+    if (!userPlaylists || userPlaylists.length === 0) {
+        _pendingAddTrack = trackObj;
+        openCreatePlaylistPrompt();
+        showToast('Create a playlist to save this track!');
         return;
     }
 
-    const playlistOptions = userPlaylists.map((p, i) => `${i + 1}. ${p.name}`).join('\n');
-    const choice = prompt(`Choose playlist to add "${title}":\n\n${playlistOptions}\n\nEnter number (1-${userPlaylists.length}):`);
-    const index = parseInt(choice, 10) - 1;
+    if (userPlaylists.length === 1) {
+        executeAddTrackToPlaylist(userPlaylists[0].id, trackObj);
+        return;
+    }
 
-    if (isNaN(index) || index < 0 || index >= userPlaylists.length) return;
+    // Multiple playlists: Show in-app selector modal
+    _pendingAddTrack = trackObj;
+    const modal = document.getElementById('add-to-playlist-modal');
+    const trackLabel = document.getElementById('add-to-playlist-track-name');
+    const optionsContainer = document.getElementById('add-to-playlist-options');
 
-    const targetPlaylist = userPlaylists[index];
-    if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.addPlaylistItem === 'function') {
-        const res = await window.RadioNinadaAPI.addPlaylistItem(targetPlaylist.id, {
-            title,
-            artist,
-            audioUrl,
-            coverUrl,
-            duration,
-        });
+    if (trackLabel) trackLabel.innerText = `Add "${trackObj.title}" to:`;
 
-        if (res && res.success) {
-            showToast(`Added to playlist "${targetPlaylist.name}"!`);
-            activePlaylistId = targetPlaylist.id;
-            await fetchAndRenderPlaylists();
-        }
+    if (optionsContainer) {
+        optionsContainer.innerHTML = userPlaylists.map(pl => `
+            <button onclick="executeAddTrackToPlaylist('${pl.id}')"
+                class="w-full text-left p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800 hover:bg-primary/10 dark:hover:bg-primary/20 border border-gray-100 dark:border-gray-700 flex items-center justify-between group transition-all cursor-pointer active:scale-[0.98]">
+                <div>
+                    <h5 class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">${pl.name}</h5>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">${(pl.items || []).length} tracks</p>
+                </div>
+                <span class="material-symbols-outlined text-primary text-xl">add_circle</span>
+            </button>
+        `).join('');
+    }
+
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
 }
 
-async function removePlaylistItem(playlistId, itemId) {
-    if (window.RadioNinadaAPI && typeof window.RadioNinadaAPI.removePlaylistItem === 'function') {
-        const res = await window.RadioNinadaAPI.removePlaylistItem(playlistId, itemId);
-        if (res && res.success) {
-            showToast('Track removed from playlist.');
-            await fetchAndRenderPlaylists();
-        }
+function closeAddToPlaylistModal() {
+    const modal = document.getElementById('add-to-playlist-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    _pendingAddTrack = null;
+}
+
+function executeAddTrackToPlaylist(playlistId, trackData) {
+    const track = trackData || _pendingAddTrack;
+    if (!track) return;
+
+    const targetPlaylist = userPlaylists.find(p => p.id === playlistId);
+    if (!targetPlaylist) return;
+
+    if (!targetPlaylist.items) targetPlaylist.items = [];
+
+    const alreadyExists = targetPlaylist.items.some(t => t.audioUrl === track.audioUrl && t.title === track.title);
+    if (alreadyExists) {
+        showToast(`Already in "${targetPlaylist.name}"!`);
+        closeAddToPlaylistModal();
+        return;
+    }
+
+    targetPlaylist.items.push(track);
+    activePlaylistId = targetPlaylist.id;
+    saveLocalPlaylists();
+    renderPlaylistUI();
+    showToast(`Added to "${targetPlaylist.name}"!`);
+    closeAddToPlaylistModal();
+}
+
+function removePlaylistItem(playlistId, itemId) {
+    const pl = userPlaylists.find(p => p.id === playlistId);
+    if (pl && pl.items) {
+        pl.items = pl.items.filter(it => it.id !== itemId);
+        saveLocalPlaylists();
+        renderPlaylistUI();
+        showToast('Track removed from playlist.');
     }
 }
 
 function playPlaylistItem(audioUrl, title, artist, coverUrl) {
     if (window.RadioPlayer && typeof window.RadioPlayer.playTrack === 'function') {
+        const active = userPlaylists.find(p => p.id === activePlaylistId);
+        if (active && active.items) {
+            window.RadioPlayer.currentPlaylist = active.items;
+            const idx = active.items.findIndex(it => it.audioUrl === audioUrl);
+            window.RadioPlayer.currentPlaylistIndex = idx >= 0 ? idx : 0;
+        }
         window.RadioPlayer.playTrack(audioUrl, title, artist, coverUrl);
         closePlaylistModal();
+        showToast(`▶ Playing: ${title}`);
     }
 }
 
@@ -1516,9 +1959,15 @@ function playActivePlaylist() {
         showToast('Playlist is empty!');
         return;
     }
-    const first = active.items[0];
-    playPlaylistItem(first.audioUrl, first.title, first.artist || active.name, first.coverUrl);
-    showToast(`▶ Playing playlist: ${active.name}`);
+    if (window.RadioPlayer) {
+        window.RadioPlayer.currentPlaylist = active.items;
+        window.RadioPlayer.currentPlaylistIndex = 0;
+        const first = active.items[0];
+        const cover = first.coverUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=400&q=80';
+        window.RadioPlayer.playTrack(first.audioUrl, first.title, first.artist || active.name, cover);
+        closePlaylistModal();
+        showToast(`▶ Playing playlist: ${active.name} (Track 1/${active.items.length})`);
+    }
 }
 
 // ==========================================
@@ -1603,9 +2052,20 @@ function handleMobileNavClick(event, targetSelector) {
 
 function handleMobilePlaylistClick() {
     closeMobileMenu();
-    if (typeof openPlaylistModal === 'function') {
-        openPlaylistModal();
-    }
+    setTimeout(() => {
+        if (typeof openPlaylistModal === 'function') {
+            openPlaylistModal();
+        }
+    }, 120);
+}
+
+function handleMobileNewPlaylistClick() {
+    closeMobileMenu();
+    setTimeout(() => {
+        if (typeof openCreatePlaylistPrompt === 'function') {
+            openCreatePlaylistPrompt();
+        }
+    }, 120);
 }
 
 function handleMobileListenLive() {
@@ -1626,6 +2086,11 @@ function handleMobileListenLive() {
     }
 }
 
+function handleMobileNotificationClick() {
+    closeMobileMenu();
+    toggleNotificationPanel();
+}
+
 // Global keyboard listener for Escape key
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
@@ -1640,10 +2105,212 @@ window.addEventListener('resize', function () {
     }
 });
 
+// ==========================================
+// Audio Sharing & Forwarding System
+// ==========================================
+let currentSharePayload = {
+    url: window.location.href,
+    title: 'Radio Ninada 90.4 FM',
+    artist: 'Live Broadcast'
+};
+
+async function shareAudioTrack(audioUrl, title, artist) {
+    const finalTitle = title || 'Radio Ninada 90.4 FM';
+    const finalArtist = artist || 'Radio Ninada';
+    const finalUrl = audioUrl && audioUrl.startsWith('http') ? audioUrl : window.location.href;
+
+    currentSharePayload = {
+        url: finalUrl,
+        title: finalTitle,
+        artist: finalArtist
+    };
+
+    // If native Web Share API is available (e.g. mobile Chrome, Safari, Android, iOS)
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: `${finalTitle} - Radio Ninada 90.4 FM`,
+                text: `Listen to "${finalTitle}" (${finalArtist}) on Radio Ninada 90.4 FM:`,
+                url: finalUrl
+            });
+            if (typeof showToast === 'function') {
+                showToast('Shared successfully!');
+            }
+            return;
+        } catch (err) {
+            // If user aborted / dismissed native dialog, do nothing; else fallback to modal
+            if (err.name === 'AbortError') return;
+            console.info('[shareAudioTrack] Native share fallback:', err);
+        }
+    }
+
+    // Fallback: Open beautiful Audio Share Modal
+    openAudioShareModal(finalTitle, finalArtist, finalUrl);
+}
+
+function openAudioShareModal(title, artist, url) {
+    const modal = document.getElementById('audio-share-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('share-modal-title');
+    const subEl = document.getElementById('share-modal-subtitle');
+    const urlInput = document.getElementById('share-modal-url-input');
+
+    if (titleEl) titleEl.textContent = title || 'Radio Ninada 90.4 FM';
+    if (subEl) subEl.textContent = artist || 'Live Broadcast';
+    if (urlInput) urlInput.value = url || window.location.href;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeAudioShareModal() {
+    const modal = document.getElementById('audio-share-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function copyShareModalUrl() {
+    const urlInput = document.getElementById('share-modal-url-input');
+    const textToCopy = (urlInput && urlInput.value) || currentSharePayload.url || window.location.href;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            showToast('✔ Audio link copied to clipboard!');
+        }).catch(() => {
+            fallbackCopyText(textToCopy);
+        });
+    } else {
+        fallbackCopyText(textToCopy);
+    }
+}
+
+function fallbackCopyText(text) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try {
+        document.execCommand('copy');
+        showToast('✔ Link copied to clipboard!');
+    } catch (_) {
+        showToast('Please copy the link manually from the box.');
+    }
+    document.body.removeChild(tempInput);
+}
+
+function shareVia(platform) {
+    const title = currentSharePayload.title || 'Radio Ninada 90.4 FM';
+    const url = currentSharePayload.url || window.location.href;
+    const text = encodeURIComponent(`Listen to "${title}" on Radio Ninada 90.4 FM:\n${url}`);
+    const encodedUrl = encodeURIComponent(url);
+
+    let targetUrl = '';
+    switch (platform) {
+        case 'whatsapp':
+            targetUrl = `https://api.whatsapp.com/send?text=${text}`;
+            break;
+        case 'facebook':
+            targetUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+            break;
+        case 'twitter':
+            targetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Listening to "${title}" on Radio Ninada 90.4 FM`)}&url=${encodedUrl}`;
+            break;
+        case 'telegram':
+            targetUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodeURIComponent(title)}`;
+            break;
+        default:
+            targetUrl = url;
+    }
+
+    if (targetUrl) {
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        showToast(`Forwarding to ${platform.charAt(0).toUpperCase() + platform.slice(1)}...`);
+    }
+}
+
+// ==========================================
+// Working Audio Download System
+// ==========================================
+async function downloadAudioTrack(audioUrl, trackTitle, episodeId) {
+    if (!audioUrl) {
+        showToast('No audio source available for download.');
+        return;
+    }
+
+    const cleanTitle = (trackTitle || 'Radio_Ninada_Audio')
+        .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+        .trim()
+        .replace(/\s+/g, '_') || 'Radio_Ninada_Episode';
+    const fileName = `${cleanTitle}.mp3`;
+
+    showToast(`⏳ Preparing download: ${trackTitle || 'Episode'}...`);
+
+    // Track download in backend analytics/episode counters
+    if (episodeId && window.RadioAPI && typeof window.RadioAPI.incrementDownload === 'function') {
+        window.RadioAPI.incrementDownload(episodeId).then(res => {
+            if (res && res.downloads !== undefined) {
+                const el = document.getElementById(`podcast-downloads-${episodeId}`);
+                if (el) el.textContent = `${res.downloads} Downloads`;
+            }
+        }).catch(() => {});
+    }
+
+    try {
+        const response = await fetch(audioUrl, { mode: 'cors' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+        showToast(`✔ Download complete: ${trackTitle || 'Audio'}`);
+    } catch (err) {
+        // Fallback for cross-origin audio or direct media URLs
+        const link = document.createElement('a');
+        link.href = audioUrl;
+        link.setAttribute('download', fileName);
+        link.setAttribute('target', '_blank');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`✔ Download started for "${trackTitle || 'Audio'}"`);
+    }
+}
+
 // Expose functions globally
 window.openMobileMenu = openMobileMenu;
 window.closeMobileMenu = closeMobileMenu;
 window.toggleMobileMenu = toggleMobileMenu;
 window.handleMobileNavClick = handleMobileNavClick;
 window.handleMobilePlaylistClick = handleMobilePlaylistClick;
+window.handleMobileNotificationClick = handleMobileNotificationClick;
 window.handleMobileListenLive = handleMobileListenLive;
+window.shareAudioTrack = shareAudioTrack;
+window.openAudioShareModal = openAudioShareModal;
+window.closeAudioShareModal = closeAudioShareModal;
+window.copyShareModalUrl = copyShareModalUrl;
+window.shareVia = shareVia;
+window.downloadAudioTrack = downloadAudioTrack;
+window.openPlaylistModal = openPlaylistModal;
+window.closePlaylistModal = closePlaylistModal;
+window.renderPlaylistUI = renderPlaylistUI;
+window.selectPlaylist = selectPlaylist;
+window.openCreatePlaylistPrompt = openCreatePlaylistPrompt;
+window.openRenamePlaylistPrompt = openRenamePlaylistPrompt;
+window.closeCreatePlaylistModal = closeCreatePlaylistModal;
+window.handleCreatePlaylistSubmit = handleCreatePlaylistSubmit;
+window.deleteActivePlaylist = deleteActivePlaylist;
+window.addTrackToPlaylistPrompt = addTrackToPlaylistPrompt;
+window.closeAddToPlaylistModal = closeAddToPlaylistModal;
+window.executeAddTrackToPlaylist = executeAddTrackToPlaylist;
+window.removePlaylistItem = removePlaylistItem;
+window.playPlaylistItem = playPlaylistItem;
+window.playActivePlaylist = playActivePlaylist;
+window.handleMobileNewPlaylistClick = handleMobileNewPlaylistClick;

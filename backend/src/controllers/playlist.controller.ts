@@ -129,7 +129,8 @@ export async function updatePlaylist(req: Request, res: Response, next: NextFunc
 export async function deletePlaylist(req: Request, res: Response, next: NextFunction) {
   try {
     const id = req.params.id as string;
-    await prisma.playlist.delete({ where: { id } });
+    await prisma.playlistItem.deleteMany({ where: { playlistId: id } });
+    await prisma.playlist.deleteMany({ where: { id } });
     return res.json({ success: true, message: 'Playlist deleted successfully' });
   } catch (error) {
     next(error);
@@ -182,15 +183,14 @@ export async function removePlaylistItem(req: Request, res: Response, next: Next
     const id = req.params.id as string;
     const itemId = req.params.itemId as string;
 
-    await prisma.playlistItem.delete({
-      where: { id: itemId },
+    await prisma.playlistItem.deleteMany({
+      where: { id: itemId, playlistId: id },
     });
 
     const updatedPlaylist = await prisma.playlist.findUnique({
       where: { id },
       include: { items: { orderBy: { position: 'asc' } } },
     });
-
 
     return res.json({
       success: true,

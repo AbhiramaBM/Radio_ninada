@@ -24,9 +24,21 @@
       ? (window.location.port === '5000' ? '/api' : 'http://localhost:5000/api')
       : '/api');
 
-  const DEFAULT_TIMEOUT_MS = 10000;
+  const DEFAULT_TIMEOUT_MS = 3500;
+  const apiCache = new Map();
+  const CACHE_TTL_MS = 25000; // 25s fast cache
 
   async function fetchApi(endpoint, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+    const isGet = !options.method || options.method.toUpperCase() === 'GET';
+    const cacheKey = `${endpoint}_${options.headers?.Authorization || 'anon'}`;
+
+    if (isGet && apiCache.has(cacheKey)) {
+      const cached = apiCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        return cached.data;
+      }
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -64,6 +76,10 @@
         throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
+      if (isGet && data && data.success) {
+        apiCache.set(cacheKey, { timestamp: Date.now(), data });
+      }
+
       return data;
     } catch (err) {
       clearTimeout(timer);
@@ -90,6 +106,13 @@
 
     async getPodcast(idOrSlug) {
       return await fetchApi(`/podcasts/${idOrSlug}`);
+    },
+
+    async incrementDownload(episodeId) {
+      if (!episodeId) return { success: false };
+      return await fetchApi(`/podcasts/episodes/${episodeId}/download`, {
+        method: 'POST',
+      });
     },
 
     async getSchedule() {
@@ -120,8 +143,53 @@
       return await fetchApi('/notifications');
     },
 
+    async markNotificationRead(id) {
+      return await fetchApi(`/notifications/${id}/read`, {
+        method: 'PATCH',
+      });
+    },
+
+    async markAllNotificationsRead() {
+      return await fetchApi('/notifications/read-all', {
+        method: 'PATCH',
+      });
+    },
+
     async getPlaylists() {
       return await fetchApi('/playlists');
+    },
+
+    async createPlaylist(name, description = '') {
+      return await fetchApi('/playlists', {
+        method: 'POST',
+        body: JSON.stringify({ name, description }),
+      });
+    },
+
+    async updatePlaylist(id, name, description = '') {
+      return await fetchApi(`/playlists/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name, description }),
+      });
+    },
+
+    async deletePlaylist(id) {
+      return await fetchApi(`/playlists/${id}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async addPlaylistItem(id, item) {
+      return await fetchApi(`/playlists/${id}/items`, {
+        method: 'POST',
+        body: JSON.stringify(item),
+      });
+    },
+
+    async removePlaylistItem(playlistId, itemId) {
+      return await fetchApi(`/playlists/${playlistId}/items/${itemId}`, {
+        method: 'DELETE',
+      });
     },
 
     async sendContactMessage(payload) {

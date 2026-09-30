@@ -187,7 +187,7 @@
         searchInput.addEventListener('input', (e) => {
           this.searchQuery = e.target.value.trim();
           if (this._searchTimer) clearTimeout(this._searchTimer);
-          this._searchTimer = setTimeout(() => this.loadMedia(), 400);
+          this._searchTimer = setTimeout(() => this.loadMedia(), 100);
         });
       }
 

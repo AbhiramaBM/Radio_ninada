@@ -8,5 +8,6 @@ const router = (0, express_1.Router)();
 router.get('/', host_controller_1.listHosts);
 router.get('/:id', host_controller_1.getHostById);
 router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('CREATE', 'Host'), host_controller_1.createHost);
+router.put('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('UPDATE', 'Host'), host_controller_1.updateHost);
 router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Host'), host_controller_1.deleteHost);
 exports.default = router;

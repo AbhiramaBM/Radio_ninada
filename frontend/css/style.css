@@ -1,4 +1,15 @@
-/* Modern FM - Core Stylesheet */
+/* Instant Input & Touch Latency Optimization */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+button, a, input, select, textarea, [role="button"] {
+    touch-action: manipulation;
+}
+
+input[type="range"] {
+    touch-action: none;
+}
 
 /* Material Symbols font is loaded via <link> in HTML head */
 .material-symbols-outlined {
@@ -269,7 +280,21 @@
     font-weight: 600;
 }
 
-/* Ensure mobile menu and drawer are hidden on desktop screens */
+/* Mobile Navigation & App Sticky Bar Rules */
+#mobile-menu-btn {
+    display: flex !important;
+}
+
+@media (max-width: 1279px) {
+    #global-audio-player {
+        bottom: 56px !important;
+    }
+    .floating-radio-player {
+        bottom: 5.25rem !important;
+    }
+}
+
+/* Ensure mobile-only elements are hidden on desktop screens */
 @media (min-width: 1280px) {
     #mobile-menu-btn {
         display: none !important;
@@ -279,5 +304,41 @@
     }
     #mobile-menu-overlay {
         display: none !important;
+    }
+    #mobile-app-bottom-bar {
+        display: none !important;
+    }
+}
+
+/* Mobile App Bottom Bar Styles */
+#mobile-app-bottom-bar {
+    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+}
+
+/* Playlist Modals Z-Index Hierarchy & Mobile Dialog Fixes */
+#playlist-modal {
+    z-index: 105 !important;
+}
+
+#add-to-playlist-modal {
+    z-index: 115 !important;
+}
+
+#create-playlist-modal {
+    z-index: 120 !important;
+}
+
+@media (max-width: 640px) {
+    #create-playlist-modal > div,
+    #add-to-playlist-modal > div {
+        max-height: 85vh;
+        max-height: 85dvh;
+        margin: auto;
+    }
+    #playlist-modal > div {
+        max-height: 88vh;
+        max-height: 88dvh;
+        width: 95% !important;
+        margin: auto;
     }
 }

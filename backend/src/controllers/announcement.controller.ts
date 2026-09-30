@@ -4,11 +4,57 @@ import { announcementSchema } from '../validation/index';
 
 export async function getAnnouncements(req: Request, res: Response, next: NextFunction) {
   try {
+    let announcements = await prisma.announcement.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+
+    if (announcements.length === 0) {
+      await prisma.announcement.createMany({
+        data: [
+          {
+            title: 'Welcome to Radio Ninada 90.4 FM',
+            message: 'Broadcasting live from SDM College Ujire. Enjoy curated shows, campus buzz, and regional music.',
+            audience: 'ALL',
+            status: 'PUBLISHED',
+          },
+          {
+            title: 'Yakshagana & Cultural Showcase Tonight',
+            message: 'Tune in at 8:00 PM for a special heritage performance hosted by RJ Vikram.',
+            audience: 'ALL',
+            status: 'PUBLISHED',
+          },
+          {
+            title: 'Campus Buzz & Youth Beat Episode 14',
+            message: 'A brand-new student feature episode is now available on demand in Podcasts.',
+            audience: 'ALL',
+            status: 'PUBLISHED',
+          },
+        ],
+      });
+      announcements = await prisma.announcement.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      });
+    }
+
+    return res.json({ success: true, data: announcements });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function markAllAnnouncementsRead(req: Request, res: Response, next: NextFunction) {
+  try {
+    await prisma.announcement.updateMany({
+      where: { isRead: false },
+      data: { isRead: true },
+    });
     const announcements = await prisma.announcement.findMany({
       orderBy: { createdAt: 'desc' },
       take: 20,
     });
-    return res.json({ success: true, data: announcements });
+    return res.json({ success: true, message: 'All announcements marked as read', data: announcements });
   } catch (error) {
     next(error);
   }

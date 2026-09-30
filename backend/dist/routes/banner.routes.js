@@ -8,5 +8,6 @@ const audit_1 = require("../middlewares/audit");
 const router = (0, express_1.Router)();
 router.get('/', banner_controller_1.getBanners);
 router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), upload_1.upload.single('image'), (0, audit_1.auditLog)('CREATE', 'Banner'), banner_controller_1.createBanner);
+router.put('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), upload_1.upload.single('image'), (0, audit_1.auditLog)('UPDATE', 'Banner'), banner_controller_1.updateBanner);
 router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'Banner'), banner_controller_1.deleteBanner);
 exports.default = router;

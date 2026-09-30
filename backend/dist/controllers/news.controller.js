@@ -89,26 +89,39 @@ async function createNews(req, res, next) {
 async function updateNews(req, res, next) {
     try {
         const id = req.params.id;
-        const data = req.body;
-        if (data.title) {
-            const isDup = await (0, duplicate_1.checkDuplicateNews)(data.title, id);
+        const existing = await prisma_1.prisma.news.findUnique({ where: { id } });
+        if (!existing) {
+            return res.status(404).json({ success: false, message: 'News article not found' });
+        }
+        const { title, content, category, featuredImage, publicId, status, publishedAt } = req.body;
+        if (title && title !== existing.title) {
+            const isDup = await (0, duplicate_1.checkDuplicateNews)(title, id);
             if (isDup) {
                 return res.status(400).json({
                     success: false,
-                    message: `Duplicate Warning: News article with headline "${data.title}" already exists.`,
+                    message: `Duplicate Warning: News article with headline "${title}" already exists.`,
                 });
             }
         }
-        let publicId = data.publicId || data.cloudinaryPublicId;
-        if (!publicId && data.featuredImage) {
-            publicId = (0, cloudinary_service_1.extractPublicIdFromUrl)(data.featuredImage);
+        let finalPublicId = publicId || (featuredImage ? (0, cloudinary_service_1.extractPublicIdFromUrl)(featuredImage) : undefined);
+        if (finalPublicId && existing.publicId && existing.publicId !== finalPublicId) {
+            try {
+                await (0, cloudinary_service_1.deleteFileFromCloudinary)(existing.publicId, 'image');
+            }
+            catch (e) {
+                console.warn('Old news image cleanup warning:', e);
+            }
         }
         const updated = await prisma_1.prisma.news.update({
             where: { id },
             data: {
-                ...data,
-                ...(publicId && { publicId }),
-                ...(data.publishedAt && { publishedAt: new Date(data.publishedAt) }),
+                ...(title !== undefined && { title }),
+                ...(content !== undefined && { content }),
+                ...(category !== undefined && { category }),
+                ...(featuredImage !== undefined && { featuredImage }),
+                ...(finalPublicId !== undefined && { publicId: finalPublicId }),
+                ...(status !== undefined && { status }),
+                ...(publishedAt !== undefined && { publishedAt: new Date(publishedAt) }),
             },
         });
         return res.json({ success: true, message: 'News article updated successfully', data: updated });

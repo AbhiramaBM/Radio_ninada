@@ -4,6 +4,7 @@ exports.getPrograms = getPrograms;
 exports.getProgramBySlug = getProgramBySlug;
 exports.createProgram = createProgram;
 exports.deleteProgram = deleteProgram;
+exports.updateProgram = updateProgram;
 const prisma_1 = require("../config/prisma");
 const slug_1 = require("../utils/slug");
 const duplicate_1 = require("../utils/duplicate");
@@ -152,6 +153,77 @@ async function deleteProgram(req, res, next) {
             where: { id: program.id },
         });
         return res.json({ success: true, message: 'Program deleted successfully' });
+    }
+    catch (error) {
+        next(error);
+    }
+}
+async function updateProgram(req, res, next) {
+    try {
+        const id = req.params.id;
+        const existing = await prisma_1.prisma.program.findUnique({
+            where: { id },
+        });
+        if (!existing) {
+            return res.status(404).json({ success: false, message: 'Program not found' });
+        }
+        const { name, description, hostId, hostName, categoryId, categoryName, thumbnail, thumbnailPublicId, banner, bannerPublicId, duration, language, tags, schedule, featured, status, } = req.body;
+        if (name && name !== existing.name) {
+            const isDup = await (0, duplicate_1.checkDuplicateProgram)(name, id);
+            if (isDup) {
+                return res.status(400).json({
+                    success: false,
+                    message: `A program with the name "${name}" already exists.`,
+                });
+            }
+        }
+        if (bannerPublicId && existing.bannerPublicId && existing.bannerPublicId !== bannerPublicId) {
+            try {
+                await (0, cloudinary_service_1.deleteFileFromCloudinary)(existing.bannerPublicId, 'image');
+            }
+            catch (e) {
+                console.warn('Old program banner cleanup warning:', e);
+            }
+        }
+        if (thumbnailPublicId && existing.thumbnailPublicId && existing.thumbnailPublicId !== thumbnailPublicId) {
+            try {
+                await (0, cloudinary_service_1.deleteFileFromCloudinary)(existing.thumbnailPublicId, 'image');
+            }
+            catch (e) {
+                console.warn('Old program thumbnail cleanup warning:', e);
+            }
+        }
+        const updated = await prisma_1.prisma.program.update({
+            where: { id },
+            data: {
+                ...(name !== undefined && { name }),
+                ...(description !== undefined && { description }),
+                ...(hostId !== undefined && { hostId }),
+                ...(hostName !== undefined && { hostName }),
+                ...(categoryId !== undefined && { categoryId }),
+                ...(categoryName !== undefined && { categoryName }),
+                ...(thumbnail !== undefined && { thumbnail }),
+                ...(thumbnailPublicId !== undefined && { thumbnailPublicId }),
+                ...(banner !== undefined && { banner }),
+                ...(bannerPublicId !== undefined && { bannerPublicId }),
+                ...(duration !== undefined && { duration }),
+                ...(language !== undefined && { language }),
+                ...(tags !== undefined && { tags }),
+                ...(schedule !== undefined && { schedule }),
+                ...(featured !== undefined && { featured }),
+                ...(status !== undefined && { status }),
+            },
+            include: {
+                host: true,
+                category: true,
+                schedules: true,
+            },
+        });
+        return res.json({
+            success: true,
+            message: 'Program updated successfully',
+            data: updated,
+        });
     }
     catch (error) {
         next(error);

@@ -6,8 +6,10 @@ exports.createPodcast = createPodcast;
 exports.addEpisode = addEpisode;
 exports.incrementDownload = incrementDownload;
 exports.deletePodcast = deletePodcast;
+exports.updatePodcast = updatePodcast;
 const prisma_1 = require("../config/prisma");
 const slug_1 = require("../utils/slug");
+const duplicate_1 = require("../utils/duplicate");
 const index_1 = require("../validation/index");
 const cloudinary_service_1 = require("../services/cloudinary.service");
 /**
@@ -241,6 +243,92 @@ async function deletePodcast(req, res, next) {
         return res.json({
             success: true,
             message: 'Podcast and associated episodes deleted successfully',
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+}
+/**
+ * Update podcast and sync default episode
+ * PUT /api/podcasts/:id
+ */
+async function updatePodcast(req, res, next) {
+    try {
+        const id = req.params.id;
+        const existing = await prisma_1.prisma.podcast.findUnique({
+            where: { id },
+            include: { episodes: true },
+        });
+        if (!existing) {
+            return res.status(404).json({ success: false, message: 'Podcast not found' });
+        }
+        const { title, description, coverUrl, coverPublicId, audioUrl, audioPublicId, duration, categoryId, hostId, featured, status, } = req.body;
+        if (title && title !== existing.title) {
+            const isDup = await (0, duplicate_1.checkDuplicatePodcast)(title, id);
+            if (isDup) {
+                return res.status(400).json({
+                    success: false,
+                    message: `A podcast with the title "${title}" already exists.`,
+                });
+            }
+        }
+        if (coverPublicId && existing.coverPublicId && existing.coverPublicId !== coverPublicId) {
+            try {
+                await (0, cloudinary_service_1.deleteFileFromCloudinary)(existing.coverPublicId, 'image');
+            }
+            catch (e) {
+                console.warn('Old podcast cover cleanup warning:', e);
+            }
+        }
+        if (audioPublicId && existing.audioPublicId && existing.audioPublicId !== audioPublicId) {
+            try {
+                await (0, cloudinary_service_1.deleteFileFromCloudinary)(existing.audioPublicId, 'video');
+            }
+            catch (e) {
+                console.warn('Old podcast audio cleanup warning:', e);
+            }
+        }
+        const updated = await prisma_1.prisma.podcast.update({
+            where: { id },
+            data: {
+                ...(title !== undefined && { title }),
+                ...(description !== undefined && { description }),
+                ...(coverUrl !== undefined && { coverUrl }),
+                ...(coverPublicId !== undefined && { coverPublicId }),
+                ...(audioUrl !== undefined && { audioUrl }),
+                ...(audioPublicId !== undefined && { audioPublicId }),
+                ...(duration !== undefined && { duration }),
+                ...(categoryId !== undefined && { categoryId }),
+                ...(hostId !== undefined && { hostId }),
+                ...(featured !== undefined && { featured }),
+                ...(status !== undefined && { status }),
+            },
+            include: {
+                category: true,
+                host: true,
+                episodes: true,
+            },
+        });
+        if (existing.episodes && existing.episodes.length > 0) {
+            const firstEp = existing.episodes[0];
+            await prisma_1.prisma.podcastEpisode.update({
+                where: { id: firstEp.id },
+                data: {
+                    ...(title !== undefined && { title }),
+                    ...(description !== undefined && { description }),
+                    ...(audioUrl !== undefined && { audioUrl }),
+                    ...(audioPublicId !== undefined && { audioPublicId }),
+                    ...(coverUrl !== undefined && { coverUrl }),
+                    ...(coverPublicId !== undefined && { coverPublicId }),
+                    ...(duration !== undefined && { duration }),
+                },
+            });
+        }
+        return res.json({
+            success: true,
+            message: 'Podcast updated successfully',
+            data: updated,
         });
     }
     catch (error) {

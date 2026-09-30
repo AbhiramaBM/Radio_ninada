@@ -24,5 +24,6 @@ const handleFileUpload = (req, res, next) => {
 };
 router.get('/', gallery_controller_1.getGallery);
 router.post('/', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), handleFileUpload, (0, audit_1.auditLog)('CREATE', 'GalleryItem'), gallery_controller_1.createGalleryItem);
+router.put('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), handleFileUpload, (0, audit_1.auditLog)('UPDATE', 'GalleryItem'), gallery_controller_1.updateGalleryItem);
 router.delete('/:id', auth_1.authenticate, (0, auth_1.requireRole)(['SUPER_ADMIN', 'ADMIN']), (0, audit_1.auditLog)('DELETE', 'GalleryItem'), gallery_controller_1.deleteGalleryItem);
 exports.default = router;
