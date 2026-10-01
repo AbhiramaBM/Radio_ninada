@@ -259,8 +259,6 @@
                 <a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm"
                     href="#podcasts">Podcasts</a>
                 <a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm"
-                    href="#events">Events</a>
-                <a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm"
                     href="#news">News</a>
                 <a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm"
                     href="#rj-team">RJ Team</a>
@@ -272,7 +270,7 @@
                 <!-- Search Button -->
                 <button onclick="openGlobalSearchModal()"
                     class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-full transition-all cursor-pointer shrink-0"
-                    title="Search programs, podcasts, news, events, RJs" aria-label="Search">
+                    title="Search programs, podcasts, news, RJs" aria-label="Search">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
@@ -374,16 +372,7 @@
                 <span>Podcasts</span>
             </a>
 
-            <!-- 4. Events -->
-            <a href="#events" onclick="handleMobileNavClick(event, '#events')"
-                class="mobile-nav-link flex items-center gap-3.5 px-4 py-2.5 rounded-2xl font-medium text-sm text-gray-700 hover:text-primary hover:bg-primary/5 transition-all">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>Upcoming Events</span>
-            </a>
-
-            <!-- 5. News & Bulletins -->
+            <!-- 4. News & Bulletins -->
             <a href="#news" onclick="handleMobileNavClick(event, '#news')"
                 class="mobile-nav-link flex items-center gap-3.5 px-4 py-2.5 rounded-2xl font-medium text-sm text-gray-700 hover:text-primary hover:bg-primary/5 transition-all">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -392,7 +381,7 @@
                 <span>News &amp; Bulletins</span>
             </a>
 
-            <!-- 6. RJ Team -->
+            <!-- 5. RJ Team -->
             <a href="#rj-team" onclick="handleMobileNavClick(event, '#rj-team')"
                 class="mobile-nav-link flex items-center gap-3.5 px-4 py-2.5 rounded-2xl font-medium text-sm text-gray-700 hover:text-primary hover:bg-primary/5 transition-all">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -401,7 +390,7 @@
                 <span>RJ Team</span>
             </a>
 
-            <!-- 7. Gallery & BTS -->
+            <!-- 6. Gallery & BTS -->
             <a href="#gallery" onclick="handleMobileNavClick(event, '#gallery')"
                 class="mobile-nav-link flex items-center gap-3.5 px-4 py-2.5 rounded-2xl font-medium text-sm text-gray-700 hover:text-primary hover:bg-primary/5 transition-all">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -784,34 +773,7 @@
         </div>
     </section>
 
-    <!-- 4. Upcoming Events Section (#events) -->
-    <section id="events"
-        class="relative z-10 w-full max-w-container-max mx-auto px-md lg:px-xl py-xl border-t border-outline-variant/20">
-        <div class="flex justify-between items-end mb-lg">
-            <div>
-                <div class="flex items-center gap-xs text-primary font-label-sm uppercase tracking-widest mb-xs">
-                    <span class="material-symbols-outlined text-lg">event</span>
-                    <span>Live Concerts &amp; Workshops</span>
-                </div>
-                <h2 class="font-headline-lg text-headline-lg font-bold">Upcoming Station &amp; Campus Events</h2>
-                <p class="text-on-surface-variant font-body-md">Join our RJs live on stage, studio tours, and music
-                    masterclasses</p>
-            </div>
-            <button class="hidden sm:flex items-center gap-xs text-primary font-bold hover:gap-sm transition-all">
-                View Calendar <span class="material-symbols-outlined">chevron_right</span>
-            </button>
-        </div>
-
-        <div id="events-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-            <div
-                class="col-span-full py-12 text-center text-on-surface-variant/60 italic font-body-md flex flex-col items-center justify-center gap-sm">
-                <span class="material-symbols-outlined text-3xl animate-spin text-primary">sync</span>
-                <span>Loading upcoming station events...</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- 5. News Section (#news) -->
+    <!-- 4. News Section (#news) -->
     <section id="news"
         class="relative z-10 w-full max-w-container-max mx-auto px-md lg:px-xl py-xl border-t border-outline-variant/20">
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-lg gap-md">
@@ -856,7 +818,7 @@
         </div>
     </section>
 
-    <!-- 6. RJ Team Section (#rj-team) -->
+    <!-- 5. RJ Team Section (#rj-team) -->
     <section id="rj-team"
         class="relative z-10 w-full max-w-container-max mx-auto px-md lg:px-xl py-xl border-t border-outline-variant/20">
         <div class="mb-lg">
@@ -882,7 +844,7 @@
         </div>
     </section>
 
-    <!-- 7. Media Gallery & BTS Section (#gallery) -->
+    <!-- 6. Media Gallery & BTS Section (#gallery) -->
     <section id="gallery"
         class="relative z-10 w-full max-w-container-max mx-auto px-md lg:px-xl py-xl border-t border-outline-variant/20">
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-lg gap-md">
@@ -1039,7 +1001,7 @@
         <span class="floating-radio-live"><span></span> LIVE</span>
     </button>
 
-    <footer id="contact" class="w-full py-xl bg-surface-container-lowest border-t border-outline-variant pb-28">
+    <footer id="contact" class="w-full py-xl bg-surface-container-lowest border-t border-outline-variant">
         <div class="max-w-container-max mx-auto px-md lg:px-xl grid grid-cols-1 md:grid-cols-4 gap-gutter">
             <div id="about" class="col-span-1">
                 <span class="font-headline-md text-headline-md font-bold text-primary mb-base block">Radio Ninada 90.4 FM</span>
@@ -1078,8 +1040,6 @@
                             href="#schedule">Schedule</a></li>
                     <li><a class="text-on-surface-variant hover:text-primary font-body-md text-sm"
                             href="#podcasts">Podcasts</a></li>
-                    <li><a class="text-on-surface-variant hover:text-primary font-body-md text-sm"
-                            href="#events">Upcoming Events</a></li>
                 </ul>
             </div>
             <div>
@@ -1142,64 +1102,7 @@
         </div>
     </footer>
 
-    <!-- Mobile App Bottom Sticky Navigation Bar (WhatsApp, Instagram, Facebook, Live FM, Menu) -->
-    <nav id="mobile-app-bottom-bar"
-        class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] px-2 py-1.5 flex items-center justify-around xl:hidden transition-all duration-300"
-        role="navigation" aria-label="Mobile Bottom App Bar">
-        <!-- 1. Home Link -->
-        <a href="#home" class="flex flex-col items-center justify-center gap-0.5 py-1 px-2 text-gray-600 hover:text-primary transition-colors cursor-pointer group">
-            <svg class="w-5 h-5 text-gray-500 group-hover:text-primary transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-            </svg>
-            <span class="text-[10px] font-semibold text-gray-600 group-hover:text-primary">Home</span>
-        </a>
 
-        <!-- 2. WhatsApp Direct Link -->
-        <a href="https://api.whatsapp.com/send?text=Listening%20to%20Radio%20Ninada%2090.4%20FM!%20Tune%20in%20live%3A%20https%3A%2F%2Fradioninada.com"
-            target="_blank" rel="noopener noreferrer"
-            class="flex flex-col items-center justify-center gap-0.5 py-1 px-2 text-gray-600 hover:text-[#25D366] transition-colors cursor-pointer group"
-            title="Chat & Share on WhatsApp">
-            <img src="images/whatsapp_logo.svg" alt="WhatsApp" class="w-5 h-5 group-hover:scale-110 transition-transform" />
-            <span class="text-[10px] font-semibold text-gray-600 group-hover:text-[#25D366]">WhatsApp</span>
-        </a>
-
-        <!-- 3. Central Radio Live Button -->
-        <button onclick="handleMobileListenLive()"
-            class="relative -top-3 w-12 h-12 rounded-full bg-gradient-to-tr from-primary to-rose-600 text-white flex items-center justify-center shadow-lg shadow-primary/40 active:scale-95 transition-all cursor-pointer group"
-            title="Listen Live Radio 90.4 FM" aria-label="Listen Live">
-            <span class="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">radio</span>
-            <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-            </span>
-        </button>
-
-        <!-- 4. Instagram Direct Link -->
-        <a href="https://www.instagram.com/radioninada" target="_blank" rel="noopener noreferrer"
-            class="flex flex-col items-center justify-center gap-0.5 py-1 px-2 text-gray-600 hover:text-[#E1306C] transition-colors cursor-pointer group"
-            title="Follow on Instagram">
-            <img src="images/instagram_logo.svg" alt="Instagram" class="w-5 h-5 group-hover:scale-110 transition-transform" />
-            <span class="text-[10px] font-semibold text-gray-600 group-hover:text-[#E1306C]">Instagram</span>
-        </a>
-
-        <!-- 5. Facebook Direct Link -->
-        <a href="https://www.facebook.com/radioninada" target="_blank" rel="noopener noreferrer"
-            class="flex flex-col items-center justify-center gap-0.5 py-1 px-2 text-gray-600 hover:text-[#1877F2] transition-colors cursor-pointer group"
-            title="Like on Facebook">
-            <img src="images/facebook_logo.svg" alt="Facebook" class="w-5 h-5 group-hover:scale-110 transition-transform" />
-            <span class="text-[10px] font-semibold text-gray-600 group-hover:text-[#1877F2]">Facebook</span>
-        </a>
-
-        <!-- 6. Mobile Menu Button -->
-        <button onclick="toggleMobileMenu()"
-            class="flex flex-col items-center justify-center gap-0.5 py-1 px-2 text-gray-600 hover:text-primary transition-colors cursor-pointer group"
-            title="Open Menu" aria-label="Menu">
-            <svg class="w-5 h-5 text-gray-500 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-            <span class="text-[10px] font-semibold text-gray-600 group-hover:text-primary">Menu</span>
-        </button>
-    </nav>
 
     <!-- Audio Share & Forward Modal -->
     <div id="audio-share-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden items-center justify-center p-4">
@@ -1329,7 +1232,7 @@
             </div>
             <div class="relative mb-4">
                 <input type="text" id="global-search-input" onkeyup="performGlobalSearch()"
-                    placeholder="Search programs, podcasts, news, events, RJs..."
+                    placeholder="Search programs, podcasts, news, RJs..."
                     class="w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl px-5 py-3.5 pl-12 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                     autofocus />
                 <span class="material-symbols-outlined absolute left-4 top-3.5 text-gray-400">search</span>
