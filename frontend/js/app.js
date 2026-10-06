@@ -754,26 +754,22 @@ function renderPodcastsUI(podList) {
                     <p class="text-on-surface-variant text-xs mb-sm">S${seasonNum} E${epNum} • ${pod.duration || '30:00'}</p>
                     <p class="text-on-surface-variant text-sm line-clamp-2">${pod.description || ''}</p>
                 </div>
-                <div class="mt-md pt-sm border-t border-outline-variant/20 flex flex-wrap gap-2 justify-between items-center text-xs text-on-surface-variant">
-                    <span id="podcast-downloads-${pod.id || ''}">${pod.downloads || 0} Downloads</span>
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                        <button onclick="downloadAudioTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', '${(pod.episodes && pod.episodes[0]?.id) || pod.id || ''}')"
-                            class="text-primary hover:text-white bg-primary/10 hover:bg-primary px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-xs" title="Download Episode Audio">
-                            <span class="material-symbols-outlined text-sm">download</span>
-                            <span>Download</span>
-                        </button>
-                        <button onclick="shareAudioTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', '${catName.replace(/'/g, "\\'")}')"
-                            class="text-on-surface-variant hover:text-primary hover:bg-surface-container px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all" title="Share Episode">
-                            <span class="material-symbols-outlined text-sm">share</span>
-                            <span>Share</span>
-                        </button>
-                        <button onclick="addTrackToPlaylistPrompt('${pod.title.replace(/'/g, "\\'")}', '${catName.replace(/'/g, "\\'")}', '${audioUrl.replace(/'/g, "\\'")}', '${coverUrl.replace(/'/g, "\\'")}', '${pod.duration || '30:00'}')"
-                            class="text-on-surface-variant hover:text-primary hover:bg-surface-container px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all active:scale-95" title="Add to playlist">
-                            <span class="material-symbols-outlined text-sm text-primary">playlist_add</span>
-                            <span>Playlist</span>
-                        </button>
-                        <span class="material-symbols-outlined text-sm hover:text-primary cursor-pointer p-1" onclick="showToast('Episode bookmarked!')" title="Bookmark episode">bookmark</span>
-                    </div>
+                <div class="mt-md pt-sm border-t border-outline-variant/20 flex items-center justify-between gap-1.5 flex-wrap">
+                    <button onclick="downloadAudioTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', '${(pod.episodes && pod.episodes[0]?.id) || pod.id || ''}')"
+                        class="text-primary hover:text-white bg-primary/10 hover:bg-primary px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-xs" title="Download Episode Audio">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                        <span>Download</span>
+                    </button>
+                    <button onclick="shareAudioTrack('${audioUrl.replace(/'/g, "\\'")}', '${pod.title.replace(/'/g, "\\'")}', '${catName.replace(/'/g, "\\'")}')"
+                        class="text-on-surface-variant hover:text-primary hover:bg-surface-container px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all" title="Share Episode">
+                        <span class="material-symbols-outlined text-sm">share</span>
+                        <span>Share</span>
+                    </button>
+                    <button onclick="addTrackToPlaylistPrompt('${pod.title.replace(/'/g, "\\'")}', '${catName.replace(/'/g, "\\'")}', '${audioUrl.replace(/'/g, "\\'")}', '${coverUrl.replace(/'/g, "\\'")}', '${pod.duration || '30:00'}')"
+                        class="text-on-surface-variant hover:text-primary hover:bg-surface-container px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all active:scale-95" title="Add to playlist">
+                        <span class="material-symbols-outlined text-sm text-primary">playlist_add</span>
+                        <span>Playlist</span>
+                    </button>
                 </div>
             </div>
         `;
