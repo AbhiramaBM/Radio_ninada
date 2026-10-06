@@ -37,7 +37,11 @@ const app = (0, express_1.default)();
 // Trust proxy for Vercel / reverse proxies
 app.set('trust proxy', 1);
 // Security Middlewares
-app.use((0, helmet_1.default)({ crossOriginResourcePolicy: false }));
+app.use((0, helmet_1.default)({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
+    crossOriginEmbedderPolicy: false,
+}));
 app.use((0, cors_1.default)({ origin: true, credentials: true }));
 // Rate Limiter (Max 1000 requests per 15 mins)
 const limiter = (0, express_rate_limit_1.default)({

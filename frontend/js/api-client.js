@@ -73,7 +73,7 @@
       const data = await response.json().catch(() => ({ success: false, message: 'Invalid server response' }));
 
       if (!response.ok) {
-        throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(data.message || data.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       if (isGet && data && data.success) {

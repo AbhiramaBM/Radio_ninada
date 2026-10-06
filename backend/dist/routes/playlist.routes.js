@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const playlist_controller_1 = require("../controllers/playlist.controller");
+const router = (0, express_1.Router)();
+router.get('/', playlist_controller_1.getPlaylists);
+router.post('/', playlist_controller_1.createPlaylist);
+router.get('/:id', playlist_controller_1.getPlaylistById);
+router.put('/:id', playlist_controller_1.updatePlaylist);
+router.delete('/:id', playlist_controller_1.deletePlaylist);
+router.post('/:id/items', playlist_controller_1.addPlaylistItem);
+router.delete('/:id/items/:itemId', playlist_controller_1.removePlaylistItem);
+exports.default = router;
