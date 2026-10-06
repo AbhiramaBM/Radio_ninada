@@ -37,7 +37,13 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Security Middlewares
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 app.use(cors({ origin: true, credentials: true }));
 
 // Rate Limiter (Max 1000 requests per 15 mins)

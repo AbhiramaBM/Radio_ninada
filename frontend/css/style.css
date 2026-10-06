@@ -160,7 +160,7 @@ input[type="range"] {
 
     .floating-radio-player {
         right: 1rem;
-        bottom: 5.25rem;
+        bottom: max(1.25rem, env(safe-area-inset-bottom, 1.25rem));
         width: 3.5rem;
         height: 3.5rem;
     }
@@ -287,10 +287,10 @@ input[type="range"] {
 
 @media (max-width: 1279px) {
     #global-audio-player {
-        bottom: 56px !important;
+        bottom: 0 !important;
     }
     .floating-radio-player {
-        bottom: 5.25rem !important;
+        bottom: max(1.25rem, env(safe-area-inset-bottom, 1.25rem)) !important;
     }
 }
 
@@ -305,14 +305,6 @@ input[type="range"] {
     #mobile-menu-overlay {
         display: none !important;
     }
-    #mobile-app-bottom-bar {
-        display: none !important;
-    }
-}
-
-/* Mobile App Bottom Bar Styles */
-#mobile-app-bottom-bar {
-    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
 }
 
 /* Playlist Modals Z-Index Hierarchy & Mobile Dialog Fixes */

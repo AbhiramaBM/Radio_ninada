@@ -780,94 +780,6 @@ function renderPodcastsUI(podList) {
     }).join('');
 }
 
-function addToCalendar(title, description, location, dateStr) {
-    try {
-        const startDate = dateStr ? new Date(dateStr) : new Date();
-        const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
-
-        const formatICSDate = (date) => {
-            return date.toISOString().replace(/-|:|\.\d+/g, '');
-        };
-
-        const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
-            `&text=${encodeURIComponent(title)}` +
-            `&details=${encodeURIComponent(description || '')}` +
-            `&location=${encodeURIComponent(location || '')}` +
-            `&dates=${formatICSDate(startDate)}/${formatICSDate(endDate)}`;
-
-        window.open(googleUrl, '_blank', 'noopener,noreferrer');
-        if (window.showToast) {
-            window.showToast(`📅 Adding "${title}" to Calendar...`);
-        }
-    } catch (err) {
-        console.error('[addToCalendar] Error:', err);
-        if (window.showToast) window.showToast('Unable to open calendar.');
-    }
-}
-
-function renderEventsUI(evtList) {
-    const eventsContainer = document.getElementById('events-grid') || document.querySelector('#events .grid');
-    if (!eventsContainer) return;
-
-    // Use events from backend or station defaults
-    const items = (Array.isArray(evtList) && evtList.length > 0) ? evtList : [
-        {
-            title: "Annual SDM Media Fest & Live RJ Contest",
-            description: "A flagship inter-collegiate festival celebrating radio production, news reporting, voice acting, and student broadcasting talents.",
-            location: "SDM Campus Auditorium, Ujire",
-            eventDate: new Date(Date.now() + 7 * 86400000).toISOString(),
-            banner: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80"
-        },
-        {
-            title: "Ninada Musical Eve - Live Classical & Folk",
-            description: "An open-air evening celebrating regional Yakshagana melodies, Carnatic classical fusions, and local acoustic bands broadcast live on 90.4 FM.",
-            location: "Radio Ninada Amphitheatre",
-            eventDate: new Date(Date.now() + 14 * 86400000).toISOString(),
-            banner: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80"
-        },
-        {
-            title: "Community Radio Workshop & Voice Modulation",
-            description: "Interactive masterclass conducted by Senior Station RJs on audio editing, podcast storytelling, and microphone presence.",
-            location: "Studio 1, SDM Campus",
-            eventDate: new Date(Date.now() + 21 * 86400000).toISOString(),
-            banner: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80"
-        }
-    ];
-
-    eventsContainer.innerHTML = items.map(evt => {
-        const bannerUrl = resolveServerUrl(evt.banner) || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80';
-        const dateObj = evt.eventDate ? new Date(evt.eventDate) : null;
-        const dateStr = dateObj ? dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'UPCOMING';
-        const rawDate = evt.eventDate || new Date().toISOString();
-
-        return `
-            <div class="bg-white rounded-2xl overflow-hidden border border-outline-variant/30 hover:shadow-2xl transition-all duration-300 group flex flex-col justify-between">
-                <div>
-                    <div class="relative h-48 overflow-hidden">
-                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${bannerUrl}" alt="${evt.title}" />
-                        <div class="absolute top-3 right-3 bg-primary text-white font-bold text-xs px-md py-xs rounded-full shadow-md">${dateStr}</div>
-                    </div>
-                    <div class="p-md">
-                        <div class="flex items-center gap-xs text-xs text-primary font-semibold uppercase mb-xs">
-                            <span class="material-symbols-outlined text-sm">location_on</span>
-                            <span>${evt.location || 'Radio Ninada Studio'}</span>
-                        </div>
-                        <h3 class="font-headline-md text-[20px] font-bold mb-xs group-hover:text-primary transition-colors">${evt.title}</h3>
-                        <p class="text-on-surface-variant text-sm mb-md line-clamp-2">${evt.description || ''}</p>
-                    </div>
-                </div>
-                <div class="p-md pt-0">
-                    <button onclick="addToCalendar('${evt.title.replace(/'/g, "\\'")}', '${(evt.description || '').replace(/'/g, "\\'")}', '${(evt.location || 'Radio Ninada Studio').replace(/'/g, "\\'")}', '${rawDate}')"
-                        class="w-full bg-surface-container-low text-primary font-bold py-sm rounded-xl hover:bg-primary hover:text-white transition-all text-sm cursor-pointer flex items-center justify-center gap-2 shadow-xs">
-                        <span class="material-symbols-outlined text-lg">calendar_add_on</span>
-                        <span>Add to Calendar</span>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
 function renderGalleryUI(galList) {
     const galGrid = document.getElementById('gallery-grid');
     if (!galGrid) return;
@@ -1102,18 +1014,6 @@ async function loadDynamicData() {
     } catch (e) { console.warn('[loadDynamicData] News fetch fallback:', e); }
 
     try {
-        const evtRes = await window.RadioNinadaAPI.getEvents();
-        if (evtRes && evtRes.success && Array.isArray(evtRes.data)) {
-            renderEventsUI(evtRes.data);
-        } else {
-            renderEventsUI([]);
-        }
-    } catch (e) {
-        console.warn('[loadDynamicData] Events fetch fallback:', e);
-        renderEventsUI([]);
-    }
-
-    try {
         const galRes = await window.RadioNinadaAPI.getGallery();
         if (galRes && galRes.success && Array.isArray(galRes.data)) {
             renderGalleryUI(galRes.data);
@@ -1221,10 +1121,9 @@ async function prewarmSearchCatalog() {
     try {
         const catalog = [];
         if (window.RadioNinadaAPI) {
-            const [pods, newsRes, evts, rjs] = await Promise.allSettled([
+            const [pods, newsRes, rjs] = await Promise.allSettled([
                 window.RadioNinadaAPI.getPodcasts(),
                 window.RadioNinadaAPI.getNews(),
-                window.RadioNinadaAPI.getEvents(),
                 window.RadioNinadaAPI.getRJs()
             ]);
             if (pods.status === 'fulfilled' && pods.value && pods.value.success && Array.isArray(pods.value.data)) {
@@ -1248,18 +1147,6 @@ async function prewarmSearchCatalog() {
                         subtitle: `News Bulletin • ${n.category || 'Local'}`,
                         icon: 'newspaper',
                         action: `const el = document.getElementById('news'); if (el) el.scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();`
-                    });
-                });
-            }
-            if (evts.status === 'fulfilled' && evts.value && evts.value.success && Array.isArray(evts.value.data)) {
-                evts.value.data.forEach(e => {
-                    catalog.push({
-                        type: 'EVENT',
-                        title: e.title || 'Event',
-                        description: e.description || '',
-                        subtitle: `Event • ${e.location || 'Radio Studio'}`,
-                        icon: 'event',
-                        action: `const el = document.getElementById('events'); if (el) el.scrollIntoView({behavior:'smooth'}); closeGlobalSearchModal();`
                     });
                 });
             }
@@ -1312,7 +1199,7 @@ async function executeGlobalSearch() {
     );
 
     if (results.length === 0) {
-        container.innerHTML = `<p class="text-xs text-center text-gray-500 py-6">No matching broadcasts, podcasts, or events found for "${query}".</p>`;
+        container.innerHTML = `<p class="text-xs text-center text-gray-500 py-6">No matching broadcasts or podcasts found for "${query}".</p>`;
         return;
     }
 
