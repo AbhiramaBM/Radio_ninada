@@ -2118,8 +2118,8 @@ function shareVia(platform) {
 // Working Audio Download System
 // ==========================================
 async function downloadAudioTrack(audioUrl, trackTitle, episodeId) {
-    if (!audioUrl) {
-        showToast('No audio source available for download.');
+    if (!audioUrl && !episodeId) {
+        showToast('⚠ No audio source available for download.');
         return;
     }
 
@@ -2127,44 +2127,55 @@ async function downloadAudioTrack(audioUrl, trackTitle, episodeId) {
         .replace(/[^a-zA-Z0-9_\-\s]/g, '')
         .trim()
         .replace(/\s+/g, '_') || 'Radio_Ninada_Episode';
-    const fileName = `${cleanTitle}.mp3`;
 
-    showToast(`⏳ Preparing download: ${trackTitle || 'Episode'}...`);
-
-    // Track download in backend analytics/episode counters
-    if (episodeId && window.RadioAPI && typeof window.RadioAPI.incrementDownload === 'function') {
-        window.RadioAPI.incrementDownload(episodeId).then(res => {
-            if (res && res.downloads !== undefined) {
-                const el = document.getElementById(`podcast-downloads-${episodeId}`);
-                if (el) el.textContent = `${res.downloads} Downloads`;
-            }
-        }).catch(() => {});
+    // --- STRATEGY 1: Use backend proxy endpoint (bypasses Cloudinary CORS/disposition) ---
+    if (episodeId && window.RadioAPI && typeof window.RadioAPI.getEpisodeDownloadUrl === 'function') {
+        const proxyUrl = window.RadioAPI.getEpisodeDownloadUrl(episodeId);
+        if (proxyUrl) {
+            showToast(`⏳ Preparing download: ${trackTitle || 'Episode'}...`);
+            const link = document.createElement('a');
+            link.href = proxyUrl;
+            link.setAttribute('download', `${cleanTitle}.mp3`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            // Show confirmation after a moment (browser handles the actual download)
+            setTimeout(() => showToast(`✔ Download started: ${trackTitle || 'Audio'}`), 800);
+            return;
+        }
     }
 
-    try {
-        const response = await fetch(audioUrl, { mode: 'cors' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
-        showToast(`✔ Download complete: ${trackTitle || 'Audio'}`);
-    } catch (err) {
-        // Fallback for cross-origin audio or direct media URLs
-        const link = document.createElement('a');
-        link.href = audioUrl;
-        link.setAttribute('download', fileName);
-        link.setAttribute('target', '_blank');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showToast(`✔ Download started for "${trackTitle || 'Audio'}"`);
+    // --- STRATEGY 2: Direct fetch with blob (works for same-origin or CORS-permissive hosts) ---
+    if (audioUrl) {
+        showToast(`⏳ Preparing download: ${trackTitle || 'Episode'}...`);
+        try {
+            const response = await fetch(audioUrl, { mode: 'cors' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `${cleanTitle}.mp3`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+            showToast(`✔ Download complete: ${trackTitle || 'Audio'}`);
+        } catch (err) {
+            // --- STRATEGY 3: Direct anchor link fallback (opens in new tab for cross-origin) ---
+            const link = document.createElement('a');
+            link.href = audioUrl;
+            link.setAttribute('download', `${cleanTitle}.mp3`);
+            link.setAttribute('target', '_blank');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast(`✔ Download started for "${trackTitle || 'Audio'}"`);
+        }
+        return;
     }
+
+    showToast('⚠ Could not start download. Audio file not available.');
 }
 
 // Expose functions globally

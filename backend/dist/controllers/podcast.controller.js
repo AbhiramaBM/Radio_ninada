@@ -5,6 +5,7 @@ exports.getPodcastBySlug = getPodcastBySlug;
 exports.createPodcast = createPodcast;
 exports.addEpisode = addEpisode;
 exports.incrementDownload = incrementDownload;
+exports.proxyDownloadEpisode = proxyDownloadEpisode;
 exports.deletePodcast = deletePodcast;
 exports.updatePodcast = updatePodcast;
 const prisma_1 = require("../config/prisma");
@@ -208,6 +209,63 @@ async function incrementDownload(req, res, next) {
             data: { downloads: { increment: 1 } },
         });
         return res.json({ success: true, downloads: episode.downloads });
+    }
+    catch (error) {
+        next(error);
+    }
+}
+/**
+ * Proxy-download episode audio via server to force browser file save dialog.
+ * GET /api/podcasts/episodes/:id/proxy-download
+ */
+async function proxyDownloadEpisode(req, res, next) {
+    try {
+        const id = req.params.id;
+        const episode = await prisma_1.prisma.podcastEpisode.findUnique({
+            where: { id },
+            select: { id: true, title: true, audioUrl: true },
+        });
+        if (!episode || !episode.audioUrl) {
+            return res.status(404).json({ success: false, message: 'Episode audio not found.' });
+        }
+        const audioUrl = episode.audioUrl;
+        const safeTitle = (episode.title || 'Radio_Ninada_Episode')
+            .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+            .trim()
+            .replace(/\s+/g, '_') || 'Radio_Ninada_Episode';
+        const urlPath = new URL(audioUrl).pathname;
+        const ext = urlPath.match(/\.(mp3|m4a|ogg|wav|aac|flac)$/i)?.[1] || 'mp3';
+        const fileName = `${safeTitle}.${ext}`;
+        // Increment counter fire-and-forget
+        prisma_1.prisma.podcastEpisode.update({
+            where: { id },
+            data: { downloads: { increment: 1 } },
+        }).catch(() => {});
+        const https = require('https');
+        const http = require('http');
+        const protocol = audioUrl.startsWith('https') ? https : http;
+        const upstream = await new Promise((resolve, reject) => {
+            const req2 = protocol.get(audioUrl, (upstreamRes) => {
+                if (upstreamRes.statusCode && upstreamRes.statusCode >= 400) {
+                    reject(new Error(`Upstream responded with ${upstreamRes.statusCode}`));
+                    return;
+                }
+                resolve(upstreamRes);
+            });
+            req2.on('error', reject);
+        });
+        const contentLength = upstream.headers?.['content-length'];
+        const contentType = upstream.headers?.['content-type'] || 'audio/mpeg';
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', contentType);
+        if (contentLength) res.setHeader('Content-Length', contentLength);
+        res.setHeader('Cache-Control', 'no-store');
+        upstream.pipe(res);
+        upstream.on('error', () => {
+            if (!res.headersSent) {
+                res.status(502).json({ success: false, message: 'Failed to stream audio from storage.' });
+            }
+        });
     }
     catch (error) {
         next(error);

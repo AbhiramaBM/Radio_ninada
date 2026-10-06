@@ -115,6 +115,12 @@
       });
     },
 
+    // Returns the URL for the server-side proxy download endpoint
+    getEpisodeDownloadUrl(episodeId) {
+      if (!episodeId) return null;
+      return `${API_BASE_URL}/podcasts/episodes/${episodeId}/proxy-download`;
+    },
+
     async getSchedule() {
       return await fetchApi('/schedule');
     },

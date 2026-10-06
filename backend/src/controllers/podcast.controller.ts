@@ -216,6 +216,79 @@ export async function incrementDownload(req: Request, res: Response, next: NextF
 }
 
 /**
+ * Proxy-download episode audio via server to force browser file save dialog.
+ * Handles Cloudinary CORS/content-disposition limitations.
+ * GET /api/podcasts/episodes/:id/proxy-download
+ */
+export async function proxyDownloadEpisode(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id as string;
+
+    // Look up the episode to get its audioUrl
+    const episode = await prisma.podcastEpisode.findUnique({
+      where: { id },
+      select: { id: true, title: true, audioUrl: true },
+    });
+
+    if (!episode || !episode.audioUrl) {
+      return res.status(404).json({ success: false, message: 'Episode audio not found.' });
+    }
+
+    const audioUrl = episode.audioUrl;
+
+    // Sanitize title to a safe filename
+    const safeTitle = (episode.title || 'Radio_Ninada_Episode')
+      .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+      .trim()
+      .replace(/\s+/g, '_') || 'Radio_Ninada_Episode';
+
+    // Detect extension from URL (default to .mp3)
+    const urlPath = new URL(audioUrl).pathname;
+    const ext = urlPath.match(/\.(mp3|m4a|ogg|wav|aac|flac)$/i)?.[1] || 'mp3';
+    const fileName = `${safeTitle}.${ext}`;
+
+    // Increment download counter (fire and forget)
+    prisma.podcastEpisode.update({
+      where: { id },
+      data: { downloads: { increment: 1 } },
+    }).catch(() => {});
+
+    // Fetch the audio from Cloudinary server-side and pipe to client
+    const https = await import('https');
+    const http = await import('http');
+    const protocol = audioUrl.startsWith('https') ? https : http;
+
+    const upstream = await new Promise<ReturnType<typeof https.get>>((resolve, reject) => {
+      const req2 = protocol.get(audioUrl, (upstreamRes) => {
+        if (upstreamRes.statusCode && upstreamRes.statusCode >= 400) {
+          reject(new Error(`Upstream responded with ${upstreamRes.statusCode}`));
+          return;
+        }
+        resolve(upstreamRes as any);
+      });
+      req2.on('error', reject);
+    });
+
+    const contentLength = (upstream as any).headers?.['content-length'];
+    const contentType = (upstream as any).headers?.['content-type'] || 'audio/mpeg';
+
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Type', contentType);
+    if (contentLength) res.setHeader('Content-Length', contentLength);
+    res.setHeader('Cache-Control', 'no-store');
+
+    (upstream as any).pipe(res);
+    (upstream as any).on('error', () => {
+      if (!res.headersSent) {
+        res.status(502).json({ success: false, message: 'Failed to stream audio from storage.' });
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * Delete podcast and associated episodes
  * DELETE /api/podcasts/:id
  */

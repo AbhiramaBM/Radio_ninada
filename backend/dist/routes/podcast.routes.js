@@ -7,6 +7,7 @@ const audit_1 = require("../middlewares/audit");
 const router = (0, express_1.Router)();
 // Public podcast endpoints
 router.get('/', podcast_controller_1.getPodcasts);
+router.get('/episodes/:id/proxy-download', podcast_controller_1.proxyDownloadEpisode);
 router.get('/:slug', podcast_controller_1.getPodcastBySlug);
 router.post('/episodes/:id/download', podcast_controller_1.incrementDownload);
 // Staff/Admin endpoints

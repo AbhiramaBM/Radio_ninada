@@ -6,6 +6,7 @@ import {
   updatePodcast,
   addEpisode,
   incrementDownload,
+  proxyDownloadEpisode,
   deletePodcast,
 } from '../controllers/podcast.controller';
 import { authenticate, requireRole } from '../middlewares/auth';
@@ -15,6 +16,7 @@ const router = Router();
 
 // Public podcast endpoints
 router.get('/', getPodcasts);
+router.get('/episodes/:id/proxy-download', proxyDownloadEpisode);
 router.get('/:slug', getPodcastBySlug);
 router.post('/episodes/:id/download', incrementDownload);
 
