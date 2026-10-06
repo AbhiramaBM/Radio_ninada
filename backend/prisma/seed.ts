@@ -185,7 +185,7 @@ async function main() {
       description: 'An insightful retrospective with senior SDM educators on community empowerment through 90.4 FM waves.',
       episodeNumber: 1,
       season: 1,
-      audioUrl: 'https://res.cloudinary.com/demo/video/upload/sample_audio.mp3',
+      audioUrl: 'https://res.cloudinary.com/demo/video/upload/dog.mp3',
       audioPublicId: 'radio-ninada/podcasts/episodes/ep1_audio',
       coverUrl: samplePodcast.coverUrl,
       duration: '28:45',

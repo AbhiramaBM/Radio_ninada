@@ -13,6 +13,7 @@ const slug_1 = require("../utils/slug");
 const duplicate_1 = require("../utils/duplicate");
 const index_1 = require("../validation/index");
 const cloudinary_service_1 = require("../services/cloudinary.service");
+const logger_1 = require("../utils/logger");
 /**
  * List podcasts with episodes & host info
  * GET /api/podcasts
@@ -215,60 +216,158 @@ async function incrementDownload(req, res, next) {
     }
 }
 /**
- * Proxy-download episode audio via server to force browser file save dialog.
+ * Proxy-download episode/podcast audio via server to force browser file save dialog.
+ * Handles Cloudinary CORS, redirects, query parameters, transformations, and disposition.
  * GET /api/podcasts/episodes/:id/proxy-download
+ * GET /api/podcasts/download
  */
 async function proxyDownloadEpisode(req, res, next) {
     try {
-        const id = req.params.id;
-        const episode = await prisma_1.prisma.podcastEpisode.findUnique({
-            where: { id },
-            select: { id: true, title: true, audioUrl: true },
-        });
-        if (!episode || !episode.audioUrl) {
-            return res.status(404).json({ success: false, message: 'Episode audio not found.' });
-        }
-        const audioUrl = episode.audioUrl;
-        const safeTitle = (episode.title || 'Radio_Ninada_Episode')
-            .replace(/[^a-zA-Z0-9_\-\s]/g, '')
-            .trim()
-            .replace(/\s+/g, '_') || 'Radio_Ninada_Episode';
-        const urlPath = new URL(audioUrl).pathname;
-        const ext = urlPath.match(/\.(mp3|m4a|ogg|wav|aac|flac)$/i)?.[1] || 'mp3';
-        const fileName = `${safeTitle}.${ext}`;
-        // Increment counter fire-and-forget
-        prisma_1.prisma.podcastEpisode.update({
-            where: { id },
-            data: { downloads: { increment: 1 } },
-        }).catch(() => {});
-        const https = require('https');
-        const http = require('http');
-        const protocol = audioUrl.startsWith('https') ? https : http;
-        const upstream = await new Promise((resolve, reject) => {
-            const req2 = protocol.get(audioUrl, (upstreamRes) => {
-                if (upstreamRes.statusCode && upstreamRes.statusCode >= 400) {
-                    reject(new Error(`Upstream responded with ${upstreamRes.statusCode}`));
-                    return;
+        const id = ((req.params.id || req.query.id || '') || '').trim();
+        let audioUrl = ((req.query.url || '') || '').trim();
+        let title = ((req.query.title || '') || '').trim();
+        // 1. If an ID is provided, look up the episode or podcast from the database
+        if (id && id !== 'audio' && id !== 'direct') {
+            try {
+                const episode = await prisma_1.prisma.podcastEpisode.findUnique({
+                    where: { id },
+                    select: {
+                        id: true,
+                        title: true,
+                        audioUrl: true,
+                        podcast: { select: { title: true } },
+                    },
+                });
+                if (episode && episode.audioUrl) {
+                    if (!audioUrl)
+                        audioUrl = episode.audioUrl;
+                    if (!title)
+                        title = episode.title || episode.podcast?.title || '';
+                    prisma_1.prisma.podcastEpisode.update({
+                        where: { id },
+                        data: { downloads: { increment: 1 } },
+                    }).catch(() => { });
                 }
-                resolve(upstreamRes);
-            });
-            req2.on('error', reject);
-        });
-        const contentLength = upstream.headers?.['content-length'];
-        const contentType = upstream.headers?.['content-type'] || 'audio/mpeg';
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-        res.setHeader('Content-Type', contentType);
-        if (contentLength) res.setHeader('Content-Length', contentLength);
-        res.setHeader('Cache-Control', 'no-store');
-        upstream.pipe(res);
-        upstream.on('error', () => {
-            if (!res.headersSent) {
-                res.status(502).json({ success: false, message: 'Failed to stream audio from storage.' });
+                else {
+                    // If not found as episode, look up as podcast
+                    const podcast = await prisma_1.prisma.podcast.findUnique({
+                        where: { id },
+                        select: {
+                            id: true,
+                            title: true,
+                            audioUrl: true,
+                            episodes: {
+                                where: { deletedAt: null },
+                                orderBy: { episodeNumber: 'asc' },
+                                take: 1,
+                                select: { id: true, title: true, audioUrl: true },
+                            },
+                        },
+                    });
+                    if (podcast) {
+                        const firstEp = podcast.episodes && podcast.episodes[0];
+                        if (!audioUrl)
+                            audioUrl = firstEp?.audioUrl || podcast.audioUrl || '';
+                        if (!title)
+                            title = firstEp?.title || podcast.title || '';
+                        prisma_1.prisma.podcast.update({
+                            where: { id },
+                            data: { downloads: { increment: 1 } },
+                        }).catch(() => { });
+                    }
+                }
             }
+            catch (dbError) {
+                logger_1.logger.warn(`[ProxyDownload] DB lookup skipped or failed for id "${id}":`, dbError);
+            }
+        }
+        // 2. Validate that an audio URL is available
+        if (!audioUrl) {
+            return res.status(404).json({
+                success: false,
+                message: 'Audio URL not found for this episode.',
+            });
+        }
+        // 3. Normalize Cloudinary URLs (upgrade http to https for Cloudinary)
+        if (audioUrl.startsWith('http://res.cloudinary.com')) {
+            audioUrl = audioUrl.replace('http://res.cloudinary.com', 'https://res.cloudinary.com');
+        }
+        // 4. Sanitize title to an appropriate filename
+        const rawTitle = title || 'Radio_Ninada_Audio';
+        const safeTitle = rawTitle
+            .replace(/[\/\\:*?"<>|]/g, '_')
+            .replace(/\s+/g, '_')
+            .trim() || 'Radio_Ninada_Episode';
+        // Detect extension from audio URL pathname (default to mp3)
+        let ext = 'mp3';
+        try {
+            const parsed = new URL(audioUrl, 'http://localhost');
+            const match = parsed.pathname.match(/\.(mp3|m4a|ogg|wav|aac|flac)$/i);
+            if (match)
+                ext = match[1].toLowerCase();
+        }
+        catch (_) { }
+        const fileName = `${safeTitle}.${ext}`;
+        const encodedFileName = encodeURIComponent(fileName);
+        // 5. Fetch from upstream (Cloudinary / CDN) with redirect following
+        const upstreamRes = await fetch(audioUrl, {
+            method: 'GET',
+            redirect: 'follow',
+            headers: {
+                'User-Agent': 'RadioNinada/1.0',
+                'Accept': '*/*',
+                ...(req.headers.range ? { Range: req.headers.range } : {}),
+            },
         });
+        if (!upstreamRes.ok) {
+            logger_1.logger.error(`[ProxyDownload] Upstream returned status ${upstreamRes.status} for ${audioUrl}`);
+            return res.status(upstreamRes.status === 404 ? 404 : 502).json({
+                success: false,
+                message: `Audio storage server returned HTTP ${upstreamRes.status}: ${upstreamRes.statusText}`,
+            });
+        }
+        // 6. Set response headers for direct download
+        const rawContentType = upstreamRes.headers.get('content-type') || '';
+        const contentType = (rawContentType.includes('audio') || rawContentType.includes('mpeg'))
+            ? rawContentType
+            : (ext === 'mp3' ? 'audio/mpeg' : `audio/${ext}`);
+        const contentLength = upstreamRes.headers.get('content-length');
+        const contentRange = upstreamRes.headers.get('content-range');
+        res.status(upstreamRes.status);
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"; filename*=UTF-8''${encodedFileName}`);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length');
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Cache-Control', 'no-cache');
+        if (contentLength)
+            res.setHeader('Content-Length', contentLength);
+        if (contentRange)
+            res.setHeader('Content-Range', contentRange);
+        // 7. Stream audio to client
+        if (upstreamRes.body) {
+            const { Readable } = await import('stream');
+            const stream = Readable.fromWeb(upstreamRes.body);
+            stream.pipe(res);
+            stream.on('error', (err) => {
+                logger_1.logger.error('[ProxyDownload] Streaming error:', err);
+                if (!res.headersSent) {
+                    res.status(502).json({ success: false, message: 'Stream interrupted while sending audio file.' });
+                }
+            });
+        }
+        else {
+            res.end();
+        }
     }
     catch (error) {
-        next(error);
+        logger_1.logger.error('[ProxyDownload] Unexpected error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({
+                success: false,
+                message: `Failed to download audio: ${error.message || 'Internal server error'}`,
+            });
+        }
     }
 }
 /**

@@ -116,9 +116,13 @@
     },
 
     // Returns the URL for the server-side proxy download endpoint
-    getEpisodeDownloadUrl(episodeId) {
-      if (!episodeId) return null;
-      return `${API_BASE_URL}/podcasts/episodes/${episodeId}/proxy-download`;
+    getEpisodeDownloadUrl(episodeId, audioUrl, title) {
+      const targetId = episodeId || 'audio';
+      const params = new URLSearchParams();
+      if (audioUrl) params.set('url', audioUrl);
+      if (title) params.set('title', title);
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
+      return `${API_BASE_URL}/podcasts/episodes/${encodeURIComponent(targetId)}/proxy-download${queryStr}`;
     },
 
     async getSchedule() {

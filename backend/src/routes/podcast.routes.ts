@@ -17,6 +17,7 @@ const router = Router();
 // Public podcast endpoints
 router.get('/', getPodcasts);
 router.get('/episodes/:id/proxy-download', proxyDownloadEpisode);
+router.get('/download', proxyDownloadEpisode);
 router.get('/:slug', getPodcastBySlug);
 router.post('/episodes/:id/download', incrementDownload);
 

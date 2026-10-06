@@ -2128,18 +2128,23 @@ async function downloadAudioTrack(audioUrl, trackTitle, episodeId) {
         .trim()
         .replace(/\s+/g, '_') || 'Radio_Ninada_Episode';
 
-    // --- STRATEGY 1: Use backend proxy endpoint (bypasses Cloudinary CORS/disposition) ---
-    if (episodeId && window.RadioAPI && typeof window.RadioAPI.getEpisodeDownloadUrl === 'function') {
-        const proxyUrl = window.RadioAPI.getEpisodeDownloadUrl(episodeId);
+    // --- STRATEGY 1: Use backend proxy endpoint (bypasses Cloudinary CORS & streams attachment) ---
+    if (window.RadioAPI && typeof window.RadioAPI.getEpisodeDownloadUrl === 'function') {
+        const proxyUrl = window.RadioAPI.getEpisodeDownloadUrl(episodeId, audioUrl, trackTitle);
         if (proxyUrl) {
             showToast(`⏳ Preparing download: ${trackTitle || 'Episode'}...`);
+
+            // Fire-and-forget download counter increment
+            if (episodeId && typeof window.RadioAPI.incrementDownload === 'function') {
+                window.RadioAPI.incrementDownload(episodeId).catch(() => {});
+            }
+
             const link = document.createElement('a');
             link.href = proxyUrl;
             link.setAttribute('download', `${cleanTitle}.mp3`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            // Show confirmation after a moment (browser handles the actual download)
             setTimeout(() => showToast(`✔ Download started: ${trackTitle || 'Audio'}`), 800);
             return;
         }
@@ -2162,9 +2167,14 @@ async function downloadAudioTrack(audioUrl, trackTitle, episodeId) {
             setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
             showToast(`✔ Download complete: ${trackTitle || 'Audio'}`);
         } catch (err) {
-            // --- STRATEGY 3: Direct anchor link fallback (opens in new tab for cross-origin) ---
+            // --- STRATEGY 3: Direct anchor link fallback ---
+            // If Cloudinary URL, inject fl_attachment transformation to force attachment disposition
+            let fallbackUrl = audioUrl;
+            if (audioUrl.includes('res.cloudinary.com') && audioUrl.includes('/upload/')) {
+                fallbackUrl = audioUrl.replace('/upload/', `/upload/fl_attachment:${encodeURIComponent(cleanTitle)}/`);
+            }
             const link = document.createElement('a');
-            link.href = audioUrl;
+            link.href = fallbackUrl;
             link.setAttribute('download', `${cleanTitle}.mp3`);
             link.setAttribute('target', '_blank');
             document.body.appendChild(link);
